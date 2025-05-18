@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="icon" type="image/png" href="https://img.icons8.com/ios/50/globe--v1.png">
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <script>
+            
+
+            window.chrome.webview.addEventListener("message", function(event) {
+                document.getElementById("messagelog").value += `Message received: ${event.data} \n`;
+            });
+
+            function sendMessageToHostApp() {
+                window.chrome.webview.postMessage(document.getElementById("msgtext").value);
+            }
+
+            function readHostAppObject() {
+                window.chrome.webview.hostObjects.getHostProperty("shared").then(result => {
+                    document.getElementById("hostAppObject").value = `${result} \n`;
+                })
+            }
+
+        </script>
+    </head>
+    <body>
+        
+        <p>Hello from the web browser! 😄😄😄</p>
+        <p>
+            <input value="Hello from the web browser!" id="msgtext"></br>
+            <button onclick="sendMessageToHostApp()"> &lt;&lt;&lt; Send a message to the host application</button>
+        </p>
+        <hr>
+
+        <p>Messages from the host application :
+            <textarea id="messagelog" rows="8" cols="80"></textarea>
+        </p>
+        <hr>
+
+        <p>
+            <button onclick="readHostAppObject()">Read host shared data</button>
+            <textarea id="hostAppObject" disabled rows="17" cols="80" style="font-size: small;"></textarea>
+        </p>
+        
+    </body>
+</html>
