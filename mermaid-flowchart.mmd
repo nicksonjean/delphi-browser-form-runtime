@@ -1,0 +1,28 @@
+flowchart TB
+    subgraph Source
+        subgraph Context
+            A1[BrowserFormInterface.pas]
+            A2[WebBrowserFormClass.pas]
+            A3[WVBrowserFormClass.pas]
+        end
+
+        subgraph Generic
+            B1[BrowserGenericInterface.pas]
+            B2[BrowserTypes.pas]
+        end
+
+        subgraph Strategy
+            C1[BrowserClass.pas]
+            C2[BrowserInterface.pas]
+        end
+    end
+
+    %% Relações de uso (exemplos de dependências)
+    A2 --> A1
+    A3 --> A1
+    C1 --> C2
+    A2 --> C2
+    A3 --> C2
+    A1 --> B1
+    B1 --> B2
+    C2 --> B1

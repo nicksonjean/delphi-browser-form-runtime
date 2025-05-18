@@ -1,0 +1,26 @@
+graph TD
+
+  subgraph Source
+    subgraph Context
+      A1[BrowserFormInterface.pas]
+      A2[WebBrowserFormClass.pas]
+      A3[WVBrowserFormClass.pas]
+    end
+
+    subgraph Generic
+      B1[BrowserGenericInterface.pas]
+      B2[BrowserTypes.pas]
+    end
+
+    subgraph Strategy
+      C1[BrowserClass.pas]
+      C2[BrowserInterface.pas]
+    end
+  end
+
+  %% Relações entre as unidades (exemplo genérico)
+  C2 --> B1
+  C1 --> C2
+  A1 --> B1
+  A2 --> A1
+  A3 --> A1
