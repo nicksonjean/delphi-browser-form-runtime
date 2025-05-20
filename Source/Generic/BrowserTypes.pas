@@ -5,7 +5,7 @@ interface
 type
   TPositionCaption = (Before, After, Replaced, None);
   TOpenType = (Normal, Modal);
-  TBrowserType = (WebBrowser, WebView2);
+  TBrowserType = (WebBrowser, WebView);
 
 implementation
 

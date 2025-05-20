@@ -1,0 +1,338 @@
+unit BrowserClass;
+
+interface
+
+uses
+  System.SysUtils, System.Classes, Vcl.Forms,
+  BrowserTypes, BrowserFormInterface, BrowserInterface,
+  WebBrowserFormClass, WVBrowserFormClass,
+
+  Vcl.OleCtrls, SHDocVw, MSHTML,
+  uWVBrowser, uWVWindowParent, uWVTypes, uWVLoader, uWVLibFunctions,
+  uWVConstants, uWVCoreWebView2, uWVInterfaces, uWVTypeLibrary
+
+  ;
+
+type
+  TBrowser = class(TInterfacedObject, IBrowser)
+  strict private
+    FBrowserImpl: IBrowserForm;
+    FWidth: Integer;
+    FHeight: Integer;
+    FCaption: string;
+    FCaptionPosition: TPositionCaption;
+    FActionButtons: TBorderIcons;
+    FResizable: Boolean;
+    FMovable: Boolean;
+    FTitleBar: Boolean;
+    procedure ApplyProperties;
+  protected
+    // Getters
+    function GetWidthProp: Integer;
+    function GetHeightProp: Integer;
+    function GetCaptionProp: String;
+    function GetCaptionPositionProp: TPositionCaption;
+    function GetActionButtonsProp: TBorderIcons;
+    function GetResizableProp: Boolean;
+    function GetMovableProp: Boolean;
+    function GetTitleBarProp: Boolean;
+    function GetInstanceProp: TComponent;
+
+    // Setters
+    procedure SetWidthProp(const Value: Integer);
+    procedure SetHeightProp(const Value: Integer);
+    procedure SetCaptionProp(const Value: string);
+    procedure SetCaptionPositionProp(const Value: TPositionCaption);
+    procedure SetActionButtonsProp(const Value: TBorderIcons);
+    procedure SetResizableProp(const Value: Boolean);
+    procedure SetMovableProp(const Value: Boolean);
+    procedure SetTitleBarProp(const Value: Boolean);
+  public
+    // Constructor
+    constructor Create(ABrowserType: TBrowserType; const AInitialURL: string);
+
+    // Fluent Chainable Methods
+    function SetWidth(const AWidth: Integer): TBrowser;
+    function SetHeight(const AHeight: Integer): TBrowser;
+    function SetCaption(const ACaption: string; APosition: TPositionCaption = TPositionCaption.Before): TBrowser;
+    function SetActionButtons(const AButtons: TBorderIcons): TBrowser;
+    function SetResizable(const AResize: Boolean): TBrowser;
+    function SetMovable(const AMove: Boolean): TBrowser;
+    function SetTitleBar(const ATitleBar: Boolean): TBrowser;
+
+    // Interface Methods
+    function IBrowser.SetWidth = ISetWidth;
+    function IBrowser.SetHeight = ISetHeight;
+    function IBrowser.SetCaption = ISetCaption;
+    function IBrowser.SetActionButtons = ISetActionButtons;
+    function IBrowser.SetResizable = ISetResizable;
+    function IBrowser.SetMovable = ISetMovable;
+    function IBrowser.SetTitleBar = ISetTitleBar;
+
+    function ISetWidth(const AWidth: Integer): IBrowser;
+    function ISetHeight(const AHeight: Integer): IBrowser;
+    function ISetCaption(const ACaption: string; APosition: TPositionCaption): IBrowser;
+    function ISetActionButtons(const AButtons: TBorderIcons): IBrowser;
+    function ISetResizable(const AResize: Boolean): IBrowser;
+    function ISetMovable(const AMove: Boolean): IBrowser;
+    function ISetTitleBar(const ATitleBar: Boolean): IBrowser;
+
+    // Final Method
+    procedure Show(const AType: TOpenType = TOpenType.Normal);
+    procedure ShowModal(const AType: TOpenType = TOpenType.Modal);
+
+    // Properties
+    property Width: Integer read GetWidthProp write SetWidthProp;
+    property Height: Integer read GetHeightProp write SetHeightProp;
+    property Caption: string read GetCaptionProp write SetCaptionProp;
+    property CaptionPosition: TPositionCaption read GetCaptionPositionProp write SetCaptionPositionProp;
+    property ActionButtons: TBorderIcons read GetActionButtonsProp write SetActionButtonsProp;
+    property Resizable: Boolean read GetResizableProp write SetResizableProp;
+    property Movable: Boolean read GetMovableProp write SetMovableProp;
+    property TitleBar: Boolean read GetTitleBarProp write SetTitleBarProp;
+    property Instance: TComponent read GetInstanceProp;
+  end;
+
+implementation
+
+{ TBrowser }
+
+constructor TBrowser.Create(ABrowserType: TBrowserType; const AInitialURL: string);
+begin
+  case ABrowserType of
+    TBrowserType.WebBrowser:
+      FBrowserImpl := TCustomFormWebBrowser.Create(AInitialURL) as IBrowserForm;
+    TBrowserType.WebView2:
+      FBrowserImpl := TCustomFormWVBrowser.Create(AInitialURL) as IBrowserForm;
+  else
+    raise Exception.Create('Unsupported browser type');
+  end;
+end;
+
+procedure TBrowser.ApplyProperties;
+begin
+  if not Assigned(FBrowserImpl) then Exit;
+
+  FBrowserImpl
+    .SetCaption(FCaption, FCaptionPosition)
+    .SetWidth(FWidth)
+    .SetHeight(FHeight)
+    .SetActionButtons(FActionButtons)
+    .SetResizable(FResizable)
+    .SetMovable(FMovable)
+    .SetTitleBar(FTitleBar);
+end;
+
+// Fluent methods
+
+function TBrowser.SetWidth(const AWidth: Integer): TBrowser;
+begin
+  FWidth := AWidth;
+  Result := Self;
+end;
+
+function TBrowser.SetHeight(const AHeight: Integer): TBrowser;
+begin
+  FHeight := AHeight;
+  Result := Self;
+end;
+
+function TBrowser.SetCaption(const ACaption: string; APosition: TPositionCaption): TBrowser;
+begin
+  FCaption := ACaption;
+  FCaptionPosition := APosition;
+  Result := Self;
+end;
+
+function TBrowser.SetActionButtons(const AButtons: TBorderIcons): TBrowser;
+begin
+  FActionButtons := AButtons;
+  Result := Self;
+end;
+
+function TBrowser.SetResizable(const AResize: Boolean): TBrowser;
+begin
+  FResizable := AResize;
+  Result := Self;
+end;
+
+function TBrowser.SetMovable(const AMove: Boolean): TBrowser;
+begin
+  FMovable := AMove;
+  Result := Self;
+end;
+
+function TBrowser.SetTitleBar(const ATitleBar: Boolean): TBrowser;
+begin
+  FTitleBar := ATitleBar;
+  Result := Self;
+end;
+
+// Interface Methods
+
+function TBrowser.ISetWidth(const AWidth: Integer): IBrowser;
+begin
+  SetWidth(AWidth);
+  Result := Self;
+end;
+
+function TBrowser.ISetHeight(const AHeight: Integer): IBrowser;
+begin
+  SetHeight(AHeight);
+  Result := Self;
+end;
+
+function TBrowser.ISetCaption(const ACaption: string; APosition: TPositionCaption): IBrowser;
+begin
+  SetCaption(ACaption, APosition);
+  Result := Self;
+end;
+
+function TBrowser.ISetActionButtons(const AButtons: TBorderIcons): IBrowser;
+begin
+  SetActionButtons(AButtons);
+  Result := Self;
+end;
+
+function TBrowser.ISetResizable(const AResize: Boolean): IBrowser;
+begin
+  SetResizable(AResize);
+  Result := Self;
+end;
+
+function TBrowser.ISetMovable(const AMove: Boolean): IBrowser;
+begin
+  SetMovable(AMove);
+  Result := Self;
+end;
+
+function TBrowser.ISetTitleBar(const ATitleBar: Boolean): IBrowser;
+begin
+  SetTitleBar(ATitleBar);
+  Result := Self;
+end;
+
+// Getters
+
+function TBrowser.GetWidthProp: Integer;
+begin
+  Result := FWidth;
+end;
+
+function TBrowser.GetHeightProp: Integer;
+begin
+  Result := FHeight;
+end;
+
+function TBrowser.GetInstanceProp: TComponent;
+var
+  Component: TComponent;
+begin
+  Component := FBrowserImpl.GetInstanceProp;
+
+  if Component is TWebBrowser then
+    TWebBrowser(Component).Navigate('https://example.com')
+  else if Component is TWVBrowser then
+    TWVBrowser(Component).Navigate('https://example.com');
+end;
+
+function TBrowser.GetCaptionProp: string;
+begin
+  Result := FCaption;
+end;
+
+function TBrowser.GetCaptionPositionProp: TPositionCaption;
+begin
+  Result := FCaptionPosition;
+end;
+
+function TBrowser.GetActionButtonsProp: TBorderIcons;
+begin
+  Result := FActionButtons;
+end;
+
+function TBrowser.GetResizableProp: Boolean;
+begin
+  Result := FResizable;
+end;
+
+function TBrowser.GetMovableProp: Boolean;
+begin
+  Result := FMovable;
+end;
+
+function TBrowser.GetTitleBarProp: Boolean;
+begin
+  Result := FTitleBar;
+end;
+
+// Setters
+
+procedure TBrowser.SetWidthProp(const Value: Integer);
+begin
+  FWidth := Value;
+end;
+
+procedure TBrowser.SetHeightProp(const Value: Integer);
+begin
+  FHeight := Value;
+end;
+
+procedure TBrowser.SetCaptionProp(const Value: string);
+begin
+  FCaption := Value;
+end;
+
+procedure TBrowser.SetCaptionPositionProp(const Value: TPositionCaption);
+begin
+  FCaptionPosition := Value;
+end;
+
+procedure TBrowser.SetActionButtonsProp(const Value: TBorderIcons);
+begin
+  FActionButtons := Value;
+end;
+
+procedure TBrowser.SetResizableProp(const Value: Boolean);
+begin
+  FResizable := Value;
+end;
+
+procedure TBrowser.SetMovableProp(const Value: Boolean);
+begin
+  FMovable := Value;
+end;
+
+procedure TBrowser.SetTitleBarProp(const Value: Boolean);
+begin
+  FTitleBar := Value;
+end;
+
+// Context
+
+procedure TBrowser.Show(const AType: TOpenType = TOpenType.Normal);
+begin
+  ApplyProperties;
+  if Assigned(FBrowserImpl) then
+  begin
+    if AType = TOpenType.Normal then
+      FBrowserImpl.Show
+    else
+      FBrowserImpl.ShowModal;
+  end;
+end;
+
+procedure TBrowser.ShowModal(const AType: TOpenType = TOpenType.Modal);
+begin
+  ApplyProperties;
+  if Assigned(FBrowserImpl) then
+  begin
+    if AType = TOpenType.Modal then
+      FBrowserImpl.ShowModal
+    else
+      FBrowserImpl.Show;
+  end;
+end;
+
+end.
+

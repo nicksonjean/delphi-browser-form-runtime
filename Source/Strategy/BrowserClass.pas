@@ -5,7 +5,13 @@ interface
 uses
   System.SysUtils, System.Classes, Vcl.Forms,
   BrowserTypes, BrowserFormInterface, BrowserInterface,
-  WebBrowserFormClass, WVBrowserFormClass;
+  WebBrowserFormClass, WVBrowserFormClass,
+
+  Vcl.OleCtrls, SHDocVw, MSHTML,
+  uWVBrowser, uWVWindowParent, uWVTypes, uWVLoader, uWVLibFunctions,
+  uWVConstants, uWVCoreWebView2, uWVInterfaces, uWVTypeLibrary
+
+  ;
 
 type
   TBrowser = class(TInterfacedObject, IBrowser)
@@ -18,6 +24,7 @@ type
     FActionButtons: TBorderIcons;
     FResizable: Boolean;
     FMovable: Boolean;
+    FTitleBar: Boolean;
     procedure ApplyProperties;
   protected
     // Getters
@@ -28,6 +35,8 @@ type
     function GetActionButtonsProp: TBorderIcons;
     function GetResizableProp: Boolean;
     function GetMovableProp: Boolean;
+    function GetTitleBarProp: Boolean;
+    function GetInstanceProp: TComponent;
 
     // Setters
     procedure SetWidthProp(const Value: Integer);
@@ -37,6 +46,7 @@ type
     procedure SetActionButtonsProp(const Value: TBorderIcons);
     procedure SetResizableProp(const Value: Boolean);
     procedure SetMovableProp(const Value: Boolean);
+    procedure SetTitleBarProp(const Value: Boolean);
   public
     // Constructor
     constructor Create(ABrowserType: TBrowserType; const AInitialURL: string);
@@ -48,6 +58,7 @@ type
     function SetActionButtons(const AButtons: TBorderIcons): TBrowser;
     function SetResizable(const AResize: Boolean): TBrowser;
     function SetMovable(const AMove: Boolean): TBrowser;
+    function SetTitleBar(const ATitleBar: Boolean): TBrowser;
 
     // Interface Methods
     function IBrowser.SetWidth = ISetWidth;
@@ -56,6 +67,7 @@ type
     function IBrowser.SetActionButtons = ISetActionButtons;
     function IBrowser.SetResizable = ISetResizable;
     function IBrowser.SetMovable = ISetMovable;
+    function IBrowser.SetTitleBar = ISetTitleBar;
 
     function ISetWidth(const AWidth: Integer): IBrowser;
     function ISetHeight(const AHeight: Integer): IBrowser;
@@ -63,6 +75,7 @@ type
     function ISetActionButtons(const AButtons: TBorderIcons): IBrowser;
     function ISetResizable(const AResize: Boolean): IBrowser;
     function ISetMovable(const AMove: Boolean): IBrowser;
+    function ISetTitleBar(const ATitleBar: Boolean): IBrowser;
 
     // Final Method
     procedure Show(const AType: TOpenType = TOpenType.Normal);
@@ -76,6 +89,8 @@ type
     property ActionButtons: TBorderIcons read GetActionButtonsProp write SetActionButtonsProp;
     property Resizable: Boolean read GetResizableProp write SetResizableProp;
     property Movable: Boolean read GetMovableProp write SetMovableProp;
+    property TitleBar: Boolean read GetTitleBarProp write SetTitleBarProp;
+    property Instance: TComponent read GetInstanceProp;
   end;
 
 implementation
@@ -85,9 +100,9 @@ implementation
 constructor TBrowser.Create(ABrowserType: TBrowserType; const AInitialURL: string);
 begin
   case ABrowserType of
-    WebBrowser:
+    TBrowserType.WebBrowser:
       FBrowserImpl := TCustomFormWebBrowser.Create(AInitialURL) as IBrowserForm;
-    WebView2:
+    TBrowserType.WebView:
       FBrowserImpl := TCustomFormWVBrowser.Create(AInitialURL) as IBrowserForm;
   else
     raise Exception.Create('Unsupported browser type');
@@ -104,7 +119,8 @@ begin
     .SetHeight(FHeight)
     .SetActionButtons(FActionButtons)
     .SetResizable(FResizable)
-    .SetMovable(FMovable);
+    .SetMovable(FMovable)
+    .SetTitleBar(FTitleBar);
 end;
 
 // Fluent methods
@@ -146,6 +162,12 @@ begin
   Result := Self;
 end;
 
+function TBrowser.SetTitleBar(const ATitleBar: Boolean): TBrowser;
+begin
+  FTitleBar := ATitleBar;
+  Result := Self;
+end;
+
 // Interface Methods
 
 function TBrowser.ISetWidth(const AWidth: Integer): IBrowser;
@@ -184,6 +206,12 @@ begin
   Result := Self;
 end;
 
+function TBrowser.ISetTitleBar(const ATitleBar: Boolean): IBrowser;
+begin
+  SetTitleBar(ATitleBar);
+  Result := Self;
+end;
+
 // Getters
 
 function TBrowser.GetWidthProp: Integer;
@@ -194,6 +222,18 @@ end;
 function TBrowser.GetHeightProp: Integer;
 begin
   Result := FHeight;
+end;
+
+function TBrowser.GetInstanceProp: TComponent;
+var
+  Component: TComponent;
+begin
+  Component := FBrowserImpl.GetInstanceProp;
+
+  if Component is TWebBrowser then
+    Result := TWebBrowser(Component)
+  else if Component is TWVBrowser then
+    Result := TWVBrowser(Component);
 end;
 
 function TBrowser.GetCaptionProp: string;
@@ -219,6 +259,11 @@ end;
 function TBrowser.GetMovableProp: Boolean;
 begin
   Result := FMovable;
+end;
+
+function TBrowser.GetTitleBarProp: Boolean;
+begin
+  Result := FTitleBar;
 end;
 
 // Setters
@@ -257,6 +302,13 @@ procedure TBrowser.SetMovableProp(const Value: Boolean);
 begin
   FMovable := Value;
 end;
+
+procedure TBrowser.SetTitleBarProp(const Value: Boolean);
+begin
+  FTitleBar := Value;
+end;
+
+// Context
 
 procedure TBrowser.Show(const AType: TOpenType = TOpenType.Normal);
 begin

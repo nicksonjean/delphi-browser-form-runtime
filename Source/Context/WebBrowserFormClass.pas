@@ -60,6 +60,8 @@ type
     function GetActionButtonsProp: TBorderIcons;
     function GetResizableProp: Boolean;
     function GetMovableProp: Boolean;
+    function GetTitleBarProp: Boolean;
+    function GetInstanceProp: TComponent;
 
     // Setters
     procedure SetWidthProp(const Value: Integer);
@@ -69,6 +71,7 @@ type
     procedure SetActionButtonsProp(const Value: TBorderIcons);
     procedure SetResizableProp(const Value: Boolean);
     procedure SetMovableProp(const Value: Boolean);
+    procedure SetTitleBarProp(const Value: Boolean);
   public
     // Constructor and Destructor
     constructor Create(const AInitialURL: string);
@@ -81,6 +84,7 @@ type
     function SetActionButtons(const AButton: TBorderIcons): TCustomFormWebBrowser;
     function SetResizable(const AResize: Boolean): TCustomFormWebBrowser;
     function SetMovable(const AMove: Boolean): TCustomFormWebBrowser;
+    function SetTitleBar(const ATitleBar: Boolean): TCustomFormWebBrowser;
 
     // Interface Methods
     function IBrowserForm.SetWidth = ISetWidth;
@@ -89,6 +93,7 @@ type
     function IBrowserForm.SetActionButtons = ISetActionButtons;
     function IBrowserForm.SetResizable = ISetResizable;
     function IBrowserForm.SetMovable = ISetMovable;
+    function IBrowserForm.SetTitleBar = ISetTitleBar;
 
     function ISetWidth(const AWidth: Integer): IBrowserForm;
     function ISetHeight(const AHeight: Integer): IBrowserForm;
@@ -96,6 +101,7 @@ type
     function ISetActionButtons(const AButtons: TBorderIcons): IBrowserForm;
     function ISetResizable(const AResize: Boolean): IBrowserForm;
     function ISetMovable(const AMove: Boolean): IBrowserForm;
+    function ISetTitleBar(const ATitleBar: Boolean): IBrowserForm;
 
     // Final Method
     procedure Show(const AType: TOpenType = TOpenType.Normal);
@@ -109,6 +115,8 @@ type
     property ActionButtons: TBorderIcons read GetActionButtonsProp write SetActionButtonsProp;
     property Resizable: Boolean read GetResizableProp write SetResizableProp;
     property Movable: Boolean read GetMovableProp write SetMovableProp;
+    property TitleBar: Boolean read GetTitleBarProp write SetTitleBarProp;
+    property Instance: TComponent read GetInstanceProp;
   end;
 
 implementation
@@ -234,7 +242,18 @@ begin
   Result := Self;
 end;
 
+function TCustomFormWebBrowser.ISetTitleBar(const ATitleBar: Boolean): IBrowserForm;
+begin
+  SetTitleBar(ATitleBar);
+  Result := Self;
+end;
+
 // Getters
+
+function TCustomFormWebBrowser.GetInstanceProp: TComponent;
+begin
+  Result := FBrowser;
+end;
 
 function TCustomFormWebBrowser.GetWidthProp: Integer;
 begin
@@ -269,6 +288,11 @@ end;
 function TCustomFormWebBrowser.GetMovableProp: Boolean;
 begin
   Result := FMovable;
+end;
+
+function TCustomFormWebBrowser.GetTitleBarProp: Boolean;
+begin
+  Result := FForm.BorderStyle = TFormBorderStyle.bsNone;
 end;
 
 // Setters
@@ -307,6 +331,11 @@ end;
 procedure TCustomFormWebBrowser.SetMovableProp(const Value: Boolean);
 begin
   SetMovable(Value);
+end;
+
+procedure TCustomFormWebBrowser.SetTitleBarProp(const Value: Boolean);
+begin
+  SetTitleBar(Value);
 end;
 
 // Chainable Methods
@@ -374,6 +403,21 @@ begin
     FForm.CenterToScreenWithMonitor;
   Result := Self;
 end;
+
+function TCustomFormWebBrowser.SetTitleBar(const ATitleBar: Boolean): TCustomFormWebBrowser;
+begin
+  if not ATitleBar then
+  begin
+    FForm.BorderStyle := TFormBorderStyle.bsNone;
+    FForm.Constraints.MinWidth := FForm.Width;
+    FForm.Constraints.MinHeight := FForm.Height;
+    FForm.Constraints.MaxWidth := FForm.Width;
+    FForm.Constraints.MaxHeight := FForm.Height;
+  end;
+  Result := Self;
+end;
+
+// Context
 
 constructor TCustomFormWebBrowser.Create(const AInitialURL: string);
 begin
@@ -444,21 +488,20 @@ end;
 
 procedure TCustomFormWebBrowser.OnDocTitleChanged(Sender: TObject);
 var
-  Doc: IHTMLDocument2;
+  Title: string;
 begin
   if Assigned(FBrowser.Document) then
   begin
-    Doc := FBrowser.Document as IHTMLDocument2;
-
+    Title := (FBrowser.Document as IHTMLDocument2).title;
     case FCaptionPosition of
       TPositionCaption.Before:
-        FForm.Caption := FCaption + ' - ' + Doc.title;
+        FForm.Caption := FCaption + ' - ' + Title;
       TPositionCaption.After:
-        FForm.Caption := Doc.title + ' - ' + FCaption;
+        FForm.Caption := Title + ' - ' + FCaption;
       TPositionCaption.Replaced:
         FForm.Caption := FCaption;
       TPositionCaption.None:
-        FForm.Caption := Doc.title;
+        FForm.Caption := Title;
     end;
   end;
 end;

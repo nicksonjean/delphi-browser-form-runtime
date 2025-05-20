@@ -15,6 +15,7 @@ type
     function SetActionButtons(const AButtons: TBorderIcons): IBrowserForm;
     function SetResizable(const AResize: Boolean): IBrowserForm;
     function SetMovable(const AMove: Boolean): IBrowserForm;
+    function SetTitleBar(const ATitleBar: Boolean): IBrowserForm;
     procedure Show(const AType: TOpenType = TOpenType.Normal);
     procedure ShowModal(const AType: TOpenType = TOpenType.Modal);
   end;

@@ -1,0 +1,258 @@
+unit FormTest;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, System.TypInfo,
+
+  Vcl.OleCtrls, SHDocVw, MSHTML,
+
+  uWVBrowser, uWVWindowParent, uWVTypes, uWVLoader, uWVLibFunctions,
+  uWVConstants, uWVCoreWebView2, uWVInterfaces, uWVTypeLibrary,
+
+  BrowserTypes,
+  BrowserFormInterface,
+  WebBrowserFormClass,
+  WVBrowserFormClass,
+  BrowserInterface,
+  BrowserClass
+  ;
+
+type
+  TFormBrowserTest = class(TForm)
+    GroupBoxWebBrowser: TGroupBox;
+    GroupBoxWVBrowser: TGroupBox;
+    GroupBoxWebBrowserWithClass: TGroupBox;
+    BtnWebBrowserClassChainableTest: TButton;
+    BtnWebBrowserClassPropertiesTest: TButton;
+    GroupBoxWebBrowserWithInterface: TGroupBox;
+    BtnWebBrowserInterfaceChainableTest: TButton;
+    BtnWebBrowserInterfacePropertiesTest: TButton;
+    GroupBoxWVBrowserWithClass: TGroupBox;
+    BtnWVBrowserClassChainableTest: TButton;
+    BtnWVBrowserClassPropertiesTest: TButton;
+    GroupBoxWVBrowserWithInterface: TGroupBox;
+    BtnWVBrowserInterfaceChainableTest: TButton;
+    BtnWVBrowserInterfacePropertiesTest: TButton;
+    GroupBoxStrategy: TGroupBox;
+    GroupBoxStrategyWithClass: TGroupBox;
+    GroupBoxStrategyWithInterface: TGroupBox;
+    BtnBrowserClassChainableTest: TButton;
+    BtnBrowserClassPropertiesTest: TButton;
+    BtnBrowserInterfaceChainableTest: TButton;
+    BtnBrowserInterfacePropertiesTest: TButton;
+    GroupBoxSendMessage: TGroupBox;
+    SendMessageMemo: TMemo;
+    SendMessageBtn: TButton;
+    GroupBoxReceivedMessage: TGroupBox;
+    RecievedMessageMemo: TMemo;
+    procedure BtnWebBrowserClassChainableTestClick(Sender: TObject);
+    procedure BtnWVBrowserInterfaceChainableTestClick(Sender: TObject);
+    procedure BtnWVBrowserClassPropertiesTestClick(Sender: TObject);
+    procedure BtnWebBrowserClassPropertiesTestClick(Sender: TObject);
+    procedure BtnWebBrowserInterfaceChainableTestClick(Sender: TObject);
+    procedure BtnWebBrowserInterfacePropertiesTestClick(Sender: TObject);
+    procedure BtnWVBrowserClassChainableTestClick(Sender: TObject);
+    procedure BtnWVBrowserInterfacePropertiesTestClick(Sender: TObject);
+    procedure BtnBrowserClassChainableTestClick(Sender: TObject);
+    procedure BtnBrowserClassPropertiesTestClick(Sender: TObject);
+    procedure BtnBrowserInterfaceChainableTestClick(Sender: TObject);
+    procedure BtnBrowserInterfacePropertiesTestClick(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+    procedure SendMessageBtnClick(Sender: TObject);
+  protected
+    { Protected declarations }
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  FormBrowserTest: TFormBrowserTest;
+
+  BrowserFormI: IBrowserForm;
+  BrowserI: IBrowser;
+  BrowserT: TBrowser;
+  WebBrowser: TCustomFormWebBrowser;
+  WebView: TCustomFormWVBrowser;
+
+implementation
+
+{$R *.dfm}
+
+procedure TFormBrowserTest.BtnBrowserClassChainableTestClick(Sender: TObject);
+begin
+  BrowserT := TBrowser.Create(TBrowserType.WebBrowser, 'https://google.com.br/')
+    .SetCaption('Exemplo')
+    .SetWidth(2048)
+    .SetHeight(1024)
+    .SetActionButtons([TBorderIcon.biMinimize, TBorderIcon.biMaximize])
+    .SetResizable(true)
+    .SetMovable(true)
+    .SetTitleBar(true);
+  BrowserT.Show;
+end;
+
+procedure TFormBrowserTest.BtnBrowserClassPropertiesTestClick(Sender: TObject);
+begin
+  BrowserT := TBrowser.Create(TBrowserType.WebView, 'file:///' + ExtractFilePath(ParamStr(0)) + 'index.html');
+  BrowserT.Caption := 'Exemplo';
+  BrowserT.Width := 2048;
+  BrowserT.Height := 1024;
+  BrowserT.ActionButtons := [TBorderIcon.biMinimize, TBorderIcon.biMaximize];
+  BrowserT.Resizable := true;
+  BrowserT.Movable := true;
+  BrowserT.TitleBar := true;
+  BrowserT.Show;
+end;
+
+procedure TFormBrowserTest.BtnBrowserInterfaceChainableTestClick(Sender: TObject);
+begin
+  BrowserI := TBrowser.Create(TBrowserType.WebBrowser, 'https://google.com.br/')
+    .SetCaption('Exemplo')
+    .SetWidth(2048)
+    .SetHeight(1024)
+    .SetActionButtons([TBorderIcon.biMinimize, TBorderIcon.biMaximize])
+    .SetResizable(true)
+    .SetMovable(true)
+    .SetTitleBar(true);
+  BrowserI.Show;
+end;
+
+procedure TFormBrowserTest.BtnBrowserInterfacePropertiesTestClick(Sender: TObject);
+begin
+  BrowserI := TBrowser.Create(TBrowserType.WebView, 'file:///' + ExtractFilePath(ParamStr(0)) + 'index.html');
+  BrowserI.Caption := 'Exemplo';
+  BrowserI.Width := 2048;
+  BrowserI.Height := 1024;
+  BrowserI.ActionButtons := [TBorderIcon.biMinimize, TBorderIcon.biMaximize];
+  BrowserI.Resizable := true;
+  BrowserI.Movable := true;
+  BrowserI.TitleBar := true;
+  BrowserI.Show;
+end;
+
+procedure TFormBrowserTest.BtnWebBrowserClassChainableTestClick(Sender: TObject);
+begin
+  WebBrowser := TCustomFormWebBrowser.Create('https://google.com.br/')
+    .SetCaption('Exemplo')
+    .SetWidth(2048)
+    .SetHeight(1024)
+    .SetActionButtons([TBorderIcon.biMinimize, TBorderIcon.biMaximize])
+    .SetResizable(false)
+    .SetMovable(false);
+  WebBrowser.Show;
+end;
+
+procedure TFormBrowserTest.BtnWebBrowserClassPropertiesTestClick(Sender: TObject);
+begin
+  WebBrowser := TCustomFormWebBrowser.Create('https://google.com.br/');
+  WebBrowser.Caption := 'Exemplo';
+  WebBrowser.Width := 2048;
+  WebBrowser.Height := 1024;
+  WebBrowser.ActionButtons := [TBorderIcon.biMinimize, TBorderIcon.biMaximize];
+  WebBrowser.Resizable := true;
+  WebBrowser.Movable := true;
+  WebBrowser.Show;
+end;
+
+procedure TFormBrowserTest.BtnWebBrowserInterfaceChainableTestClick(Sender: TObject);
+begin
+  BrowserFormI := TCustomFormWebBrowser.Create('https://google.com.br/')
+    .SetCaption('Exemplo')
+    .SetWidth(2048)
+    .SetHeight(1024)
+    .SetActionButtons([TBorderIcon.biMinimize, TBorderIcon.biMaximize])
+    .SetResizable(true)
+    .SetMovable(true);
+  BrowserFormI.Show;
+end;
+
+procedure TFormBrowserTest.BtnWebBrowserInterfacePropertiesTestClick(Sender: TObject);
+begin
+  BrowserFormI := TCustomFormWebBrowser.Create('https://google.com.br/');
+  BrowserFormI.Caption := 'Exemplo';
+  BrowserFormI.Width := 2048;
+  BrowserFormI.Height := 1024;
+  BrowserFormI.ActionButtons := [TBorderIcon.biMinimize, TBorderIcon.biMaximize];
+  BrowserFormI.Resizable := true;
+  BrowserFormI.Movable := true;
+  BrowserFormI.Show;
+end;
+
+procedure TFormBrowserTest.BtnWVBrowserClassChainableTestClick(Sender: TObject);
+begin
+//  WebView := TCustomFormWVBrowser.Create('file:///' + ExtractFilePath(ParamStr(0)) + 'index.html')
+  WebView := TCustomFormWVBrowser.Create('https://google.com/')
+    .SetCaption('Exemplo')
+    .SetWidth(2048)
+    .SetHeight(1024)
+    .SetActionButtons([TBorderIcon.biMinimize, TBorderIcon.biMaximize])
+    .SetResizable(true)
+    .SetMovable(true);
+  WebView.ShowModal;
+end;
+
+procedure TFormBrowserTest.BtnWVBrowserClassPropertiesTestClick(Sender: TObject);
+begin
+  WebView := TCustomFormWVBrowser.Create('file:///' + ExtractFilePath(ParamStr(0)) + 'index.html');
+  WebView.Caption := 'Exemplo';
+  WebView.Width := 2048;
+  WebView.Height := 1024;
+  WebView.ActionButtons := [TBorderIcon.biMinimize, TBorderIcon.biMaximize];
+  WebView.Resizable := true;
+  WebView.Movable := true;
+  WebView.Show;
+end;
+
+procedure TFormBrowserTest.BtnWVBrowserInterfaceChainableTestClick(Sender: TObject);
+begin
+  BrowserFormI := TCustomFormWVBrowser.Create('file:///' + ExtractFilePath(ParamStr(0)) + 'index.html')
+    .SetCaption('Exemplo')
+    .SetWidth(2048)
+    .SetHeight(1024)
+    .SetActionButtons([TBorderIcon.biMinimize, TBorderIcon.biMaximize])
+    .SetResizable(true)
+    .SetMovable(true);
+  BrowserFormI.Show;
+end;
+
+procedure TFormBrowserTest.BtnWVBrowserInterfacePropertiesTestClick(Sender: TObject);
+begin
+  BrowserFormI := TCustomFormWVBrowser.Create('file:///' + ExtractFilePath(ParamStr(0)) + 'index.html');
+  BrowserFormI.Caption := 'Exemplo';
+  BrowserFormI.Width := 2048;
+  BrowserFormI.Height := 1024;
+  BrowserFormI.ActionButtons := [TBorderIcon.biMinimize, TBorderIcon.biMaximize];
+  BrowserFormI.Resizable := true;
+  BrowserFormI.Movable := true;
+  BrowserFormI.Show;
+end;
+
+procedure TFormBrowserTest.FormCreate(Sender: TObject);
+begin
+  SendMessageMemo.Lines.Text :=
+    ' { ' + sLineBreak
+  + '   "operation": "putMessage", ' + sLineBreak
+  + '   "data":{' + sLineBreak
+  + '      "text": "Enviou para o WebView"' + sLineBreak
+  + '    }' + sLineBreak
+  + ' } ';
+end;
+
+procedure TFormBrowserTest.SendMessageBtnClick(Sender: TObject);
+begin
+  if Assigned(WebView) and (WebView.Instance.ClassType = TWVBrowser) then
+    (WebView.Instance as TWVBrowser).PostWebMessageAsString(SendMessageMemo.Text)
+  else if Assigned(BrowserI) and (BrowserI.Instance.ClassType = TWVBrowser) then
+    (BrowserI.Instance as TWVBrowser).PostWebMessageAsString(SendMessageMemo.Text)
+  else if Assigned(BrowserT) and (BrowserT.Instance.ClassType = TWVBrowser) then
+    (BrowserT.Instance as TWVBrowser).PostWebMessageAsString(SendMessageMemo.Text)
+  else if Assigned(BrowserFormI) and (BrowserFormI.Instance.ClassType = TWVBrowser) then
+    (BrowserFormI.Instance as TWVBrowser).PostWebMessageAsString(SendMessageMemo.Text)
+  ;
+end;
+
+end.

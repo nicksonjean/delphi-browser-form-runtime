@@ -63,6 +63,8 @@ type
     function GetActionButtonsProp: TBorderIcons;
     function GetResizableProp: Boolean;
     function GetMovableProp: Boolean;
+    function GetTitleBarProp: Boolean;
+    function GetInstanceProp: TComponent;
 
     // Setters
     procedure SetWidthProp(const Value: Integer);
@@ -72,6 +74,7 @@ type
     procedure SetActionButtonsProp(const Value: TBorderIcons);
     procedure SetResizableProp(const Value: Boolean);
     procedure SetMovableProp(const Value: Boolean);
+    procedure SetTitleBarProp(const Value: Boolean);
   public
     // Constructor and Destructor
     constructor Create(const AInitialURL: string);
@@ -84,6 +87,7 @@ type
     function SetActionButtons(const AButton: TBorderIcons): TCustomFormWVBrowser;
     function SetResizable(const AResize: Boolean): TCustomFormWVBrowser;
     function SetMovable(const AMove: Boolean): TCustomFormWVBrowser;
+    function SetTitleBar(const ATitleBar: Boolean): TCustomFormWVBrowser;
 
     // Interface Methods
     function IBrowserForm.SetWidth = ISetWidth;
@@ -92,6 +96,7 @@ type
     function IBrowserForm.SetActionButtons = ISetActionButtons;
     function IBrowserForm.SetResizable = ISetResizable;
     function IBrowserForm.SetMovable = ISetMovable;
+    function IBrowserForm.SetTitleBar = ISetTitleBar;
 
     function ISetWidth(const AWidth: Integer): IBrowserForm;
     function ISetHeight(const AHeight: Integer): IBrowserForm;
@@ -99,6 +104,7 @@ type
     function ISetActionButtons(const AButtons: TBorderIcons): IBrowserForm;
     function ISetResizable(const AResize: Boolean): IBrowserForm;
     function ISetMovable(const AMove: Boolean): IBrowserForm;
+    function ISetTitleBar(const ATitleBar: Boolean): IBrowserForm;
 
     // Final Method
     procedure Show(const AType: TOpenType = TOpenType.Normal);
@@ -112,6 +118,8 @@ type
     property ActionButtons: TBorderIcons read GetActionButtonsProp write SetActionButtonsProp;
     property Resizable: Boolean read GetResizableProp write SetResizableProp;
     property Movable: Boolean read GetMovableProp write SetMovableProp;
+    property TitleBar: Boolean read GetTitleBarProp write SetTitleBarProp;
+    property Instance: TComponent read GetInstanceProp;
   end;
 
 implementation
@@ -245,7 +253,18 @@ begin
   Result := Self;
 end;
 
+function TCustomFormWVBrowser.ISetTitleBar(const ATitleBar: Boolean): IBrowserForm;
+begin
+  SetTitleBar(ATitleBar);
+  Result := Self;
+end;
+
 // Getters
+
+function TCustomFormWVBrowser.GetInstanceProp: TComponent;
+begin
+  Result := FBrowser;
+end;
 
 function TCustomFormWVBrowser.GetWidthProp: Integer;
 begin
@@ -280,6 +299,11 @@ end;
 function TCustomFormWVBrowser.GetMovableProp: Boolean;
 begin
   Result := FMovable;
+end;
+
+function TCustomFormWVBrowser.GetTitleBarProp: Boolean;
+begin
+  Result := FForm.BorderStyle = TFormBorderStyle.bsNone;
 end;
 
 // Setters
@@ -319,6 +343,13 @@ procedure TCustomFormWVBrowser.SetMovableProp(const Value: Boolean);
 begin
   SetMovable(Value);
 end;
+
+procedure TCustomFormWVBrowser.SetTitleBarProp(const Value: Boolean);
+begin
+  SetTitleBar(Value);
+end;
+
+// Chainable Methods
 
 function TCustomFormWVBrowser.SetWidth(const AWidth: Integer): TCustomFormWVBrowser;
 begin
@@ -383,6 +414,21 @@ begin
     FForm.CenterToScreenWithMonitor;
   Result := Self;
 end;
+
+function TCustomFormWVBrowser.SetTitleBar(const ATitleBar: Boolean): TCustomFormWVBrowser;
+begin
+  if not ATitleBar then
+  begin
+    FForm.BorderStyle := TFormBorderStyle.bsNone;
+    FForm.Constraints.MinWidth := FForm.Width;
+    FForm.Constraints.MinHeight := FForm.Height;
+    FForm.Constraints.MaxWidth := FForm.Width;
+    FForm.Constraints.MaxHeight := FForm.Height;
+  end;
+  Result := Self;
+end;
+
+// Context
 
 constructor TCustomFormWVBrowser.Create(const AInitialURL: string);
 begin
@@ -468,7 +514,6 @@ procedure TCustomFormWVBrowser.OnAfterCreated(Sender: TObject);
 begin
   FBrowserInitialized := True;
   ResizeBrowser;
-
   if FPendingURL <> '' then
     FBrowser.Navigate(FPendingURL);
 end;
@@ -478,7 +523,6 @@ var
   Title: string;
 begin
   Title := FBrowser.DocumentTitle;
-
   case FCaptionPosition of
     TPositionCaption.Before:
       FForm.Caption := FCaption + ' - ' + Title;
@@ -490,7 +534,6 @@ begin
       FForm.Caption := Title;
   end;
 end;
-
 
 procedure TCustomFormWVBrowser.OnInitError(Sender: TObject; aErrorCode: HRESULT; const aErrorMessage: wvstring);
 begin
@@ -512,13 +555,11 @@ procedure TCustomFormWVBrowser.TryCreateBrowser;
 begin
   if not FWindowParent.HandleAllocated then
     FWindowParent.HandleNeeded;
-
   if GlobalWebView2Loader.InitializationError then
     ShowMessage(GlobalWebView2Loader.ErrorMessage)
   else if GlobalWebView2Loader.Initialized then
   begin
     ResizeBrowser;
-
     if FWindowParent.HandleAllocated then
     begin
       if not FBrowserInitialized then
@@ -533,14 +574,10 @@ procedure TCustomFormWVBrowser.ResizeBrowser;
 begin
   if Assigned(FWindowParent) then
   begin
-
     FWindowParent.HandleNeeded;
-
     FWindowParent.SetBounds(0, 0, FForm.ClientWidth, FForm.ClientHeight);
-
     FWindowParent.Invalidate;
     FWindowParent.Update;
-
     if FBrowserInitialized and Assigned(FBrowser) then
     begin
       FWindowParent.UpdateSize;

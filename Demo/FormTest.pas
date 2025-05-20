@@ -68,7 +68,7 @@ procedure TFormBrowserTest.BtnBrowserClassChainableTestClick(Sender: TObject);
 var
   BrowserForm: TBrowser;
 begin
-  BrowserForm := TBrowser.Create(WebBrowser, 'https://google.com.br/')
+  BrowserForm := TBrowser.Create(TBrowserType.WebBrowser, 'https://google.com.br/')
     .SetCaption('Exemplo')
     .SetWidth(2048)
     .SetHeight(1024)
@@ -82,7 +82,7 @@ procedure TFormBrowserTest.BtnBrowserClassPropertiesTestClick(Sender: TObject);
 var
   BrowserForm: TBrowser;
 begin
-  BrowserForm := TBrowser.Create(WebView2, 'file:///' + ExtractFilePath(ParamStr(0)) + 'index.html');
+  BrowserForm := TBrowser.Create(TBrowserType.WebView, 'file:///' + ExtractFilePath(ParamStr(0)) + 'index.html');
   BrowserForm.Caption := 'Exemplo';
   BrowserForm.Width := 2048;
   BrowserForm.Height := 1024;
@@ -96,7 +96,7 @@ procedure TFormBrowserTest.BtnBrowserInterfaceChainableTestClick(Sender: TObject
 var
   BrowserForm: IBrowser;
 begin
-  BrowserForm := TBrowser.Create(WebBrowser, 'https://google.com.br/')
+  BrowserForm := TBrowser.Create(TBrowserType.WebBrowser, 'https://google.com.br/')
     .SetCaption('Exemplo')
     .SetWidth(2048)
     .SetHeight(1024)
@@ -110,7 +110,7 @@ procedure TFormBrowserTest.BtnBrowserInterfacePropertiesTestClick(Sender: TObjec
 var
   BrowserForm: IBrowser;
 begin
-  BrowserForm := TBrowser.Create(WebView2, 'file:///' + ExtractFilePath(ParamStr(0)) + 'index.html');
+  BrowserForm := TBrowser.Create(TBrowserType.WebView, 'file:///' + ExtractFilePath(ParamStr(0)) + 'index.html');
   BrowserForm.Caption := 'Exemplo';
   BrowserForm.Width := 2048;
   BrowserForm.Height := 1024;

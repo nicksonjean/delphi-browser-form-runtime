@@ -3,7 +3,7 @@ unit BrowserGenericInterface;
 interface
 
 uses
-  Vcl.Forms, BrowserTypes;
+  Vcl.Forms, System.Classes, BrowserTypes;
 
 type
   IBrowserGeneric = interface
@@ -16,6 +16,8 @@ type
     function GetActionButtonsProp: TBorderIcons;
     function GetResizableProp: Boolean;
     function GetMovableProp: Boolean;
+    function GetTitleBarProp: Boolean;
+    function GetInstanceProp: TComponent;
 
     // Setters
     procedure SetWidthProp(const Value: Integer);
@@ -25,6 +27,7 @@ type
     procedure SetActionButtonsProp(const Value: TBorderIcons);
     procedure SetResizableProp(const Value: Boolean);
     procedure SetMovableProp(const Value: Boolean);
+    procedure SetTitleBarProp(const Value: Boolean);
 
     // Properties
     property Width: Integer read GetWidthProp write SetWidthProp;
@@ -34,6 +37,8 @@ type
     property ActionButtons: TBorderIcons read GetActionButtonsProp write SetActionButtonsProp;
     property Resizable: Boolean read GetResizableProp write SetResizableProp;
     property Movable: Boolean read GetMovableProp write SetMovableProp;
+    property TitleBar: Boolean read GetTitleBarProp write SetTitleBarProp;
+    property Instance: TComponent read GetInstanceProp;
   end;
 
 implementation
