@@ -3,7 +3,7 @@ object FormBrowserTest: TFormBrowserTest
   Top = 0
   BorderStyle = bsDialog
   Caption = 'FormBrowserTest'
-  ClientHeight = 419
+  ClientHeight = 491
   ClientWidth = 350
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -13,74 +13,12 @@ object FormBrowserTest: TFormBrowserTest
   Font.Style = []
   OldCreateOrder = False
   Position = poScreenCenter
+  OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
-  object GroupBoxWebBrowser: TGroupBox
-    Left = 0
-    Top = 0
-    Width = 350
-    Height = 140
-    Align = alTop
-    Caption = 'WebBrowser'
-    TabOrder = 0
-    object GroupBoxWebBrowserWithClass: TGroupBox
-      Left = 2
-      Top = 15
-      Width = 173
-      Height = 123
-      Align = alLeft
-      Caption = 'Classe'
-      TabOrder = 0
-      object BtnWebBrowserClassChainableTest: TButton
-        Left = 22
-        Top = 32
-        Width = 123
-        Height = 25
-        Caption = 'Chainable'
-        TabOrder = 0
-        OnClick = BtnWebBrowserClassChainableTestClick
-      end
-      object BtnWebBrowserClassPropertiesTest: TButton
-        Left = 22
-        Top = 63
-        Width = 123
-        Height = 25
-        Caption = 'Properties'
-        TabOrder = 1
-        OnClick = BtnWebBrowserClassPropertiesTestClick
-      end
-    end
-    object GroupBoxWebBrowserWithInterface: TGroupBox
-      Left = 175
-      Top = 15
-      Width = 173
-      Height = 123
-      Align = alRight
-      Caption = 'Interface'
-      TabOrder = 1
-      object BtnWebBrowserInterfaceChainableTest: TButton
-        Left = 27
-        Top = 32
-        Width = 123
-        Height = 25
-        Caption = 'Chainable'
-        TabOrder = 0
-        OnClick = BtnWebBrowserInterfaceChainableTestClick
-      end
-      object BtnWebBrowserInterfacePropertiesTest: TButton
-        Left = 27
-        Top = 63
-        Width = 123
-        Height = 25
-        Caption = 'Properties'
-        TabOrder = 1
-        OnClick = BtnWebBrowserInterfacePropertiesTestClick
-      end
-    end
-  end
   object GroupBoxWVBrowser: TGroupBox
     Left = 0
-    Top = 140
+    Top = 0
     Width = 350
     Height = 140
     Margins.Left = 5
@@ -89,7 +27,8 @@ object FormBrowserTest: TFormBrowserTest
     Margins.Bottom = 5
     Align = alTop
     Caption = 'WVBrowser'
-    TabOrder = 1
+    TabOrder = 0
+    ExplicitTop = -8
     object GroupBoxWVBrowserWithClass: TGroupBox
       Left = 2
       Top = 15
@@ -145,67 +84,59 @@ object FormBrowserTest: TFormBrowserTest
       end
     end
   end
-  object GroupBoxStrategy: TGroupBox
+  object GroupBoxMessageReceiver: TGroupBox
     Left = 0
-    Top = 280
+    Top = 140
     Width = 350
     Height = 140
     Align = alTop
-    Caption = 'Strategy'
-    TabOrder = 2
-    object GroupBoxStrategyWithClass: TGroupBox
+    Caption = 'Message Receiver'
+    TabOrder = 1
+    object MemoMessageReceiver: TMemo
       Left = 2
       Top = 15
-      Width = 173
+      Width = 346
       Height = 123
-      Align = alLeft
-      Caption = 'Classe'
+      Align = alClient
       TabOrder = 0
-      object BtnBrowserClassChainableTest: TButton
-        Left = 22
-        Top = 32
-        Width = 123
-        Height = 25
-        Caption = 'Chainable'
-        TabOrder = 0
-        OnClick = BtnBrowserClassChainableTestClick
-      end
-      object BtnBrowserClassPropertiesTest: TButton
-        Left = 22
-        Top = 63
-        Width = 123
-        Height = 25
-        Caption = 'Properties'
-        TabOrder = 1
-        OnClick = BtnBrowserClassPropertiesTestClick
-      end
+      ExplicitLeft = 3
+      ExplicitTop = 11
     end
-    object GroupBoxStrategyWithInterface: TGroupBox
-      Left = 175
+  end
+  object GroupBoxMessageSender: TGroupBox
+    Left = 0
+    Top = 280
+    Width = 350
+    Height = 210
+    Align = alTop
+    Caption = 'Message Sender'
+    TabOrder = 2
+    object MemoMessageSender: TMemo
+      Left = 2
       Top = 15
-      Width = 173
+      Width = 346
       Height = 123
-      Align = alRight
-      Caption = 'Interface'
+      Align = alTop
+      TabOrder = 0
+      ExplicitLeft = 3
+    end
+    object BtnMessageSenderByProperty: TButton
+      Left = 202
+      Top = 162
+      Width = 123
+      Height = 25
+      Caption = 'Send By Property'
       TabOrder = 1
-      object BtnBrowserInterfaceChainableTest: TButton
-        Left = 24
-        Top = 32
-        Width = 123
-        Height = 25
-        Caption = 'Chainable'
-        TabOrder = 0
-        OnClick = BtnBrowserInterfaceChainableTestClick
-      end
-      object BtnBrowserInterfacePropertiesTest: TButton
-        Left = 24
-        Top = 63
-        Width = 123
-        Height = 25
-        Caption = 'Properties'
-        TabOrder = 1
-        OnClick = BtnBrowserInterfacePropertiesTestClick
-      end
+      OnClick = BtnMessageSenderByPropertyClick
+    end
+    object BtnMessageSenderByChainable: TButton
+      Left = 24
+      Top = 160
+      Width = 123
+      Height = 25
+      Caption = 'Send By Chainable'
+      TabOrder = 2
+      OnClick = BtnMessageSenderByChainableClick
     end
   end
 end

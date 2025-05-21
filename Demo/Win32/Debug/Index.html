@@ -1,45 +1,41 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <link rel="icon" type="image/png" href="https://img.icons8.com/ios/50/globe--v1.png">
-        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-        <script>
-            
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <script>
+        window.chrome.webview.addEventListener("message", function(event) {
+            document.getElementById("messagelog").value += `${event.data}\n`;
+        });
 
-            window.chrome.webview.addEventListener("message", function(event) {
-                document.getElementById("messagelog").value += `Message received: ${event.data} \n`;
-            });
+        function sendMessageToHostApp() {
+            window.chrome.webview.postMessage(document.getElementById("msgtext").value);
+        }
+    </script>
+</head>
+<body style="font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 40px;">
 
-            function sendMessageToHostApp() {
-                window.chrome.webview.postMessage(document.getElementById("msgtext").value);
-            }
+    <div style="max-width: 800px; margin: auto; background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+        <h2 style="margin-top: 0; color: #333;">Swap Messages</h2>
 
-            function readHostAppObject() {
-                window.chrome.webview.hostObjects.getHostProperty("shared").then(result => {
-                    document.getElementById("hostAppObject").value = `${result} \n`;
-                })
-            }
+        <label for="msgtext" style="font-weight: bold; display: block; margin-bottom: 8px;">Send Messages:</label>
+        <textarea id="msgtext" rows="8" cols="80" style="width: 100%; padding: 10px 0 10px 0px; font-family: monospace; font-size: 14px; border: 1px solid #ccc; border-radius: 4px; resize: vertical;">
+{ 
+"operation": "putMessage", 
+"data":{
+    "text": "Enviou para o Aplicativo"
+    }
+}
+        </textarea>
 
-        </script>
-    </head>
-    <body>
-        
-        <p>Hello from the web browser! 😄😄😄</p>
-        <p>
-            <input value='{"operation":301,"data":{"text":"Enviou para o aplicatível host"}}' style="width:600px;" id="msgtext"></br>
-            <button onclick="sendMessageToHostApp()"> &lt;&lt;&lt; Send a message to the host application</button>
-        </p>
-        <hr>
+        <button onclick="sendMessageToHostApp()" style="margin-top: 12px; padding: 10px 20px; background-color: #007BFF; color: white; border: none; border-radius: 4px; font-size: 14px; cursor: pointer;">
+            Send
+        </button>
 
-        <p>Messages from the host application :
-            <textarea id="messagelog" rows="8" cols="80"></textarea>
-        </p>
-        <hr>
+        <hr style="margin: 30px 0;">
 
-        <p>
-            <button onclick="readHostAppObject()">Read host shared data</button>
-            <textarea id="hostAppObject" disabled rows="17" cols="80" style="font-size: small;"></textarea>
-        </p>
-        
-    </body>
+        <label for="messagelog" style="font-weight: bold; display: block; margin-bottom: 8px;">Received Messages:</label>
+        <textarea id="messagelog" rows="8" cols="80" readonly style="width: 100%; padding: 1 10px 0 10px 0px; font-family: monospace; font-size: 14px; border: 1px solid #ccc; border-radius: 4px; background-color: #f9f9f9; resize: vertical;"></textarea>
+    </div>
+
+</body>
 </html>

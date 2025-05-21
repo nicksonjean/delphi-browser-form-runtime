@@ -18,6 +18,8 @@ type
     function GetMovableProp: Boolean;
     function GetTitleBarProp: Boolean;
     function GetInstanceProp: TComponent;
+    function ReadMessageReceiverProp: TMessageReceiverCallback;
+    function ReadMessageSenderProp: String;
 
     // Setters
     procedure SetWidthProp(const Value: Integer);
@@ -28,6 +30,8 @@ type
     procedure SetResizableProp(const Value: Boolean);
     procedure SetMovableProp(const Value: Boolean);
     procedure SetTitleBarProp(const Value: Boolean);
+    procedure SetMessageReceiverProp(const Value: TMessageReceiverCallback);
+    procedure SetMessageSenderProp(const Value: String);
 
     // Properties
     property Width: Integer read GetWidthProp write SetWidthProp;
@@ -39,6 +43,8 @@ type
     property Movable: Boolean read GetMovableProp write SetMovableProp;
     property TitleBar: Boolean read GetTitleBarProp write SetTitleBarProp;
     property Instance: TComponent read GetInstanceProp;
+    property OnMessageReceiver: TMessageReceiverCallback read ReadMessageReceiverProp write SetMessageReceiverProp;
+    property OnMessageSender: String read ReadMessageSenderProp write SetMessageSenderProp;
   end;
 
 implementation
