@@ -1,0 +1,138 @@
+unit FormTest;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
+
+  BrowserTypes,
+  BrowserFormInterface,
+  WVBrowserFormClass
+  ;
+
+type
+  TFormBrowserTest = class(TForm)
+    GroupBoxWVBrowser: TGroupBox;
+    GroupBoxWVBrowserWithClass: TGroupBox;
+    BtnWVBrowserClassChainableTest: TButton;
+    BtnWVBrowserClassPropertiesTest: TButton;
+    GroupBoxWVBrowserWithInterface: TGroupBox;
+    BtnWVBrowserInterfaceChainableTest: TButton;
+    BtnWVBrowserInterfacePropertiesTest: TButton;
+    GroupBoxMessageReceiver: TGroupBox;
+    MemoMessageReceiver: TMemo;
+    GroupBoxMessageSender: TGroupBox;
+    MemoMessageSender: TMemo;
+    BtnMessageSenderByProperty: TButton;
+    BtnMessageSenderByChainable: TButton;
+    procedure BtnWVBrowserInterfaceChainableTestClick(Sender: TObject);
+    procedure BtnWVBrowserClassPropertiesTestClick(Sender: TObject);
+    procedure BtnWVBrowserClassChainableTestClick(Sender: TObject);
+    procedure BtnWVBrowserInterfacePropertiesTestClick(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+    procedure BtnMessageSenderByPropertyClick(Sender: TObject);
+    procedure BtnMessageSenderByChainableClick(Sender: TObject);
+  protected
+    { Protected declarations }
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  FormBrowserTest: TFormBrowserTest;
+  BrowserForm: TCustomFormWVBrowser;
+//  BrowserForm: IBrowserForm;
+
+implementation
+
+{$R *.dfm}
+
+procedure TFormBrowserTest.BtnWVBrowserClassChainableTestClick(Sender: TObject);
+begin
+  BrowserForm := TCustomFormWVBrowser.Create('file:///' + ExtractFilePath(ParamStr(0)) + 'index.html')
+    .SetCaption('Exemplo')
+    .SetWidth(2048)
+    .SetHeight(1024)
+    .SetActionButtons([TBorderIcon.biMinimize, TBorderIcon.biMaximize])
+    .SetResizable(true)
+    .SetMovable(true)
+    .SetCookie('1', '2', '3')
+    .SetMessageReceiver(procedure(Sender: TObject; const MessageText: string)
+    begin
+      MemoMessageReceiver.Lines.Add(MessageText);
+    end);
+  BrowserForm.ShowModal;
+end;
+
+procedure TFormBrowserTest.BtnWVBrowserClassPropertiesTestClick(Sender: TObject);
+begin
+  BrowserForm := TCustomFormWVBrowser.Create('file:///' + ExtractFilePath(ParamStr(0)) + 'index.html');
+  BrowserForm.Caption := 'Exemplo';
+  BrowserForm.Width := 2048;
+  BrowserForm.Height := 1024;
+  BrowserForm.ActionButtons := [TBorderIcon.biMinimize, TBorderIcon.biMaximize];
+  BrowserForm.Resizable := true;
+  BrowserForm.Movable := true;
+  BrowserForm.OnMessageReceiver := procedure(Sender: TObject; const MessageText: string)
+  begin
+    MemoMessageReceiver.Lines.Add(MessageText);
+  end;
+  BrowserForm.ShowModal;
+end;
+
+procedure TFormBrowserTest.BtnWVBrowserInterfaceChainableTestClick(Sender: TObject);
+begin
+  BrowserForm := TCustomFormWVBrowser.Create('file:///' + ExtractFilePath(ParamStr(0)) + 'index.html')
+    .SetCaption('Exemplo')
+    .SetWidth(2048)
+    .SetHeight(1024)
+    .SetActionButtons([TBorderIcon.biMinimize, TBorderIcon.biMaximize])
+    .SetResizable(true)
+    .SetMovable(true)
+    .SetMessageReceiver(procedure(Sender: TObject; const MessageText: string)
+    begin
+      MemoMessageReceiver.Lines.Add(MessageText);
+    end);
+  BrowserForm.Show;
+end;
+
+procedure TFormBrowserTest.BtnWVBrowserInterfacePropertiesTestClick(Sender: TObject);
+begin
+  BrowserForm := TCustomFormWVBrowser.Create('file:///' + ExtractFilePath(ParamStr(0)) + 'index.html');
+  BrowserForm.Caption := 'Exemplo';
+  BrowserForm.Width := 2048;
+  BrowserForm.Height := 1024;
+  BrowserForm.ActionButtons := [TBorderIcon.biMinimize, TBorderIcon.biMaximize];
+  BrowserForm.Resizable := true;
+  BrowserForm.Movable := true;
+  BrowserForm.OnMessageReceiver := procedure(Sender: TObject; const MessageText: string)
+  begin
+    MemoMessageReceiver.Lines.Add(MessageText);
+  end;
+  BrowserForm.Show;
+end;
+
+procedure TFormBrowserTest.FormCreate(Sender: TObject);
+begin
+  MemoMessageSender.Lines.Text := ' { ' + sLineBreak
+  + '   "operation": "putMessage", ' + sLineBreak
+  + '   "data":{' + sLineBreak
+  + '      "text": "Enviou para o WebView"' + sLineBreak
+  + '    }' + sLineBreak
+  + ' } ';
+end;
+
+procedure TFormBrowserTest.BtnMessageSenderByChainableClick(Sender: TObject);
+begin
+  BrowserForm.SetMessageSender(MemoMessageSender.Text);
+end;
+
+procedure TFormBrowserTest.BtnMessageSenderByPropertyClick(Sender: TObject);
+begin
+  BrowserForm.OnMessageSender := MemoMessageSender.Text;
+end;
+
+end.

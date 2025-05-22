@@ -38,6 +38,11 @@ type
     FForm: TCustomWVForm;
     FBrowser: TWVBrowser;
     FWindowParent: TWVWindowParent;
+    FCookie: ICoreWebView2Cookie;
+    FCookieName: String;
+    FCookieValue: String;
+    FCookieDomain: String;
+    FCookiePath: String;
     FTimer: TTimer;
     FWidth: Integer;
     FHeight: Integer;
@@ -70,23 +75,31 @@ type
     function GetMovableProp: Boolean;
     function GetTitleBarProp: Boolean;
     function GetInstanceProp: TComponent;
+    function GetCookieNameProp: String;
+    function GetCookieValueProp: String;
+    function GetCookieDomainProp: String;
+    function GetCookiePathProp: String;
     function ReadMessageReceiverProp: TMessageReceiverCallback;
     function ReadMessageSenderProp: String;
 
     // Setters
     procedure SetWidthProp(const Value: Integer);
     procedure SetHeightProp(const Value: Integer);
-    procedure SetCaptionProp(const Value: string);
+    procedure SetCaptionProp(const Value: String);
     procedure SetCaptionPositionProp(const Value: TPositionCaption);
     procedure SetActionButtonsProp(const Value: TBorderIcons);
     procedure SetResizableProp(const Value: Boolean);
     procedure SetMovableProp(const Value: Boolean);
     procedure SetTitleBarProp(const Value: Boolean);
+    procedure SetCookieNameProp(const Value: String);
+    procedure SetCookieValueProp(const Value: String);
+    procedure SetCookieDomainProp(const Value: String);
+    procedure SetCookiePathProp(const Value: String = '/');
     procedure SetMessageReceiverProp(const Value: TMessageReceiverCallback);
-    procedure SetMessageSenderProp(const Value: string);
+    procedure SetMessageSenderProp(const Value: String);
   public
     // Constructor and Destructor
-    constructor Create(const AInitialURL: string);
+    constructor Create(const AInitialURL: String);
     destructor Destroy; override;
 
     // Fluent Chainable Methods
@@ -97,6 +110,7 @@ type
     function SetResizable(const AResize: Boolean): TCustomFormWVBrowser;
     function SetMovable(const AMove: Boolean): TCustomFormWVBrowser;
     function SetTitleBar(const ATitleBar: Boolean): TCustomFormWVBrowser;
+    function SetCookie(const ACookieName, ACookieValue, ACookieDomain: String; const ACookiePath: String = '/'): TCustomFormWVBrowser;
     function SetMessageReceiver(const AMessage: TMessageReceiverCallback): TCustomFormWVBrowser;
     function SetMessageSender(const AMessage: String): TCustomFormWVBrowser;
 
@@ -108,16 +122,18 @@ type
     function IBrowserForm.SetResizable = ISetResizable;
     function IBrowserForm.SetMovable = ISetMovable;
     function IBrowserForm.SetTitleBar = ISetTitleBar;
+    function IBrowserForm.SetCookie = ISetCookie;
     function IBrowserForm.SetMessageReceiver = ISetMessageReceiver;
     function IBrowserForm.SetMessageSender = ISetMessageSender;
 
     function ISetWidth(const AWidth: Integer): IBrowserForm;
     function ISetHeight(const AHeight: Integer): IBrowserForm;
-    function ISetCaption(const ACaption: string; APosition: TPositionCaption): IBrowserForm;
+    function ISetCaption(const ACaption: String; APosition: TPositionCaption): IBrowserForm;
     function ISetActionButtons(const AButtons: TBorderIcons): IBrowserForm;
     function ISetResizable(const AResize: Boolean): IBrowserForm;
     function ISetMovable(const AMove: Boolean): IBrowserForm;
     function ISetTitleBar(const ATitleBar: Boolean): IBrowserForm;
+    function ISetCookie(const ACookieName, ACookieValue, ACookieDomain: String; const ACookiePath: String = '/'): IBrowserForm;
     function ISetMessageReceiver(const AMessage: TMessageReceiverCallback): IBrowserForm;
     function ISetMessageSender(const AMessage: String): IBrowserForm;
 
@@ -134,6 +150,10 @@ type
     property Resizable: Boolean read GetResizableProp write SetResizableProp;
     property Movable: Boolean read GetMovableProp write SetMovableProp;
     property TitleBar: Boolean read GetTitleBarProp write SetTitleBarProp;
+    property CookieName: String read GetCookieNameProp write SetCookieNameProp;
+    property CookieValue: String read GetCookieValueProp write SetCookieValueProp;
+    property CookieDomain: String read GetCookieDomainProp write SetCookieDomainProp;
+    property CookiePath: String read GetCookiePathProp write SetCookiePathProp;
     property Instance: TComponent read GetInstanceProp;
     property OnMessageReceiver: TMessageReceiverCallback read ReadMessageReceiverProp write SetMessageReceiverProp;
     property OnMessageSender: String read ReadMessageSenderProp write SetMessageSenderProp;
@@ -276,6 +296,12 @@ begin
   Result := Self;
 end;
 
+function TCustomFormWVBrowser.ISetCookie(const ACookieName: string; const ACookieValue: string; const ACookieDomain: string; const ACookiePath: string = '/'): IBrowserForm;
+begin
+  SetCookie(ACookieName, ACookieValue, ACookieDomain, ACookiePath);
+  Result := Self;
+end;
+
 function TCustomFormWVBrowser.ISetMessageReceiver(const AMessage: TMessageReceiverCallback): IBrowserForm;
 begin
   SetMessageReceiver(AMessage);
@@ -335,6 +361,26 @@ begin
   Result := FBrowser;
 end;
 
+function TCustomFormWVBrowser.GetCookieNameProp: String;
+begin
+  Result := FCookieName;
+end;
+
+function TCustomFormWVBrowser.GetCookieValueProp: String;
+begin
+  Result := FCookieValue;
+end;
+
+function TCustomFormWVBrowser.GetCookieDomainProp: String;
+begin
+  Result := FCookieDomain;
+end;
+
+function TCustomFormWVBrowser.GetCookiePathProp: String;
+begin
+Result := FCookiePath;
+end;
+
 function TCustomFormWVBrowser.ReadMessageReceiverProp: TMessageReceiverCallback;
 begin
   Result := FMessageReceiver;
@@ -386,6 +432,29 @@ end;
 procedure TCustomFormWVBrowser.SetTitleBarProp(const Value: Boolean);
 begin
   SetTitleBar(Value);
+end;
+
+procedure TCustomFormWVBrowser.SetCookieNameProp(const Value: String);
+begin
+  SetCookie(Value, FCookieValue, FCookieDomain, FCookiePath);
+end;
+
+procedure TCustomFormWVBrowser.SetCookieValueProp(const Value: String);
+begin
+  FCookieValue := Value;
+  SetCookie(FCookieName, Value, FCookieDomain, FCookiePath);
+end;
+
+procedure TCustomFormWVBrowser.SetCookieDomainProp(const Value: String);
+begin
+  FCookieDomain := Value;
+  SetCookie(FCookieName, FCookieValue, Value, FCookiePath);
+end;
+
+procedure TCustomFormWVBrowser.SetCookiePathProp(const Value: String);
+begin
+  FCookiePath := Value;
+  SetCookie(FCookieName, FCookieValue, FCookieDomain, Value);
 end;
 
 procedure TCustomFormWVBrowser.SetMessageReceiverProp(const Value: TMessageReceiverCallback);
@@ -474,6 +543,15 @@ begin
     FForm.Constraints.MaxWidth := FForm.Width;
     FForm.Constraints.MaxHeight := FForm.Height;
   end;
+  Result := Self;
+end;
+
+function TCustomFormWVBrowser.SetCookie(const ACookieName, ACookieValue, ACookieDomain: String; const ACookiePath: String = '/'): TCustomFormWVBrowser;
+begin
+  FCookieName := ACookieName;
+  FCookieValue := ACookieValue;
+  FCookieDomain := ACookieDomain;
+  FCookiePath := ACookiePath;
   Result := Self;
 end;
 
@@ -579,7 +657,15 @@ begin
   FBrowserInitialized := True;
   ResizeBrowser;
   if FPendingURL <> '' then
+  begin
+    if Assigned(FBrowser) then
+    begin
+      FCookie := FBrowser.CreateCookie(FCookieName, FCookieValue, FCookieDomain, FCookiePath);
+      if Assigned(FCookie) then
+        FBrowser.AddOrUpdateCookie(FCookie);
+    end;
     FBrowser.Navigate(FPendingURL);
+  end;
 end;
 
 procedure TCustomFormWVBrowser.OnDocTitleChanged(Sender: TObject);

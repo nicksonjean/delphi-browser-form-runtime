@@ -18,6 +18,10 @@ type
     function GetMovableProp: Boolean;
     function GetTitleBarProp: Boolean;
     function GetInstanceProp: TComponent;
+    function GetCookieNameProp: String;
+    function GetCookieValueProp: String;
+    function GetCookieDomainProp: String;
+    function GetCookiePathProp: String;
     function ReadMessageReceiverProp: TMessageReceiverCallback;
     function ReadMessageSenderProp: String;
 
@@ -30,6 +34,10 @@ type
     procedure SetResizableProp(const Value: Boolean);
     procedure SetMovableProp(const Value: Boolean);
     procedure SetTitleBarProp(const Value: Boolean);
+    procedure SetCookieNameProp(const Value: String);
+    procedure SetCookieValueProp(const Value: String);
+    procedure SetCookieDomainProp(const Value: String);
+    procedure SetCookiePathProp(const Value: String = '/');
     procedure SetMessageReceiverProp(const Value: TMessageReceiverCallback);
     procedure SetMessageSenderProp(const Value: String);
 
@@ -42,6 +50,10 @@ type
     property Resizable: Boolean read GetResizableProp write SetResizableProp;
     property Movable: Boolean read GetMovableProp write SetMovableProp;
     property TitleBar: Boolean read GetTitleBarProp write SetTitleBarProp;
+    property CookieName: String read GetCookieNameProp write SetCookieNameProp;
+    property CookieValue: String read GetCookieValueProp write SetCookieValueProp;
+    property CookieDomain: String read GetCookieDomainProp write SetCookieDomainProp;
+    property CookiePath: String read GetCookiePathProp write SetCookiePathProp;
     property Instance: TComponent read GetInstanceProp;
     property OnMessageReceiver: TMessageReceiverCallback read ReadMessageReceiverProp write SetMessageReceiverProp;
     property OnMessageSender: String read ReadMessageSenderProp write SetMessageSenderProp;

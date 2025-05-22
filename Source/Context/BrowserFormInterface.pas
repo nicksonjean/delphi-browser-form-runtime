@@ -18,6 +18,7 @@ type
     function SetTitleBar(const ATitleBar: Boolean): IBrowserForm;
     function SetMessageReceiver(const AMessage: TMessageReceiverCallback): IBrowserForm;
     function SetMessageSender(const AMessage: String): IBrowserForm;
+    function SetCookie(const ACookieName, ACookieValue, ACookieDomain: String; const ACookiePath: String = '/'): IBrowserForm;
     procedure Show(const AType: TOpenType = TOpenType.Normal);
     procedure ShowModal(const AType: TOpenType = TOpenType.Modal);
   end;

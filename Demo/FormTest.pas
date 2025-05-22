@@ -59,11 +59,12 @@ begin
     .SetActionButtons([TBorderIcon.biMinimize, TBorderIcon.biMaximize])
     .SetResizable(true)
     .SetMovable(true)
+    .SetCookie('CookieName', 'CookieValue', 'CookieDomain')
     .SetMessageReceiver(procedure(Sender: TObject; const MessageText: string)
     begin
       MemoMessageReceiver.Lines.Add(MessageText);
     end);
-  BrowserForm.Show;
+  BrowserForm.ShowModal;
 end;
 
 procedure TFormBrowserTest.BtnWVBrowserClassPropertiesTestClick(Sender: TObject);
@@ -75,11 +76,14 @@ begin
   BrowserForm.ActionButtons := [TBorderIcon.biMinimize, TBorderIcon.biMaximize];
   BrowserForm.Resizable := true;
   BrowserForm.Movable := true;
+  BrowserForm.CookieName := 'CookieName';
+  BrowserForm.CookieValue := 'CookieValue';
+  BrowserForm.CookieDomain := 'CookieDomain';
   BrowserForm.OnMessageReceiver := procedure(Sender: TObject; const MessageText: string)
   begin
     MemoMessageReceiver.Lines.Add(MessageText);
   end;
-  BrowserForm.Show;
+  BrowserForm.ShowModal;
 end;
 
 procedure TFormBrowserTest.BtnWVBrowserInterfaceChainableTestClick(Sender: TObject);
@@ -91,6 +95,7 @@ begin
     .SetActionButtons([TBorderIcon.biMinimize, TBorderIcon.biMaximize])
     .SetResizable(true)
     .SetMovable(true)
+    .SetCookie('CookieName', 'CookieValue', 'CookieDomain')
     .SetMessageReceiver(procedure(Sender: TObject; const MessageText: string)
     begin
       MemoMessageReceiver.Lines.Add(MessageText);
@@ -107,6 +112,9 @@ begin
   BrowserForm.ActionButtons := [TBorderIcon.biMinimize, TBorderIcon.biMaximize];
   BrowserForm.Resizable := true;
   BrowserForm.Movable := true;
+  BrowserForm.CookieName := 'CookieName';
+  BrowserForm.CookieValue := 'CookieValue';
+  BrowserForm.CookieDomain := 'CookieDomain';
   BrowserForm.OnMessageReceiver := procedure(Sender: TObject; const MessageText: string)
   begin
     MemoMessageReceiver.Lines.Add(MessageText);
