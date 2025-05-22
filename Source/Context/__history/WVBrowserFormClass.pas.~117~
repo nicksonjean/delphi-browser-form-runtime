@@ -51,6 +51,7 @@ type
     FCaption: string;
     FCaptionPosition: TPositionCaption;
     FMovable: Boolean;
+    FAlpha: Boolean;
     FMessageSender: string;
     FMessageReceiver: TMessageReceiverCallback;
 
@@ -79,6 +80,7 @@ type
     function GetCookieValueProp: String;
     function GetCookieDomainProp: String;
     function GetCookiePathProp: String;
+    function GetAlphaProp: Boolean;
     function ReadMessageReceiverProp: TMessageReceiverCallback;
     function ReadMessageSenderProp: String;
 
@@ -94,7 +96,8 @@ type
     procedure SetCookieNameProp(const Value: String);
     procedure SetCookieValueProp(const Value: String);
     procedure SetCookieDomainProp(const Value: String);
-    procedure SetCookiePathProp(const Value: String);
+    procedure SetCookiePathProp(const Value: String = '/');
+    procedure SetAlphaProp(const Value: Boolean);
     procedure SetMessageReceiverProp(const Value: TMessageReceiverCallback);
     procedure SetMessageSenderProp(const Value: String);
   public
@@ -111,6 +114,7 @@ type
     function SetMovable(const AMove: Boolean): TCustomFormWVBrowser;
     function SetTitleBar(const ATitleBar: Boolean): TCustomFormWVBrowser;
     function SetCookie(const ACookieName, ACookieValue, ACookieDomain: String; const ACookiePath: String = '/'): TCustomFormWVBrowser;
+    function SetAlpha(const AAlpha: Boolean): TCustomFormWVBrowser;
     function SetMessageReceiver(const AMessage: TMessageReceiverCallback): TCustomFormWVBrowser;
     function SetMessageSender(const AMessage: String): TCustomFormWVBrowser;
 
@@ -123,6 +127,7 @@ type
     function IBrowserForm.SetMovable = ISetMovable;
     function IBrowserForm.SetTitleBar = ISetTitleBar;
     function IBrowserForm.SetCookie = ISetCookie;
+    function IBrowserForm.SetAlpha = IAlpha;
     function IBrowserForm.SetMessageReceiver = ISetMessageReceiver;
     function IBrowserForm.SetMessageSender = ISetMessageSender;
 
@@ -134,6 +139,7 @@ type
     function ISetMovable(const AMove: Boolean): IBrowserForm;
     function ISetTitleBar(const ATitleBar: Boolean): IBrowserForm;
     function ISetCookie(const ACookieName, ACookieValue, ACookieDomain: String; const ACookiePath: String = '/'): IBrowserForm;
+    function ISetAlpha(const AAlpha: Boolean): IBrowserForm;
     function ISetMessageReceiver(const AMessage: TMessageReceiverCallback): IBrowserForm;
     function ISetMessageSender(const AMessage: String): IBrowserForm;
 
@@ -150,7 +156,6 @@ type
     property Resizable: Boolean read GetResizableProp write SetResizableProp;
     property Movable: Boolean read GetMovableProp write SetMovableProp;
     property TitleBar: Boolean read GetTitleBarProp write SetTitleBarProp;
-
     property CookieName: String read GetCookieNameProp write SetCookieNameProp;
     property CookieValue: String read GetCookieValueProp write SetCookieValueProp;
     property CookieDomain: String read GetCookieDomainProp write SetCookieDomainProp;
@@ -551,7 +556,7 @@ function TCustomFormWVBrowser.SetCookie(const ACookieName, ACookieValue, ACookie
 begin
   FCookieName := ACookieName;
   FCookieValue := ACookieValue;
-  FCookieValue := ACookieValue;
+  FCookieDomain := ACookieDomain;
   FCookiePath := ACookiePath;
   Result := Self;
 end;
@@ -662,7 +667,8 @@ begin
     if Assigned(FBrowser) then
     begin
       FCookie := FBrowser.CreateCookie(FCookieName, FCookieValue, FCookieDomain, FCookiePath);
-      FBrowser.AddOrUpdateCookie(FCookie);
+      if Assigned(FCookie) then
+        FBrowser.AddOrUpdateCookie(FCookie);
     end;
     FBrowser.Navigate(FPendingURL);
   end;

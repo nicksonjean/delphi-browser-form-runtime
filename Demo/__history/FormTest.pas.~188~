@@ -59,6 +59,8 @@ begin
     .SetActionButtons([TBorderIcon.biMinimize, TBorderIcon.biMaximize])
     .SetResizable(true)
     .SetMovable(true)
+    .SetAlpha(true)
+    .SetCookie('CookieName', 'CookieValue', 'CookieDomain')
     .SetMessageReceiver(procedure(Sender: TObject; const MessageText: string)
     begin
       MemoMessageReceiver.Lines.Add(MessageText);
@@ -75,6 +77,9 @@ begin
   BrowserForm.ActionButtons := [TBorderIcon.biMinimize, TBorderIcon.biMaximize];
   BrowserForm.Resizable := true;
   BrowserForm.Movable := true;
+  BrowserForm.CookieName := 'CookieName';
+  BrowserForm.CookieValue := 'CookieValue';
+  BrowserForm.CookieDomain := 'CookieDomain';
   BrowserForm.OnMessageReceiver := procedure(Sender: TObject; const MessageText: string)
   begin
     MemoMessageReceiver.Lines.Add(MessageText);
@@ -91,6 +96,7 @@ begin
     .SetActionButtons([TBorderIcon.biMinimize, TBorderIcon.biMaximize])
     .SetResizable(true)
     .SetMovable(true)
+    .SetCookie('CookieName', 'CookieValue', 'CookieDomain')
     .SetMessageReceiver(procedure(Sender: TObject; const MessageText: string)
     begin
       MemoMessageReceiver.Lines.Add(MessageText);
@@ -107,9 +113,11 @@ begin
   BrowserForm.ActionButtons := [TBorderIcon.biMinimize, TBorderIcon.biMaximize];
   BrowserForm.Resizable := true;
   BrowserForm.Movable := true;
+  BrowserForm.CookieName := 'CookieName';
+  BrowserForm.CookieValue := 'CookieValue';
+  BrowserForm.CookieDomain := 'CookieDomain';
   BrowserForm.OnMessageReceiver := procedure(Sender: TObject; const MessageText: string)
   begin
-    Showmessage(MessageText);
     MemoMessageReceiver.Lines.Add(MessageText);
   end;
   BrowserForm.Show;

@@ -94,7 +94,7 @@ type
     procedure SetCookieNameProp(const Value: String);
     procedure SetCookieValueProp(const Value: String);
     procedure SetCookieDomainProp(const Value: String);
-    procedure SetCookiePathProp(const Value: String);
+    procedure SetCookiePathProp(const Value: String = '/');
     procedure SetMessageReceiverProp(const Value: TMessageReceiverCallback);
     procedure SetMessageSenderProp(const Value: String);
   public
@@ -150,7 +150,6 @@ type
     property Resizable: Boolean read GetResizableProp write SetResizableProp;
     property Movable: Boolean read GetMovableProp write SetMovableProp;
     property TitleBar: Boolean read GetTitleBarProp write SetTitleBarProp;
-
     property CookieName: String read GetCookieNameProp write SetCookieNameProp;
     property CookieValue: String read GetCookieValueProp write SetCookieValueProp;
     property CookieDomain: String read GetCookieDomainProp write SetCookieDomainProp;
@@ -549,8 +548,11 @@ end;
 
 function TCustomFormWVBrowser.SetCookie(const ACookieName, ACookieValue, ACookieDomain: String; const ACookiePath: String = '/'): TCustomFormWVBrowser;
 begin
-  FCookie := FBrowser.CreateCookie(ACookieName, ACookieValue, ACookieDomain, ACookiePath);
-  FBrowser.AddOrUpdateCookie(FCookie);
+  FCookieName := ACookieName;
+  FCookieValue := ACookieValue;
+  FCookieDomain := ACookieDomain;
+  FCookiePath := ACookiePath;
+  Result := Self;
 end;
 
 function TCustomFormWVBrowser.SetMessageReceiver(const AMessage: TMessageReceiverCallback): TCustomFormWVBrowser;
@@ -656,10 +658,11 @@ begin
   ResizeBrowser;
   if FPendingURL <> '' then
   begin
-    if Assigned(FCookie) then
+    if Assigned(FBrowser) then
     begin
-      FCookie := FBrowser.CreateCookie('nome_cookie', 'access_token', 'dominio', '/');
-      FBrowser.AddOrUpdateCookie(FCookie);
+      FCookie := FBrowser.CreateCookie(FCookieName, FCookieValue, FCookieDomain, FCookiePath);
+      if Assigned(FCookie) then
+        FBrowser.AddOrUpdateCookie(FCookie);
     end;
     FBrowser.Navigate(FPendingURL);
   end;
