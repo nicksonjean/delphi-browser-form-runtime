@@ -37,7 +37,9 @@ type
     procedure FormResize(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure CenterToScreenWithMonitor;
-    constructor Create(AOwner: TComponent; const aArgs: ICoreWebView2NewWindowRequestedEventArgs); reintroduce;
+//    constructor Create(AOwner: TComponent; const aArgs: ICoreWebView2NewWindowRequestedEventArgs); reintroduce;
+    constructor Create(AOwner: TComponent); override;
+    constructor CreateWithArgs(AOwner: TComponent; const aArgs: ICoreWebView2NewWindowRequestedEventArgs);
   end;
 
   TCustomFormWVBrowser = class(TInterfacedObject, IBrowserForm)
@@ -199,12 +201,19 @@ begin
   );
 end;
 
-constructor TCustomWVForm.Create(AOwner: TComponent; const aArgs: ICoreWebView2NewWindowRequestedEventArgs);
+constructor TCustomWVForm.Create(AOwner: TComponent);
 begin
-  inherited Create(AOwner);
+  inherited CreateNew(AOwner);
+end;
 
-  FArgs := TCoreWebView2NewWindowRequestedEventArgs.Create(aArgs);
-  FDeferral := TCoreWebView2Deferral.Create(FArgs.Deferral);
+constructor TCustomWVForm.CreateWithArgs(AOwner: TComponent; const aArgs: ICoreWebView2NewWindowRequestedEventArgs);
+begin
+  inherited CreateNew(AOwner);
+  if Assigned(aArgs) then
+  begin
+    FArgs := TCoreWebView2NewWindowRequestedEventArgs.Create(aArgs);
+    FDeferral := TCoreWebView2Deferral.Create(FArgs.Deferral);
+  end;
 end;
 
 procedure TCustomWVForm.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -674,7 +683,7 @@ begin
     GlobalWebView2Loader.StartWebView2;
   end;
 
-  FForm := TCustomWVForm.CreateNew(nil);
+  FForm := TCustomWVForm.CreateWithArgs(nil, nil);
   FForm.BrowserInstance := Self;
   FForm.Caption := FCaption;
   FForm.Position := poScreenCenter;
@@ -807,7 +816,7 @@ end;
 
 procedure TCustomFormWVBrowser.OnNewWindowRequested(Sender: TObject; const aWebView: ICoreWebView2; const aArgs: ICoreWebView2NewWindowRequestedEventArgs);
 begin
-  FTempChildForm := TCustomWVForm.Create(FForm, aArgs);
+  FTempChildForm := TCustomWVForm.CreateWithArgs(nil, aArgs);
   FTempChildForm.Show;
 end;
 

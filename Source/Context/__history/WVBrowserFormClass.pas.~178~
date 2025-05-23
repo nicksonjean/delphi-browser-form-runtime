@@ -37,7 +37,9 @@ type
     procedure FormResize(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure CenterToScreenWithMonitor;
-    constructor Create(AOwner: TComponent; const aArgs: ICoreWebView2NewWindowRequestedEventArgs); reintroduce;
+//    constructor Create(AOwner: TComponent; const aArgs: ICoreWebView2NewWindowRequestedEventArgs); reintroduce;
+    constructor Create(AOwner: TComponent); override;
+    constructor CreateWithArgs(AOwner: TComponent; const aArgs: ICoreWebView2NewWindowRequestedEventArgs);
   end;
 
   TCustomFormWVBrowser = class(TInterfacedObject, IBrowserForm)
@@ -114,7 +116,7 @@ type
     procedure SetMessageSenderProp(const Value: String);
   public
     // Constructor and Destructor
-    constructor Create(const AInitialURL: String);
+    constructor Create(const AInitialURL: String = '');
     destructor Destroy; override;
 
     // Fluent Chainable Methods
@@ -199,13 +201,28 @@ begin
   );
 end;
 
-constructor TCustomWVForm.Create(AOwner: TComponent; const aArgs: ICoreWebView2NewWindowRequestedEventArgs);
+constructor TCustomWVForm.Create(AOwner: TComponent);
 begin
-  inherited Create(AOwner);
-
-  FArgs := TCoreWebView2NewWindowRequestedEventArgs.Create(aArgs);
-  FDeferral := TCoreWebView2Deferral.Create(FArgs.Deferral);
+  inherited CreateNew(AOwner);
 end;
+
+constructor TCustomWVForm.CreateWithArgs(AOwner: TComponent; const aArgs: ICoreWebView2NewWindowRequestedEventArgs);
+begin
+  inherited CreateNew(AOwner);
+  if Assigned(aArgs) then
+  begin
+    FArgs := TCoreWebView2NewWindowRequestedEventArgs.Create(aArgs);
+    FDeferral := TCoreWebView2Deferral.Create(FArgs.Deferral);
+  end;
+end;
+
+//constructor TCustomWVForm.Create(AOwner: TComponent; const aArgs: ICoreWebView2NewWindowRequestedEventArgs);
+//begin
+//  inherited Create(AOwner);
+//
+//  FArgs := TCoreWebView2NewWindowRequestedEventArgs.Create(aArgs);
+//  FDeferral := TCoreWebView2Deferral.Create(FArgs.Deferral);
+//end;
 
 procedure TCustomWVForm.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
@@ -656,7 +673,7 @@ end;
 
 // Context
 
-constructor TCustomFormWVBrowser.Create(const AInitialURL: string);
+constructor TCustomFormWVBrowser.Create(const AInitialURL: string = '');
 begin
   inherited Create;
   FWidth := 800;
@@ -674,7 +691,7 @@ begin
     GlobalWebView2Loader.StartWebView2;
   end;
 
-  FForm := TCustomWVForm.CreateNew(nil);
+  FForm := TCustomWVForm.CreateWithArgs(nil, nil);
   FForm.BrowserInstance := Self;
   FForm.Caption := FCaption;
   FForm.Position := poScreenCenter;
@@ -807,7 +824,7 @@ end;
 
 procedure TCustomFormWVBrowser.OnNewWindowRequested(Sender: TObject; const aWebView: ICoreWebView2; const aArgs: ICoreWebView2NewWindowRequestedEventArgs);
 begin
-  FTempChildForm := TCustomWVForm.Create(Self, aArgs);
+  FTempChildForm := TCustomWVForm.CreateWithArgs(nil, aArgs);
   FTempChildForm.Show;
 end;
 
