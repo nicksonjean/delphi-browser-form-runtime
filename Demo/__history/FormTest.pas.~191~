@@ -52,13 +52,15 @@ implementation
 
 procedure TFormBrowserTest.BtnWVBrowserClassChainableTestClick(Sender: TObject);
 begin
-  BrowserForm := TCustomFormWVBrowser.Create('file:///' + ExtractFilePath(ParamStr(0)) + 'index.html')
+  BrowserForm := TCustomFormWVBrowser.Create()
+    .SetURL('file:///' + ExtractFilePath(ParamStr(0)) + 'index.html')
     .SetCaption('Exemplo')
     .SetWidth(2048)
     .SetHeight(1024)
     .SetActionButtons([TBorderIcon.biMinimize, TBorderIcon.biMaximize])
     .SetResizable(true)
     .SetMovable(true)
+    .SetCookie('CookieName', 'CookieValue', 'CookieDomain')
     .SetMessageReceiver(procedure(Sender: TObject; const MessageText: string)
     begin
       MemoMessageReceiver.Lines.Add(MessageText);
@@ -75,6 +77,9 @@ begin
   BrowserForm.ActionButtons := [TBorderIcon.biMinimize, TBorderIcon.biMaximize];
   BrowserForm.Resizable := true;
   BrowserForm.Movable := true;
+  BrowserForm.CookieName := 'CookieName';
+  BrowserForm.CookieValue := 'CookieValue';
+  BrowserForm.CookieDomain := 'CookieDomain';
   BrowserForm.OnMessageReceiver := procedure(Sender: TObject; const MessageText: string)
   begin
     MemoMessageReceiver.Lines.Add(MessageText);
@@ -91,6 +96,7 @@ begin
     .SetActionButtons([TBorderIcon.biMinimize, TBorderIcon.biMaximize])
     .SetResizable(true)
     .SetMovable(true)
+    .SetCookie('CookieName', 'CookieValue', 'CookieDomain')
     .SetMessageReceiver(procedure(Sender: TObject; const MessageText: string)
     begin
       MemoMessageReceiver.Lines.Add(MessageText);
@@ -107,6 +113,9 @@ begin
   BrowserForm.ActionButtons := [TBorderIcon.biMinimize, TBorderIcon.biMaximize];
   BrowserForm.Resizable := true;
   BrowserForm.Movable := true;
+  BrowserForm.CookieName := 'CookieName';
+  BrowserForm.CookieValue := 'CookieValue';
+  BrowserForm.CookieDomain := 'CookieDomain';
   BrowserForm.OnMessageReceiver := procedure(Sender: TObject; const MessageText: string)
   begin
     MemoMessageReceiver.Lines.Add(MessageText);

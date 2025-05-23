@@ -23,6 +23,7 @@ type
     function GetCookieDomainProp: String;
     function GetCookiePathProp: String;
     function GetAlphaProp: Boolean;
+    function GetURLProp: String;
     function ReadMessageReceiverProp: TMessageReceiverCallback;
     function ReadMessageSenderProp: String;
 
@@ -40,6 +41,7 @@ type
     procedure SetCookieDomainProp(const Value: String);
     procedure SetCookiePathProp(const Value: String = '/');
     procedure SetAlphaProp(const Value: Boolean);
+    procedure SetURLProp(const Value: String);
     procedure SetMessageReceiverProp(const Value: TMessageReceiverCallback);
     procedure SetMessageSenderProp(const Value: String);
 
@@ -58,6 +60,7 @@ type
     property CookiePath: String read GetCookiePathProp write SetCookiePathProp;
     property Instance: TComponent read GetInstanceProp;
     property Alpha: Boolean read GetAlphaProp write SetAlphaProp;
+    property URL: String read GetURLProp write SetURLProp;
     property OnMessageReceiver: TMessageReceiverCallback read ReadMessageReceiverProp write SetMessageReceiverProp;
     property OnMessageSender: String read ReadMessageSenderProp write SetMessageSenderProp;
   end;

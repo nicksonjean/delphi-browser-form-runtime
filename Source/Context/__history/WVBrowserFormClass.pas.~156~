@@ -3,12 +3,16 @@ unit WVBrowserFormClass;
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
+  Winapi.Windows, Winapi.Messages, Winapi.Dwmapi, Winapi.ShellAPI,
 
-  Vcl.Controls, Vcl.Forms, Vcl.ExtCtrls, Vcl.Dialogs, System.JSON,
+  Vcl.Controls, Vcl.Forms, Vcl.ExtCtrls, Vcl.Dialogs, Vcl.ComCtrls, Vcl.AppEvnts,
 
-  uWVBrowser, uWVWindowParent, uWVTypes, uWVLoader, uWVLibFunctions,
-  uWVConstants, uWVCoreWebView2, uWVInterfaces, uWVTypeLibrary, uWVCoreWebView2Args,
+  System.JSON, System.Generics.Collections, System.SysUtils, System.Classes,
+
+  uWVBrowser, uWVWinControl, uWVWindowParent, uWVTypes, uWVTypeLibrary,
+  uWVBrowserBase, uWVCoreWebView2Args, uWVCoreWebView2Deferral, uWVLoader,
+  uWVLibFunctions, uWVConstants, uWVCoreWebView2, uWVInterfaces,
+  uWVCoreWebView2WindowFeatures,
 
   BrowserTypes,
   BrowserFormInterface;
@@ -31,14 +35,18 @@ type
     procedure FormResize(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure CenterToScreenWithMonitor;
+    constructor Create(AOwner: TComponent; const aArgs: ICoreWebView2NewWindowRequestedEventArgs);
   end;
 
   TCustomFormWVBrowser = class(TInterfacedObject, IBrowserForm)
   private
     FForm: TCustomWVForm;
+    FTempChildForm: TCustomWVForm;
     FBrowser: TWVBrowser;
     FWindowParent: TWVWindowParent;
     FCookie: ICoreWebView2Cookie;
+    FArgs: TCoreWebView2NewWindowRequestedEventArgs;
+    FDeferral: TCoreWebView2Deferral;
     FCookieName: String;
     FCookieValue: String;
     FCookieDomain: String;
@@ -46,11 +54,12 @@ type
     FTimer: TTimer;
     FWidth: Integer;
     FHeight: Integer;
-    FPendingURL: string;
+    FURL: string;
     FBrowserInitialized: Boolean;
     FCaption: string;
     FCaptionPosition: TPositionCaption;
     FMovable: Boolean;
+    FAlpha: Boolean;
     FMessageSender: string;
     FMessageReceiver: TMessageReceiverCallback;
 
@@ -62,6 +71,8 @@ type
     procedure OnInitError(Sender: TObject; aErrorCode: HRESULT; const aErrorMessage: wvstring);
     procedure OnNavigationCompleted(Sender: TObject; const aWebView: ICoreWebView2; const aArgs: ICoreWebView2NavigationCompletedEventArgs);
     procedure OnWebMessageReceived(Sender: TObject; const aWebView: ICoreWebView2; const aArgs: ICoreWebView2WebMessageReceivedEventArgs);
+    procedure OnNewWindowRequested(Sender: TObject; const aWebView: ICoreWebView2; const aArgs: ICoreWebView2NewWindowRequestedEventArgs);
+    procedure OnWindowCloseRequested(Sender: TObject);
     procedure TryCreateBrowser;
     procedure ResizeBrowser;
   protected
@@ -79,6 +90,8 @@ type
     function GetCookieValueProp: String;
     function GetCookieDomainProp: String;
     function GetCookiePathProp: String;
+    function GetAlphaProp: Boolean;
+    function GetURLProp: String;
     function ReadMessageReceiverProp: TMessageReceiverCallback;
     function ReadMessageSenderProp: String;
 
@@ -95,6 +108,8 @@ type
     procedure SetCookieValueProp(const Value: String);
     procedure SetCookieDomainProp(const Value: String);
     procedure SetCookiePathProp(const Value: String = '/');
+    procedure SetAlphaProp(const Value: Boolean);
+    procedure SetURLProp(const Value: String);
     procedure SetMessageReceiverProp(const Value: TMessageReceiverCallback);
     procedure SetMessageSenderProp(const Value: String);
   public
@@ -111,6 +126,8 @@ type
     function SetMovable(const AMove: Boolean): TCustomFormWVBrowser;
     function SetTitleBar(const ATitleBar: Boolean): TCustomFormWVBrowser;
     function SetCookie(const ACookieName, ACookieValue, ACookieDomain: String; const ACookiePath: String = '/'): TCustomFormWVBrowser;
+    function SetAlpha(const AAlpha: Boolean): TCustomFormWVBrowser;
+    function SetURL(const AURL: String): TCustomFormWVBrowser;
     function SetMessageReceiver(const AMessage: TMessageReceiverCallback): TCustomFormWVBrowser;
     function SetMessageSender(const AMessage: String): TCustomFormWVBrowser;
 
@@ -123,6 +140,8 @@ type
     function IBrowserForm.SetMovable = ISetMovable;
     function IBrowserForm.SetTitleBar = ISetTitleBar;
     function IBrowserForm.SetCookie = ISetCookie;
+    function IBrowserForm.SetAlpha = ISetAlpha;
+    function IBrowserForm.SetURL = ISetURL;
     function IBrowserForm.SetMessageReceiver = ISetMessageReceiver;
     function IBrowserForm.SetMessageSender = ISetMessageSender;
 
@@ -134,6 +153,8 @@ type
     function ISetMovable(const AMove: Boolean): IBrowserForm;
     function ISetTitleBar(const ATitleBar: Boolean): IBrowserForm;
     function ISetCookie(const ACookieName, ACookieValue, ACookieDomain: String; const ACookiePath: String = '/'): IBrowserForm;
+    function ISetAlpha(const AAlpha: Boolean): IBrowserForm;
+    function ISetURL(const AURL: String): IBrowserForm;
     function ISetMessageReceiver(const AMessage: TMessageReceiverCallback): IBrowserForm;
     function ISetMessageSender(const AMessage: String): IBrowserForm;
 
@@ -155,6 +176,8 @@ type
     property CookieDomain: String read GetCookieDomainProp write SetCookieDomainProp;
     property CookiePath: String read GetCookiePathProp write SetCookiePathProp;
     property Instance: TComponent read GetInstanceProp;
+    property Alpha: Boolean read GetAlphaProp write SetAlphaProp;
+    property URL: String read GetURLProp write SetURLProp;
     property OnMessageReceiver: TMessageReceiverCallback read ReadMessageReceiverProp write SetMessageReceiverProp;
     property OnMessageSender: String read ReadMessageSenderProp write SetMessageSenderProp;
   end;
@@ -174,6 +197,14 @@ begin
     Width,
     Height
   );
+end;
+
+constructor TCustomWVForm.Create(AOwner: TComponent; const aArgs: ICoreWebView2NewWindowRequestedEventArgs);
+begin
+  inherited Create(AOwner);
+
+//  FArgs := TCoreWebView2NewWindowRequestedEventArgs.Create(aArgs);
+//  FDeferral := TCoreWebView2Deferral.Create(FArgs.Deferral);
 end;
 
 procedure TCustomWVForm.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -296,6 +327,18 @@ begin
   Result := Self;
 end;
 
+function TCustomFormWVBrowser.ISetAlpha(const AAlpha: Boolean): IBrowserForm;
+begin
+  SetAlpha(AAlpha);
+  Result := Self;
+end;
+
+function TCustomFormWVBrowser.ISetURL(const AURL: String): IBrowserForm;
+begin
+  SetURL(AURL);
+  Result := Self;
+end;
+
 function TCustomFormWVBrowser.ISetCookie(const ACookieName: string; const ACookieValue: string; const ACookieDomain: string; const ACookiePath: string = '/'): IBrowserForm;
 begin
   SetCookie(ACookieName, ACookieValue, ACookieDomain, ACookiePath);
@@ -378,7 +421,17 @@ end;
 
 function TCustomFormWVBrowser.GetCookiePathProp: String;
 begin
-Result := FCookiePath;
+  Result := FCookiePath;
+end;
+
+function TCustomFormWVBrowser.GetAlphaProp: Boolean;
+begin
+  Result := FAlpha;
+end;
+
+function TCustomFormWVBrowser.GetURLProp: String;
+begin
+  Result := FURL;
 end;
 
 function TCustomFormWVBrowser.ReadMessageReceiverProp: TMessageReceiverCallback;
@@ -455,6 +508,16 @@ procedure TCustomFormWVBrowser.SetCookiePathProp(const Value: String);
 begin
   FCookiePath := Value;
   SetCookie(FCookieName, FCookieValue, FCookieDomain, Value);
+end;
+
+procedure TCustomFormWVBrowser.SetAlphaProp(const Value: Boolean);
+begin
+  SetAlpha(Value);
+end;
+
+procedure TCustomFormWVBrowser.SetURLProp(const Value: String);
+begin
+  SetURL(Value);
 end;
 
 procedure TCustomFormWVBrowser.SetMessageReceiverProp(const Value: TMessageReceiverCallback);
@@ -555,6 +618,28 @@ begin
   Result := Self;
 end;
 
+function TCustomFormWVBrowser.SetAlpha(const AAlpha: Boolean): TCustomFormWVBrowser;
+begin
+  FAlpha := AAlpha;
+  if Assigned(FForm) and not AAlpha then
+  begin
+    FForm.AlphaBlend := false;
+    FForm.AlphaBlendValue := 100;
+  end
+  else
+  begin
+    FForm.AlphaBlend := true;
+    FForm.AlphaBlendValue := 0;
+  end;
+  Result := Self;
+end;
+
+function TCustomFormWVBrowser.SetURL(const AURL: String): TCustomFormWVBrowser;
+begin
+  FURL := AURL;
+  Result := Self;
+end;
+
 function TCustomFormWVBrowser.SetMessageReceiver(const AMessage: TMessageReceiverCallback): TCustomFormWVBrowser;
 begin
   FMessageReceiver := AMessage;
@@ -576,7 +661,7 @@ begin
   inherited Create;
   FWidth := 800;
   FHeight := 600;
-  FPendingURL := AInitialURL;
+  FURL := AInitialURL;
   FCaption := EmptyStr;
   FCaptionPosition := TPositionCaption.Before;
   FMovable := True;
@@ -632,6 +717,8 @@ begin
   FBrowser.OnAfterCreated := OnAfterCreated;
   FBrowser.OnDocumentTitleChanged := OnDocTitleChanged;
   FBrowser.OnInitializationError := OnInitError;
+  FBrowser.OnNewWindowRequested := OnNewWindowRequested;
+  FBrowser.OnWindowCloseRequested := OnWindowCloseRequested;
   FBrowser.OnNavigationCompleted := OnNavigationCompleted;
   FBrowser.OnWebMessageReceived := OnWebMessageReceived;
 
@@ -656,7 +743,7 @@ procedure TCustomFormWVBrowser.OnAfterCreated(Sender: TObject);
 begin
   FBrowserInitialized := True;
   ResizeBrowser;
-  if FPendingURL <> '' then
+  if FURL <> '' then
   begin
     if Assigned(FBrowser) then
     begin
@@ -664,7 +751,7 @@ begin
       if Assigned(FCookie) then
         FBrowser.AddOrUpdateCookie(FCookie);
     end;
-    FBrowser.Navigate(FPendingURL);
+    FBrowser.Navigate(FURL);
   end;
 end;
 
@@ -716,6 +803,17 @@ begin
     if Assigned(FMessageReceiver) then
       FMessageReceiver(Self, MessageString);
   end;
+end;
+
+procedure TCustomFormWVBrowser.OnNewWindowRequested(Sender: TObject; const aWebView: ICoreWebView2; const aArgs: ICoreWebView2NewWindowRequestedEventArgs);
+begin
+  FTempChildForm := TCustomWVForm.Create(Self, aArgs);
+  FTempChildForm.Show;
+end;
+
+procedure TCustomFormWVBrowser.OnWindowCloseRequested(Sender: TObject);
+begin
+  PostMessage(FForm.Handle, WM_CLOSE, 0, 0);
 end;
 
 procedure TCustomFormWVBrowser.TryCreateBrowser;

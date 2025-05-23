@@ -52,7 +52,8 @@ implementation
 
 procedure TFormBrowserTest.BtnWVBrowserClassChainableTestClick(Sender: TObject);
 begin
-  BrowserForm := TCustomFormWVBrowser.Create('file:///' + ExtractFilePath(ParamStr(0)) + 'index.html')
+  BrowserForm := TCustomFormWVBrowser.Create()
+    .SetURL('file:///' + ExtractFilePath(ParamStr(0)) + 'index.html')
     .SetCaption('Exemplo')
     .SetWidth(2048)
     .SetHeight(1024)
