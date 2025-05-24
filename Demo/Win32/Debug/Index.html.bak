@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <script>
+        window.chrome.webview.addEventListener("message", function(event) {
+            document.getElementById("messagelog").value += `${event.data}\n`;
+        });
+
+        function sendMessageToHostApp() {
+            window.chrome.webview.postMessage(document.getElementById("msgtext").value);
+        }
+    </script>
+</head>
+<body style="font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 40px;">
+
+    <div style="max-width: 800px; margin: auto; background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+        <h2 style="margin-top: 0; color: #333;">Swap Messages</h2>
+
+        <label for="msgtext" style="font-weight: bold; display: block; margin-bottom: 8px;">Send Messages:</label>
+        <textarea id="msgtext" rows="8" cols="80" style="width: 100%; padding: 10px 0 10px 0px; font-family: monospace; font-size: 14px; border: 1px solid #ccc; border-radius: 4px; resize: vertical;">
+{ 
+"operation": "putMessage", 
+"data":{
+    "text": "Enviou para o Aplicativo"
+    }
+}
+        </textarea>
+
+        <button onclick="sendMessageToHostApp()" style="margin-top: 12px; padding: 10px 20px; background-color: #007BFF; color: white; border: none; border-radius: 4px; font-size: 14px; cursor: pointer;">
+            Send
+        </button>
+
+        <hr style="margin: 30px 0;">
+
+        <label for="messagelog" style="font-weight: bold; display: block; margin-bottom: 8px;">Received Messages:</label>
+        <textarea id="messagelog" rows="8" cols="80" readonly style="width: 100%; padding: 1 10px 0 10px 0px; font-family: monospace; font-size: 14px; border: 1px solid #ccc; border-radius: 4px; background-color: #f9f9f9; resize: vertical;"></textarea>
+    </div>
+
+</body>
+</html>

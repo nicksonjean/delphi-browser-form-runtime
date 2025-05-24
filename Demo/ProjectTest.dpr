@@ -6,7 +6,8 @@ uses
   BrowserTypes in '..\Source\Generic\BrowserTypes.pas',
   BrowserGenericInterface in '..\Source\Generic\BrowserGenericInterface.pas',
   BrowserFormInterface in '..\Source\Context\BrowserFormInterface.pas',
-  WVBrowserFormClass in '..\Source\Context\WVBrowserFormClass.pas';
+  WVBrowserFormClass in '..\Source\Context\WVBrowserFormClass.pas',
+  AdvancedPopupExample in '..\Source\Example\AdvancedPopupExample.pas';
 
 {$R *.res}
 

@@ -2,40 +2,364 @@
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>WebView2 Popup Test</title>
     <script>
-        window.chrome.webview.addEventListener("message", function(event) {
-            document.getElementById("messagelog").value += `${event.data}\n`;
-        });
+        // Listener para mensagens do host
+        if (window.chrome && window.chrome.webview) {
+            window.chrome.webview.addEventListener("message", function(event) {
+                document.getElementById("messagelog").value += event.data + "\n";
+            });
+        }
 
         function sendMessageToHostApp() {
-            window.chrome.webview.postMessage(document.getElementById("msgtext").value);
+            if (window.chrome && window.chrome.webview) {
+                window.chrome.webview.postMessage(document.getElementById("msgtext").value);
+            } else {
+                alert('WebView2 messaging not available');
+            }
         }
+
+        function openSimplePopup() {
+            console.log('Abrindo popup simples...');
+            try {
+                var popup = window.open(
+                    'about:blank', 
+                    'simple_popup',
+                    'width=800,height=600,resizable=yes,scrollbars=yes'
+                );
+                
+                if (popup) {
+                    console.log('Popup criado, aguardando carregamento...');
+                    setTimeout(function() {
+                        try {                           
+                            popup.document.open();
+                            popup.document.write(
+                                '<!DOCTYPE html>' +
+                                '<html>' +
+                                '<head>' +
+                                '    <title>Popup Simples</title>' +
+                                '    <style>' +
+                                '        body { ' +
+                                '            font-family: Arial, sans-serif; ' +
+                                '            padding: 20px; ' +
+                                '            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);' +
+                                '            margin: 0;' +
+                                '            display: flex;' +
+                                '            justify-content: center;' +
+                                '            align-items: center;' +
+                                '            min-height: 100vh;' +
+                                '        }' +
+                                '        .container {' +
+                                '            background: white;' +
+                                '            padding: 30px;' +
+                                '            border-radius: 12px;' +
+                                '            box-shadow: 0 4px 20px rgba(0,0,0,0.15);' +
+                                '            text-align: center;' +
+                                '            max-width: 400px;' +
+                                '        }' +
+                                '        h2 { ' +
+                                '            color: #1976d2; ' +
+                                '            margin-top: 0; ' +
+                                '            margin-bottom: 20px;' +
+                                '        }' +
+                                '        p { ' +
+                                '            color: #555; ' +
+                                '            line-height: 1.6; ' +
+                                '            margin-bottom: 15px;' +
+                                '        }' +
+                                '        button {' +
+                                '            padding: 12px 24px;' +
+                                '            margin: 8px;' +
+                                '            border: none;' +
+                                '            border-radius: 6px;' +
+                                '            cursor: pointer;' +
+                                '            font-size: 14px;' +
+                                '            font-weight: bold;' +
+                                '            transition: all 0.3s ease;' +
+                                '        }' +
+                                '        .btn-close {' +
+                                '            background: linear-gradient(45deg, #f44336, #d32f2f);' +
+                                '            color: white;' +
+                                '        }' +
+                                '        .btn-close:hover {' +
+                                '            background: linear-gradient(45deg, #d32f2f, #b71c1c);' +
+                                '            transform: translateY(-2px);' +
+                                '        }' +
+                                '        .btn-test {' +
+                                '            background: linear-gradient(45deg, #4caf50, #388e3c);' +
+                                '            color: white;' +
+                                '        }' +
+                                '        .btn-test:hover {' +
+                                '            background: linear-gradient(45deg, #388e3c, #2e7d32);' +
+                                '            transform: translateY(-2px);' +
+                                '        }' +
+                                '    </style>' +
+                                '    <script>' +
+                                '        window.addEventListener(\'beforeunload\', function() {' +
+                                '            console.log(\'Simple popup sendo fechado...\');' +
+                                '        });' +
+                                '        ' +
+                                '        function closeWindow() {' +
+                                '            console.log(\'Fechando popup via botão...\');' +
+                                '            window.close();' +
+                                '        }' +
+                                '        ' +
+                                '        function testAlert() {' +
+                                '            alert(\'Popup funcionando perfeitamente!\');' +
+                                '        }' +
+                                '    </' + 'script>' +
+                                '</head>' +
+                                '<body>' +
+                                '    <div class="container">' +
+                                '        <h2>🎉 Popup Simples</h2>' +
+                                '        <p>Esta janela foi criada através do evento <strong>OnNewWindowRequested</strong> no Delphi WebView2.</p>' +
+                                '        <p><strong>Timestamp:</strong><br>' + new Date().toLocaleString('pt-BR') + '</p>' +
+                                '        <button class="btn-test" onclick="testAlert()">Testar Interação</button>' +
+                                '        <button class="btn-close" onclick="closeWindow()">Fechar Janela</button>' +
+                                '    </div>' +
+                                '</body>' +
+                                '</html>'
+                            );
+                            popup.document.close();
+                            
+                        } catch (e) {
+                            console.error('Erro ao escrever conteúdo:', e);
+                        }
+                    }, 150);
+                } else {
+                    alert('Popup foi bloqueado pelo navegador');
+                }
+            } catch (e) {
+                console.error('Erro ao criar popup:', e);
+                alert('Erro: ' + e.message);
+            }
+        }
+
+        function openModalDialog() {
+            console.log('Abrindo modal dialog...');
+            try {
+                var popup = window.open(
+                    'about:blank',
+                    'modal_dialog',
+                    'width=800,height=600,resizable=no,scrollbars=no'
+                );
+                
+                if (popup) {
+                    console.log('Modal criado, injetando conteúdo...');
+                    setTimeout(function() {
+                        try {
+                            popup.document.open();
+                            popup.document.write(
+                                '<!DOCTYPE html>' +
+                                '<html>' +
+                                '<head>' +
+                                '    <title>Modal Dialog</title>' +
+                                '    <style>' +
+                                '        body {' +
+                                '            font-family: Arial, sans-serif;' +
+                                '            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);' +
+                                '            margin: 0;' +
+                                '            padding: 0;' +
+                                '            display: flex;' +
+                                '            justify-content: center;' +
+                                '            align-items: center;' +
+                                '            min-height: 100vh;' +
+                                '        }' +
+                                '        .modal {' +
+                                '            background: white;' +
+                                '            padding: 30px;' +
+                                '            border-radius: 15px;' +
+                                '            box-shadow: 0 10px 30px rgba(0,0,0,0.3);' +
+                                '            text-align: center;' +
+                                '            max-width: 350px;' +
+                                '            width: 90%;' +
+                                '        }' +
+                                '        h2 {' +
+                                '            color: #333;' +
+                                '            margin-top: 0;' +
+                                '            margin-bottom: 20px;' +
+                                '            font-size: 24px;' +
+                                '        }' +
+                                '        p {' +
+                                '            color: #666;' +
+                                '            line-height: 1.6;' +
+                                '            margin-bottom: 15px;' +
+                                '        }' +
+                                '        button {' +
+                                '            padding: 12px 20px;' +
+                                '            margin: 8px;' +
+                                '            border: none;' +
+                                '            border-radius: 8px;' +
+                                '            cursor: pointer;' +
+                                '            font-size: 14px;' +
+                                '            font-weight: bold;' +
+                                '            transition: all 0.3s ease;' +
+                                '        }' +
+                                '        .btn-ok {' +
+                                '            background: linear-gradient(45deg, #667eea, #764ba2);' +
+                                '            color: white;' +
+                                '        }' +
+                                '        .btn-ok:hover {' +
+                                '            background: linear-gradient(45deg, #5a67d8, #6b46c1);' +
+                                '            transform: translateY(-2px);' +
+                                '        }' +
+                                '        .btn-cancel {' +
+                                '            background: linear-gradient(45deg, #ed64a6, #d53f8c);' +
+                                '            color: white;' +
+                                '        }' +
+                                '        .btn-cancel:hover {' +
+                                '            background: linear-gradient(45deg, #d53f8c, #b83280);' +
+                                '            transform: translateY(-2px);' +
+                                '        }' +
+                                '    </style>' +
+                                '    <script>' +
+                                '        window.addEventListener(\'beforeunload\', function() {' +
+                                '            console.log(\'Modal dialog sendo fechado...\');' +
+                                '        });' +
+                                '        ' +
+                                '        function confirmAction() {' +
+                                '            alert(\'Ação confirmada com sucesso!\');' +
+                                '            window.close();' +
+                                '        }' +
+                                '        ' +
+                                '        function cancelAction() {' +
+                                '            console.log(\'Ação cancelada\');' +
+                                '            window.close();' +
+                                '        }' +
+                                '    </' + 'script>' +
+                                '</head>' +
+                                '<body>' +
+                                '    <div class="modal">' +
+                                '        <h2>✨ Modal Dialog</h2>' +
+                                '        <p>Este é um diálogo modal criado através do WebView2 no Delphi.</p>' +
+                                '        <p><strong>Data:</strong> ' + new Date().toLocaleDateString('pt-BR') + '<br>' +
+                                '        <strong>Hora:</strong> ' + new Date().toLocaleTimeString('pt-BR') + '</p>' +
+                                '        <div>' +
+                                '            <button class="btn-ok" onclick="confirmAction()">Confirmar</button>' +
+                                '            <button class="btn-cancel" onclick="cancelAction()">Cancelar</button>' +
+                                '        </div>' +
+                                '    </div>' +
+                                '</body>' +
+                                '</html>'
+                            );
+                            popup.document.close();
+                            
+                        } catch (e) {
+                            console.error('Erro ao criar modal:', e);
+                        }
+                    }, 150);
+                } else {
+                    alert('Modal foi bloqueado pelo navegador');
+                }
+            } catch (e) {
+                console.error('Erro ao criar modal:', e);
+                alert('Erro: ' + e.message);
+            }
+        }
+
+        function openUrlPopup() {
+            var url = document.getElementById("popupUrl").value.trim();
+            if (!url) {
+                alert('Digite uma URL válida');
+                return;
+            }
+            
+            console.log('Abrindo URL popup:', url);
+            try {
+                var popup = window.open(
+                    url,
+                    'url_popup',
+                    'width=800,height=600,resizable=yes,scrollbars=yes,location=yes,toolbar=yes'
+                );
+                
+                if (popup) {
+                    console.log('URL popup aberto');
+                    popup.focus();
+                } else {
+                    alert('Popup foi bloqueado');
+                }
+            } catch (e) {
+                console.error('Erro:', e);
+                alert('Erro: ' + e.message);
+            }
+        }
+
+        // Log quando a página carrega
+        window.addEventListener('load', function() {
+            console.log('Página carregada');
+            console.log('WebView2 disponível:', !!(window.chrome && window.chrome.webview));
+        });
     </script>
 </head>
-<body style="font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 40px;">
+<body style="font-family: Arial, sans-serif; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); margin: 0; padding: 20px; min-height: 100vh;">
 
-    <div style="max-width: 800px; margin: auto; background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
-        <h2 style="margin-top: 0; color: #333;">Swap Messages</h2>
+    <div style="max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1);">
+        
+        <h1 style="text-align: center; color: #333; margin-top: 0; padding-bottom: 20px; border-bottom: 3px solid #667eea;">
+            🌐 WebView2 Popup & Message Test
+        </h1>
 
-        <label for="msgtext" style="font-weight: bold; display: block; margin-bottom: 8px;">Send Messages:</label>
-        <textarea id="msgtext" rows="8" cols="80" style="width: 100%; padding: 10px 0 10px 0px; font-family: monospace; font-size: 14px; border: 1px solid #ccc; border-radius: 4px; resize: vertical;">
-{ 
-"operation": "putMessage", 
-"data":{
-    "text": "Enviou para o Aplicativo"
-    }
-}
-        </textarea>
+        <!-- Seção de Mensagens -->
+        <div style="margin-bottom: 30px; padding: 25px; background: #f8f9fa; border-radius: 10px; border-left: 4px solid #28a745;">
+            <h3 style="color: #495057; margin-top: 0; margin-bottom: 20px;">📨 Troca de Mensagens</h3>
+            
+            <div style="margin-bottom: 15px;">
+                <label for="msgtext" style="font-weight: bold; display: block; margin-bottom: 8px; color: #495057;">
+                    Enviar Mensagem para Delphi:
+                </label>
+                                <textarea id="msgtext" rows="4" style="width: 100%; padding: 12px; font-family: 'Courier New', monospace; font-size: 13px; border: 2px solid #dee2e6; border-radius: 8px; resize: vertical; box-sizing: border-box;">{   "operation": "putMessage",   "data": {    "text": "Hello from WebView2!",    "timestamp": "2024-01-01T00:00:00Z"  }}</textarea>
+            </div>
 
-        <button onclick="sendMessageToHostApp()" style="margin-top: 12px; padding: 10px 20px; background-color: #007BFF; color: white; border: none; border-radius: 4px; font-size: 14px; cursor: pointer;">
-            Send
-        </button>
+            <button onclick="sendMessageToHostApp()" style="padding: 12px 24px; background: linear-gradient(45deg, #28a745, #20c997); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px;">
+                📤 Enviar Mensagem
+            </button>
 
-        <hr style="margin: 30px 0;">
+            <div style="margin-top: 20px;">
+                <label for="messagelog" style="font-weight: bold; display: block; margin-bottom: 8px; color: #495057;">
+                    Mensagens Recebidas:
+                </label>
+                <textarea id="messagelog" rows="4" readonly style="width: 100%; padding: 12px; font-family: 'Courier New', monospace; font-size: 13px; border: 2px solid #dee2e6; border-radius: 8px; background: #fff; resize: vertical; box-sizing: border-box;"></textarea>
+            </div>
+        </div>
 
-        <label for="messagelog" style="font-weight: bold; display: block; margin-bottom: 8px;">Received Messages:</label>
-        <textarea id="messagelog" rows="8" cols="80" readonly style="width: 100%; padding: 1 10px 0 10px 0px; font-family: monospace; font-size: 14px; border: 1px solid #ccc; border-radius: 4px; background-color: #f9f9f9; resize: vertical;"></textarea>
+        <!-- Seção de Popup Windows -->
+        <div style="padding: 25px; background: #e8f5e8; border-radius: 10px; border-left: 4px solid #007bff;">
+            <h3 style="color: #495057; margin-top: 0; margin-bottom: 20px;">🪟 Teste de Janelas Popup</h3>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px;">
+                <button onclick="openSimplePopup()" style="padding: 15px 20px; background: linear-gradient(45deg, #007bff, #0056b3); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; transition: all 0.3s ease;">
+                    🔗 Popup Simples
+                </button>
+                
+                <button onclick="openModalDialog()" style="padding: 15px 20px; background: linear-gradient(45deg, #6f42c1, #563d7c); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; transition: all 0.3s ease;">
+                    📋 Modal Dialog
+                </button>
+            </div>
+
+            <div style="margin-top: 20px;">
+                <label for="popupUrl" style="font-weight: bold; display: block; margin-bottom: 8px; color: #495057;">
+                    Abrir URL em Nova Janela:
+                </label>
+                <div style="display: flex; gap: 10px; align-items: stretch;">
+                    <input type="url" id="popupUrl" placeholder="https://www.google.com" value="https://www.google.com" style="flex: 1; padding: 12px; font-size: 14px; border: 2px solid #dee2e6; border-radius: 8px; box-sizing: border-box;">
+                    <button onclick="openUrlPopup()" style="padding: 12px 20px; background: linear-gradient(45deg, #fd7e14, #e55a00); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; white-space: nowrap;">
+                        🌍 Abrir URL
+                    </button>
+                </div>
+            </div>
+
+            <div style="margin-top: 25px; padding: 20px; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; color: #856404;">
+                <strong>ℹ️ Informações Importantes:</strong>
+                <ul style="margin: 10px 0 0 20px; line-height: 1.6;">
+                    <li><strong>Popup Simples:</strong> Cria uma janela redimensionável com conteúdo customizado</li>
+                    <li><strong>Modal Dialog:</strong> Cria uma janela fixa que simula um diálogo modal</li>
+                    <li><strong>Eventos de Fechamento:</strong> Todos os popups disparam o evento <code>OnWindowClosed</code></li>
+                    <li><strong>Debug:</strong> Abra o Console (F12) para ver logs detalhados</li>
+                </ul>
+            </div>
+        </div>
     </div>
 
+    
 </body>
 </html>

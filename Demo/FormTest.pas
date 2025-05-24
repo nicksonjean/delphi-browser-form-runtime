@@ -1,4 +1,4 @@
-unit FormTest;
+﻿unit FormTest;
 
 interface
 
@@ -6,9 +6,15 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
 
+  uWVBrowser, uWVWinControl, uWVWindowParent, uWVTypes, uWVTypeLibrary,
+  uWVBrowserBase, uWVCoreWebView2Args, uWVCoreWebView2Deferral, uWVLoader,
+  uWVLibFunctions, uWVConstants, uWVCoreWebView2, uWVInterfaces,
+  uWVCoreWebView2WindowFeatures,
+
   BrowserTypes,
   BrowserFormInterface,
-  WVBrowserFormClass
+  WVBrowserFormClass,
+  AdvancedPopupExample
   ;
 
 type
@@ -26,6 +32,11 @@ type
     MemoMessageSender: TMemo;
     BtnMessageSenderByProperty: TButton;
     BtnMessageSenderByChainable: TButton;
+    GroupBoxWindowAndSubWindow: TGroupBox;
+    Memolog: TMemo;
+    BtnCreatePopupHtml: TButton;
+    BtnCreateMainBrowser: TButton;
+    BtnCreatePopup: TButton;
     procedure BtnWVBrowserInterfaceChainableTestClick(Sender: TObject);
     procedure BtnWVBrowserClassPropertiesTestClick(Sender: TObject);
     procedure BtnWVBrowserClassChainableTestClick(Sender: TObject);
@@ -33,10 +44,20 @@ type
     procedure FormCreate(Sender: TObject);
     procedure BtnMessageSenderByPropertyClick(Sender: TObject);
     procedure BtnMessageSenderByChainableClick(Sender: TObject);
+    procedure BtnCreateMainBrowserClick(Sender: TObject);
+    procedure BtnCreatePopupClick(Sender: TObject);
+    procedure BtnCreatePopupHtmlClick(Sender: TObject);
   protected
     { Protected declarations }
   private
     { Private declarations }
+    FMainBrowser: TCustomFormWVBrowser;
+    FPopupBrowser: TCustomFormWVBrowser;
+    procedure LogMessage(const AMessage: string);
+    procedure OnMainBrowserMessage(Sender: TObject; const Message: string);
+    procedure OnPopupBrowserMessage(Sender: TObject; const Message: string);
+    procedure OnBrowserWindowClosed(Sender: TObject);
+    procedure OnMessageReceived(ASender: TObject; const AMessage: string);
   public
     { Public declarations }
   end;
@@ -45,10 +66,26 @@ var
   FormBrowserTest: TFormBrowserTest;
   BrowserForm: TCustomFormWVBrowser;
 //  BrowserForm: IBrowserForm;
+  PopupManager: TAdvancedPopupManager;
 
 implementation
 
 {$R *.dfm}
+
+procedure TFormBrowserTest.LogMessage(const AMessage: string);
+begin
+  memoLog.Lines.Add(FormatDateTime('hh:nn:ss', Now) + ' - ' + AMessage);
+end;
+
+procedure TFormBrowserTest.OnBrowserWindowClosed(Sender: TObject);
+begin
+  LogMessage('Janela do browser foi fechada: ' + Sender.ClassName);
+end;
+
+procedure TFormBrowserTest.OnMessageReceived(ASender: TObject; const AMessage: string);
+begin
+  LogMessage('Mensagem recebida do browser: ' + AMessage);
+end;
 
 procedure TFormBrowserTest.BtnWVBrowserClassChainableTestClick(Sender: TObject);
 begin
@@ -56,7 +93,7 @@ begin
     .SetURL('file:///' + ExtractFilePath(ParamStr(0)) + 'index.html')
     .SetCaption('Exemplo')
     .SetWidth(2048)
-    .SetHeight(1024)
+    .SetHeight(1800)
     .SetActionButtons([TBorderIcon.biMinimize, TBorderIcon.biMaximize])
     .SetResizable(true)
     .SetMovable(true)
@@ -73,7 +110,7 @@ begin
   BrowserForm := TCustomFormWVBrowser.Create('file:///' + ExtractFilePath(ParamStr(0)) + 'index.html');
   BrowserForm.Caption := 'Exemplo';
   BrowserForm.Width := 2048;
-  BrowserForm.Height := 1024;
+  BrowserForm.Height := 1800;
   BrowserForm.ActionButtons := [TBorderIcon.biMinimize, TBorderIcon.biMaximize];
   BrowserForm.Resizable := true;
   BrowserForm.Movable := true;
@@ -92,7 +129,7 @@ begin
   BrowserForm := TCustomFormWVBrowser.Create('file:///' + ExtractFilePath(ParamStr(0)) + 'index.html')
     .SetCaption('Exemplo')
     .SetWidth(2048)
-    .SetHeight(1024)
+    .SetHeight(1800)
     .SetActionButtons([TBorderIcon.biMinimize, TBorderIcon.biMaximize])
     .SetResizable(true)
     .SetMovable(true)
@@ -109,7 +146,7 @@ begin
   BrowserForm := TCustomFormWVBrowser.Create('file:///' + ExtractFilePath(ParamStr(0)) + 'index.html');
   BrowserForm.Caption := 'Exemplo';
   BrowserForm.Width := 2048;
-  BrowserForm.Height := 1024;
+  BrowserForm.Height := 1800;
   BrowserForm.ActionButtons := [TBorderIcon.biMinimize, TBorderIcon.biMaximize];
   BrowserForm.Resizable := true;
   BrowserForm.Movable := true;
@@ -131,6 +168,156 @@ begin
   + '      "text": "Enviou para o WebView"' + sLineBreak
   + '    }' + sLineBreak
   + ' } ';
+
+  memoLog.Lines.Add('=== Exemplo de Uso do WVBrowserFormClass ===');
+  memoLog.Lines.Add('1. Primeiro clique em "Criar Browser Principal"');
+  memoLog.Lines.Add('2. Depois clique em "Criar Popup"');
+  memoLog.Lines.Add('');
+
+//  PopupManager := TAdvancedPopupManager.Create;
+//  PopupManager.CreateMainBrowser;
+end;
+
+procedure TFormBrowserTest.BtnCreateMainBrowserClick(Sender: TObject);
+begin
+  try
+    LogMessage('Criando browser principal...');
+
+    // Criar o browser principal
+    FMainBrowser := TCustomFormWVBrowser.Create('https://www.google.com')
+      .SetWidth(1000)
+      .SetHeight(700)
+      .SetCaption('Browser Principal', TPositionCaption.Before)
+      .SetResizable(True)
+      .SetMovable(True)
+      .SetActionButtons([TBorderIcon.biMinimize, TBorderIcon.biMaximize])
+      .SetCookie('session_id', '123456789', '.google.com', '/')
+      .SetMessageReceiver(OnMainBrowserMessage);
+
+    // Mostrar o browser principal
+    FMainBrowser.Show();
+
+    LogMessage('Browser principal criado e exibido!');
+    btnCreatePopup.Enabled := True;
+
+  except
+    on E: Exception do
+    begin
+      LogMessage('ERRO ao criar browser principal: ' + E.Message);
+    end;
+  end;
+end;
+
+procedure TFormBrowserTest.BtnCreatePopupClick(Sender: TObject);
+begin
+  try
+    if not Assigned(FMainBrowser) then
+    begin
+      LogMessage('Primeiro crie o browser principal!');
+      Exit;
+    end;
+
+    LogMessage('Criando popup...');
+
+    FPopupBrowser := TCustomFormWVBrowser.CreateAsPopup(
+      FMainBrowser.Instance as TWVBrowser, // Browser pai
+      'https://www.github.com'             // URL do popup
+    )
+      .SetWidth(800)
+      .SetHeight(800)
+      .SetCaption('Popup - GitHub', TPositionCaption.Before)
+      .SetResizable(True)
+      .SetMovable(True)
+      .SetActionButtons([TBorderIcon.biMinimize, TBorderIcon.biMaximize])
+      .SetCookie('popup_session', 'popup_123', '.github.com', '/')
+      .SetMessageReceiver(OnPopupBrowserMessage);
+
+    // Mostrar o popup
+    FPopupBrowser.Show();
+
+    LogMessage('Popup criado e exibido!');
+
+  except
+    on E: Exception do
+    begin
+      LogMessage('Erro: ' + E.Message);
+    end;
+  end;
+end;
+
+procedure TFormBrowserTest.BtnCreatePopupHtmlClick(Sender: TObject);
+var
+  Browser: IBrowserForm;
+  HTMLContent: string;
+begin
+  LogMessage('Criando browser com HTML customizado...');
+
+  HTMLContent :=
+    '<!DOCTYPE html>' +
+    '<html>' +
+    '<head>' +
+    '  <title>Conteúdo Personalizado</title>' +
+    '  <style>' +
+    '    body { font-family: Arial; background: linear-gradient(45deg, #667eea, #764ba2); ' +
+    '           color: white; text-align: center; padding: 50px; }' +
+    '    .container { background: rgba(255,255,255,0.1); padding: 30px; ' +
+    '                border-radius: 15px; backdrop-filter: blur(10px); }' +
+    '    button { padding: 15px 30px; background: #fff; color: #333; ' +
+    '            border: none; border-radius: 8px; cursor: pointer; font-size: 16px; }' +
+    '  </style>' +
+    '  <script>' +
+    '    function enviarMensagem() {' +
+    '      if (window.chrome && window.chrome.webview) {' +
+    '        window.chrome.webview.postMessage("Olá do HTML customizado!");' +
+    '      }' +
+    '    }' +
+    '  </script>' +
+    '</head>' +
+    '<body>' +
+    '  <div class="container">' +
+    '    <h1>🎨 Conteúdo HTML Personalizado</h1>' +
+    '    <p>Este conteúdo foi injetado diretamente via SetHTMLContent!</p>' +
+    '    <p><strong>Data/Hora:</strong> ' + DateTimeToStr(Now) + '</p>' +
+    '    <button onclick="enviarMensagem()">📤 Enviar Mensagem</button>' +
+    '  </div>' +
+    '</body>' +
+    '</html>';
+
+  Browser := TCustomFormWVBrowser.Create()
+    .SetWidth(800)
+    .SetHeight(800)
+    .SetCaption('HTML Personalizado')
+    .SetResizable(False)
+    .SetMovable(True)
+    .SetActionButtons([TBorderIcon.biMinimize, TBorderIcon.biMaximize])
+    .SetWindowClosed(OnBrowserWindowClosed)
+    .SetMessageReceiver(OnMessageReceived)
+    .SetHTMLContent(HTMLContent);
+
+  Browser.Show;
+  LogMessage('Browser com HTML customizado criado');
+end;
+
+procedure TFormBrowserTest.OnMainBrowserMessage(Sender: TObject; const Message: string);
+begin
+  LogMessage('Mensagem do Browser Principal: ' + Message);
+
+  // Exemplo de como responder à mensagem
+  if Assigned(FMainBrowser) then
+  begin
+    FMainBrowser.SetMessageSender('{"response": "Mensagem recebida no Delphi!", "timestamp": "' + DateTimeToStr(Now) + '"}');
+  end;
+end;
+
+procedure TFormBrowserTest.OnPopupBrowserMessage(Sender: TObject; const Message: string);
+begin
+  LogMessage('Mensagem do Popup: ' + Message);
+
+  // Exemplo de como responder à mensagem do popup
+  if Assigned(FPopupBrowser) then
+  begin
+    FPopupBrowser.SetMessageSender('{"response": "Popup respondeu!", "timestamp": "' + DateTimeToStr(Now) + '"}');
+  end;
 end;
 
 procedure TFormBrowserTest.BtnMessageSenderByChainableClick(Sender: TObject);

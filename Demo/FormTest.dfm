@@ -3,8 +3,8 @@ object FormBrowserTest: TFormBrowserTest
   Top = 0
   BorderStyle = bsDialog
   Caption = 'FormBrowserTest'
-  ClientHeight = 491
-  ClientWidth = 350
+  ClientHeight = 729
+  ClientWidth = 356
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -19,7 +19,7 @@ object FormBrowserTest: TFormBrowserTest
   object GroupBoxWVBrowser: TGroupBox
     Left = 0
     Top = 0
-    Width = 350
+    Width = 356
     Height = 140
     Margins.Left = 5
     Margins.Top = 5
@@ -34,7 +34,7 @@ object FormBrowserTest: TFormBrowserTest
       Width = 173
       Height = 123
       Align = alLeft
-      Caption = 'Classe'
+      Caption = 'Classe Modal'
       TabOrder = 0
       object BtnWVBrowserClassChainableTest: TButton
         Left = 22
@@ -56,13 +56,15 @@ object FormBrowserTest: TFormBrowserTest
       end
     end
     object GroupBoxWVBrowserWithInterface: TGroupBox
-      Left = 175
+      Left = 181
       Top = 15
       Width = 173
       Height = 123
       Align = alRight
-      Caption = 'Interface'
+      Caption = 'Interface Non Modal'
       TabOrder = 1
+      ExplicitLeft = 180
+      ExplicitTop = 11
       object BtnWVBrowserInterfaceChainableTest: TButton
         Left = 27
         Top = 40
@@ -85,8 +87,8 @@ object FormBrowserTest: TFormBrowserTest
   end
   object GroupBoxMessageReceiver: TGroupBox
     Left = 0
-    Top = 140
-    Width = 350
+    Top = 350
+    Width = 356
     Height = 140
     Align = alTop
     Caption = 'Message Receiver'
@@ -94,27 +96,30 @@ object FormBrowserTest: TFormBrowserTest
     object MemoMessageReceiver: TMemo
       Left = 2
       Top = 15
-      Width = 346
+      Width = 352
       Height = 123
       Align = alClient
       TabOrder = 0
+      ExplicitTop = 11
     end
   end
   object GroupBoxMessageSender: TGroupBox
     Left = 0
-    Top = 280
-    Width = 350
+    Top = 140
+    Width = 356
     Height = 210
     Align = alTop
     Caption = 'Message Sender'
     TabOrder = 2
+    ExplicitTop = 134
     object MemoMessageSender: TMemo
       Left = 2
       Top = 15
-      Width = 346
+      Width = 352
       Height = 123
       Align = alTop
       TabOrder = 0
+      ExplicitTop = 8
     end
     object BtnMessageSenderByProperty: TButton
       Left = 202
@@ -133,6 +138,51 @@ object FormBrowserTest: TFormBrowserTest
       Caption = 'Send By Chainable'
       TabOrder = 2
       OnClick = BtnMessageSenderByChainableClick
+    end
+  end
+  object GroupBoxWindowAndSubWindow: TGroupBox
+    Left = 0
+    Top = 490
+    Width = 356
+    Height = 240
+    Align = alTop
+    Caption = 'Window And SubWindow'
+    TabOrder = 3
+    object Memolog: TMemo
+      Left = 2
+      Top = 15
+      Width = 352
+      Height = 123
+      Align = alTop
+      TabOrder = 0
+      ExplicitLeft = 3
+    end
+    object BtnCreatePopupHtml: TButton
+      Left = 112
+      Top = 197
+      Width = 123
+      Height = 25
+      Caption = 'Create Popup HTML'
+      TabOrder = 1
+      OnClick = BtnCreatePopupHtmlClick
+    end
+    object BtnCreateMainBrowser: TButton
+      Left = 24
+      Top = 158
+      Width = 123
+      Height = 25
+      Caption = 'Create Main Browser'
+      TabOrder = 2
+      OnClick = BtnCreateMainBrowserClick
+    end
+    object BtnCreatePopup: TButton
+      Left = 208
+      Top = 158
+      Width = 123
+      Height = 25
+      Caption = 'Create Popup'
+      TabOrder = 3
+      OnClick = BtnCreatePopupClick
     end
   end
 end
