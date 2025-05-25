@@ -63,8 +63,6 @@ object FormBrowserTest: TFormBrowserTest
       Align = alRight
       Caption = 'Interface Non Modal'
       TabOrder = 1
-      ExplicitLeft = 180
-      ExplicitTop = 11
       object BtnWVBrowserInterfaceChainableTest: TButton
         Left = 27
         Top = 40
@@ -100,7 +98,6 @@ object FormBrowserTest: TFormBrowserTest
       Height = 123
       Align = alClient
       TabOrder = 0
-      ExplicitTop = 11
     end
   end
   object GroupBoxMessageSender: TGroupBox
@@ -111,7 +108,6 @@ object FormBrowserTest: TFormBrowserTest
     Align = alTop
     Caption = 'Message Sender'
     TabOrder = 2
-    ExplicitTop = 134
     object MemoMessageSender: TMemo
       Left = 2
       Top = 15
@@ -119,7 +115,6 @@ object FormBrowserTest: TFormBrowserTest
       Height = 123
       Align = alTop
       TabOrder = 0
-      ExplicitTop = 8
     end
     object BtnMessageSenderByProperty: TButton
       Left = 202
@@ -155,7 +150,6 @@ object FormBrowserTest: TFormBrowserTest
       Height = 123
       Align = alTop
       TabOrder = 0
-      ExplicitLeft = 3
     end
     object BtnCreatePopupHtml: TButton
       Left = 112

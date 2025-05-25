@@ -26,6 +26,7 @@ type
     function GetURLProp: String;
     function ReadMessageReceiverProp: TMessageReceiverCallback;
     function ReadMessageSenderProp: String;
+    function GetWindowOpenedProp: TNotifyEvent;
     function GetWindowClosedProp: TNotifyEvent;
 
     // Setters
@@ -45,6 +46,7 @@ type
     procedure SetURLProp(const Value: String);
     procedure SetMessageReceiverProp(const Value: TMessageReceiverCallback);
     procedure SetMessageSenderProp(const Value: String);
+    procedure SetWindowOpenedProp(const Value: TNotifyEvent);
     procedure SetWindowClosedProp(const Value: TNotifyEvent);
 
     // Properties
@@ -65,6 +67,7 @@ type
     property URL: String read GetURLProp write SetURLProp;
     property OnMessageReceiver: TMessageReceiverCallback read ReadMessageReceiverProp write SetMessageReceiverProp;
     property OnMessageSender: String read ReadMessageSenderProp write SetMessageSenderProp;
+    property OnWindowOpened: TNotifyEvent read GetWindowOpenedProp write SetWindowOpenedProp;
     property OnWindowClosed: TNotifyEvent read GetWindowClosedProp write SetWindowClosedProp;
   end;
 

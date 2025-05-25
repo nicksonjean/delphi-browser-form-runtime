@@ -11,7 +11,7 @@ type
     // Fluent methods
     function SetWidth(const AWidth: Integer): IBrowserForm;
     function SetHeight(const AHeight: Integer): IBrowserForm;
-    function SetCaption(const ACaption: String; APosition: TPositionCaption = TPositionCaption.Before): IBrowserForm;
+    function SetCaption(const ACaption: String; APosition: TPositionCaption = TPositionCaption.Between): IBrowserForm;
     function SetActionButtons(const AButtons: TBorderIcons): IBrowserForm;
     function SetResizable(const AResize: Boolean): IBrowserForm;
     function SetMovable(const AMove: Boolean): IBrowserForm;
@@ -21,11 +21,14 @@ type
     function SetCookie(const ACookieName, ACookieValue, ACookieDomain: String; const ACookiePath: String = '/'): IBrowserForm;
     function SetAlpha(const AAlpha: Boolean): IBrowserForm;
     function SetURL(const AURL: String): IBrowserForm;
+    function SetWindowOpened(const AEvent: TNotifyEvent): IBrowserForm;
     function SetWindowClosed(const AEvent: TNotifyEvent): IBrowserForm;
     function SetHTMLContent(const AHTMLContent: String): IBrowserForm;
-
     procedure Show(const AType: TOpenType = TOpenType.Normal);
     procedure ShowModal(const AType: TOpenType = TOpenType.Modal);
+    procedure ShowAsModal(AParentForm: TForm = nil);
+    procedure ShowAsMDI(TFormulario: TComponentClass; var Formulario; AutoShow: Boolean = True);
+    procedure ShowAsMDIAdvanced(TFormulario: TComponentClass; var Formulario; AutoShow: Boolean = True; SingleInstance: Boolean = True; MaximizeOnShow: Boolean = True; BringToFrontIfExists: Boolean = True);
   end;
 
 implementation

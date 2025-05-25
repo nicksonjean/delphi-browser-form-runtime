@@ -91,7 +91,7 @@ procedure TFormBrowserTest.BtnWVBrowserClassChainableTestClick(Sender: TObject);
 begin
   BrowserForm := TCustomFormWVBrowser.Create()
     .SetURL('file:///' + ExtractFilePath(ParamStr(0)) + 'index.html')
-    .SetCaption('Exemplo')
+    .SetCaption('Exemplo de Teste')
     .SetWidth(2048)
     .SetHeight(1800)
     .SetActionButtons([TBorderIcon.biMinimize, TBorderIcon.biMaximize])
@@ -108,7 +108,7 @@ end;
 procedure TFormBrowserTest.BtnWVBrowserClassPropertiesTestClick(Sender: TObject);
 begin
   BrowserForm := TCustomFormWVBrowser.Create('file:///' + ExtractFilePath(ParamStr(0)) + 'index.html');
-  BrowserForm.Caption := 'Exemplo';
+  BrowserForm.Caption := 'Exemplo de Teste';
   BrowserForm.Width := 2048;
   BrowserForm.Height := 1800;
   BrowserForm.ActionButtons := [TBorderIcon.biMinimize, TBorderIcon.biMaximize];
@@ -127,7 +127,7 @@ end;
 procedure TFormBrowserTest.BtnWVBrowserInterfaceChainableTestClick(Sender: TObject);
 begin
   BrowserForm := TCustomFormWVBrowser.Create('file:///' + ExtractFilePath(ParamStr(0)) + 'index.html')
-    .SetCaption('Exemplo')
+    .SetCaption('Exemplo de Teste')
     .SetWidth(2048)
     .SetHeight(1800)
     .SetActionButtons([TBorderIcon.biMinimize, TBorderIcon.biMaximize])
@@ -144,7 +144,7 @@ end;
 procedure TFormBrowserTest.BtnWVBrowserInterfacePropertiesTestClick(Sender: TObject);
 begin
   BrowserForm := TCustomFormWVBrowser.Create('file:///' + ExtractFilePath(ParamStr(0)) + 'index.html');
-  BrowserForm.Caption := 'Exemplo';
+  BrowserForm.Caption := 'Exemplo de Teste';
   BrowserForm.Width := 2048;
   BrowserForm.Height := 1800;
   BrowserForm.ActionButtons := [TBorderIcon.biMinimize, TBorderIcon.biMaximize];
@@ -195,7 +195,7 @@ begin
       .SetMessageReceiver(OnMainBrowserMessage);
 
     // Mostrar o browser principal
-    FMainBrowser.Show();
+    FMainBrowser.Show;
 
     LogMessage('Browser principal criado e exibido!');
     btnCreatePopup.Enabled := True;
@@ -233,7 +233,7 @@ begin
       .SetMessageReceiver(OnPopupBrowserMessage);
 
     // Mostrar o popup
-    FPopupBrowser.Show();
+    FPopupBrowser.ShowModal;
 
     LogMessage('Popup criado e exibido!');
 
@@ -294,7 +294,7 @@ begin
     .SetMessageReceiver(OnMessageReceived)
     .SetHTMLContent(HTMLContent);
 
-  Browser.Show;
+  Browser.ShowAsModal;
   LogMessage('Browser com HTML customizado criado');
 end;
 
