@@ -201,6 +201,8 @@ type
     procedure Show(const AType: TOpenType = TOpenType.Normal);
     procedure ShowModal(const AType: TOpenType = TOpenType.Modal);
     procedure ShowAsModal(AParentForm: TForm = nil);
+    procedure ShowAsMDI(TFormulario: TComponentClass; var Formulario; AutoShow: Boolean = True);
+    procedure ShowAsMDIAdvanced(TFormulario: TComponentClass; var Formulario; AutoShow: Boolean = True; SingleInstance: Boolean = True; MaximizeOnShow: Boolean = True; BringToFrontIfExists: Boolean = True);
 
     // Properties
     property Width: Integer read GetWidthProp write SetWidthProp;
@@ -1227,12 +1229,14 @@ end;
 
 procedure TCustomFormWVBrowser.OnPopupOpened(Sender: TObject);
 begin
-  ShowMessage('Popup foi concluiu a abertura! Instância: ' + TCustomFormWVBrowser(Sender).ClassName);
+  if DEBUG_MODE then
+    ShowMessage('Popup foi concluiu a abertura! Instância: ' + TCustomFormWVBrowser(Sender).ClassName);
 end;
 
 procedure TCustomFormWVBrowser.OnPopupClosed(Sender: TObject);
 begin
-  ShowMessage('Popup foi fechado! Instância: ' + TCustomFormWVBrowser(Sender).ClassName);
+  if DEBUG_MODE then
+    ShowMessage('Popup foi fechado! Instância: ' + TCustomFormWVBrowser(Sender).ClassName);
 end;
 
 function TCustomFormWVBrowser.DecodeDataURL(const DataURL: string): string;
@@ -1350,6 +1354,144 @@ begin
   end
   else
     Show;
+end;
+
+procedure TCustomFormWVBrowser.ShowAsMDI(TFormulario: TComponentClass; var Formulario; AutoShow: Boolean = True);
+var
+  Form: TForm;
+  ExistingForm: TForm;
+  i: Integer;
+begin
+  ExistingForm := nil;
+  if Assigned(Application.MainForm) then
+  begin
+    for i := 0 to Application.MainForm.MDIChildCount - 1 do
+    begin
+      if Application.MainForm.MDIChildren[i].ClassType = TFormulario then
+      begin
+        ExistingForm := Application.MainForm.MDIChildren[i];
+        Break;
+      end;
+    end;
+  end;
+
+  if Assigned(ExistingForm) then
+  begin
+    TForm(Formulario) := ExistingForm;
+    if AutoShow then
+    begin
+      ExistingForm.Show;
+      ExistingForm.BringToFront;
+      if ExistingForm.CanFocus then
+        ExistingForm.SetFocus;
+    end;
+  end
+  else
+  begin
+    try
+      if not Assigned(Application.MainForm) then
+        raise Exception.Create('Application.MainForm não está definido');
+
+      if Application.MainForm.FormStyle <> fsMDIForm then
+        raise Exception.Create('MainForm deve ter FormStyle = fsMDIForm para usar MDI');
+
+      Form := TFormulario.Create(Application.MainForm) as TForm;
+
+      Form.FormStyle := fsMDIChild;
+      Form.WindowState := wsMaximized;
+
+      TForm(Formulario) := Form;
+
+      if AutoShow then
+      begin
+        Form.Show;
+        if Form.CanFocus then
+          Form.SetFocus;
+      end;
+
+    except
+      on E: Exception do
+      begin
+        TForm(Formulario) := nil;
+        raise Exception.Create('Erro ao criar formulário MDI: ' + E.Message);
+      end;
+    end;
+  end;
+end;
+
+procedure TCustomFormWVBrowser.ShowAsMDIAdvanced(TFormulario: TComponentClass; var Formulario; AutoShow: Boolean = True; SingleInstance: Boolean = True; MaximizeOnShow: Boolean = True; BringToFrontIfExists: Boolean = True);
+var
+  Form: TForm;
+  ExistingForm: TForm;
+  i: Integer;
+  MDIParent: TForm;
+begin
+  MDIParent := Application.MainForm;
+  if not Assigned(MDIParent) then
+    raise Exception.Create('Application.MainForm não está definido');
+
+  if MDIParent.FormStyle <> fsMDIForm then
+    raise Exception.Create('MainForm deve ter FormStyle = fsMDIForm para usar MDI');
+
+  ExistingForm := nil;
+  if SingleInstance then
+  begin
+    for i := 0 to MDIParent.MDIChildCount - 1 do
+    begin
+      if MDIParent.MDIChildren[i].ClassType = TFormulario then
+      begin
+        ExistingForm := MDIParent.MDIChildren[i];
+        Break;
+      end;
+    end;
+  end;
+
+  if Assigned(ExistingForm) then
+  begin
+    TForm(Formulario) := ExistingForm;
+    if AutoShow then
+    begin
+      if ExistingForm.WindowState = wsMinimized then
+        ExistingForm.WindowState := wsNormal;
+
+      ExistingForm.Show;
+
+      if BringToFrontIfExists then
+        ExistingForm.BringToFront;
+
+      if MaximizeOnShow and (ExistingForm.WindowState <> wsMaximized) then
+        ExistingForm.WindowState := wsMaximized;
+
+      if ExistingForm.CanFocus then
+        ExistingForm.SetFocus;
+    end;
+  end
+  else
+  begin
+    try
+      Form := TFormulario.Create(MDIParent) as TForm;
+      Form.FormStyle := fsMDIChild;
+
+      if MaximizeOnShow then
+        Form.WindowState := wsMaximized;
+
+      TForm(Formulario) := Form;
+
+      if AutoShow then
+      begin
+        Form.Show;
+        if Form.CanFocus then
+          Form.SetFocus;
+      end;
+
+    except
+      on E: Exception do
+      begin
+        TForm(Formulario) := nil;
+        raise Exception.Create('Erro ao criar formulário MDI: ' + E.Message);
+      end;
+    end;
+  end;
 end;
 
 end.

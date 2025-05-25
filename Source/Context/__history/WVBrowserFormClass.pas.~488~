@@ -15,6 +15,9 @@ uses
   BrowserTypes,
   BrowserFormInterface;
 
+const
+  DEBUG_MODE = False;
+
 type
   TCustomFormWVBrowser = class;
 
@@ -142,6 +145,7 @@ type
     constructor Create(const AURL: String = ''); overload;
     constructor CreateAsPopup(AParentBrowser: TWVBrowser; const AURL: String = ''); overload;
     function CreateInheritedPopup(const AURL: string): TCustomFormWVBrowser; overload;
+    class function CreateAsPopup(const AURL: string): TCustomFormWVBrowser; overload;
     destructor Destroy; override;
 
     // Fluent Chainable Methods
@@ -198,6 +202,8 @@ type
     procedure Show(const AType: TOpenType = TOpenType.Normal);
     procedure ShowModal(const AType: TOpenType = TOpenType.Modal);
     procedure ShowAsModal(AParentForm: TForm = nil);
+    procedure ShowAsMDI(TFormulario: TComponentClass; var Formulario; AutoShow: Boolean = True);
+    procedure ShowAsMDIAdvanced(TFormulario: TComponentClass; var Formulario; AutoShow: Boolean = True; SingleInstance: Boolean = True; MaximizeOnShow: Boolean = True; BringToFrontIfExists: Boolean = True);
 
     // Properties
     property Width: Integer read GetWidthProp write SetWidthProp;
@@ -840,6 +846,20 @@ begin
   Self.CreateComponents(nil, false, AURL);
 end;
 
+class function TCustomFormWVBrowser.CreateAsPopup(const AURL: string): TCustomFormWVBrowser;
+begin
+  Result := TCustomFormWVBrowser.Create(AURL);
+  Result.Caption := 'Exemplo';
+  Result.Width := 2048;
+  Result.Height := 1024;
+  Result.ActionButtons := [TBorderIcon.biMinimize, TBorderIcon.biMaximize];
+  Result.Resizable := true;
+  Result.Movable := true;
+  Result.CookieName := 'CookieName';
+  Result.CookieValue := 'CookieValue';
+  Result.CookieDomain := 'CookieDomain';
+end;
+
 constructor TCustomFormWVBrowser.CreateAsPopup(AParentBrowser: TWVBrowser; const AURL: String = '');
 begin
   inherited Create;
@@ -851,15 +871,15 @@ function TCustomFormWVBrowser.CreateInheritedPopup(const AURL: string): TCustomF
 begin
   Result := TCustomFormWVBrowser.Create(AURL);
 
-  Result.FForm.Caption := Self.Caption;
-  Result.FForm.Width := Self.Width;
-  Result.FForm.Height := Self.Height;
+  Result.Caption := Self.Caption;
+  Result.Width := Self.Width;
+  Result.Height := Self.Height;
   Result.FForm.BorderIcons := Self.ActionButtons;
 
-  Result.CaptionPosition := Self.CaptionPosition;
+  Result.CaptionPosition := Self.FCaptionPosition;
   Result.Resizable := Self.Resizable;
   Result.Movable := Self.Movable;
-  Result.Alpha := Self.Alpha;
+  Result.Alpha := false;
 
   if Self.FCookieName <> EmptyStr then
   begin
@@ -1121,6 +1141,7 @@ begin
 
         if Assigned(TempBrowser) then
         begin
+          TempBrowser.FOnWindowClosed := Self.OnPopupClosed;
           TempBrowser.FOnWindowOpened := Self.OnPopupOpened;
 
           if Succeeded(aArgs.Get_WindowFeatures(WindowFeatures)) then
@@ -1153,9 +1174,7 @@ begin
             end;
           end;
 
-          TempBrowser.FOriginalOnWindowClosed := Self.OnPopupClosed;
-
-          TempBrowser.ShowAsModal(Self.FForm);
+          TempBrowser.Show;
 
           TempBrowser.WaitForBrowserInitialization(
             procedure
@@ -1171,7 +1190,8 @@ begin
                     aArgs.Set_Handled(1);
                     if UriString = 'about:blank' then
                     begin
-
+                      // Para about:blank, aguarda o JavaScript injetar o conteúdo
+                      // Não fazemos nada aqui, o conteúdo será injetado pelo JS
                     end
                     else if Pos('data:text/html', UriString) = 1 then
                     begin
@@ -1217,6 +1237,124 @@ begin
   end;
 end;
 
+//procedure TCustomFormWVBrowser.OnNewWindowRequested(Sender: TObject; const aWebView: ICoreWebView2; const aArgs: ICoreWebView2NewWindowRequestedEventArgs);
+//var
+//  TempBrowser: TCustomFormWVBrowser;
+//  Deferral: ICoreWebView2Deferral;
+//  Uri: PWideChar;
+//  WindowFeatures: ICoreWebView2WindowFeatures;
+//  HasPosition, HasSize: Integer;
+//  WinLeft, WinTop, WinWidth, WinHeight: Cardinal;
+//  UriString: string;
+//begin
+//  try
+//    if Succeeded(aArgs.GetDeferral(Deferral)) then
+//    begin
+//      try
+//        UriString := '';
+//        if Succeeded(aArgs.Get_uri(Uri)) then
+//          UriString := string(Uri);
+//
+//        TempBrowser := Self.CreateInheritedPopup('about:blank');
+//
+//        if Assigned(TempBrowser) then
+//        begin
+//          TempBrowser.FOnWindowOpened := Self.OnPopupOpened;
+//
+//          if Succeeded(aArgs.Get_WindowFeatures(WindowFeatures)) then
+//          begin
+//            if Succeeded(WindowFeatures.Get_HasPosition(HasPosition)) and (HasPosition <> 0) then
+//            begin
+//              if Succeeded(WindowFeatures.Get_Left(WinLeft)) and
+//                 Succeeded(WindowFeatures.Get_Top(WinTop)) then
+//              begin
+//                if Assigned(TempBrowser.FForm) then
+//                begin
+//                  TempBrowser.FForm.Position := poDesigned;
+//                  TempBrowser.FForm.Left := Integer(WinLeft);
+//                  TempBrowser.FForm.Top := Integer(WinTop);
+//                end;
+//              end;
+//            end;
+//
+//            if Succeeded(WindowFeatures.Get_HasSize(HasSize)) and (HasSize <> 0) then
+//            begin
+//              if Succeeded(WindowFeatures.Get_Width(WinWidth)) and
+//                 Succeeded(WindowFeatures.Get_Height(WinHeight)) then
+//              begin
+//                if Assigned(TempBrowser.FForm) then
+//                begin
+//                  TempBrowser.FForm.Width := Integer(WinWidth);
+//                  TempBrowser.FForm.Height := Integer(WinHeight);
+//                end;
+//              end;
+//            end;
+//          end;
+//
+//          TempBrowser.FOriginalOnWindowClosed := Self.OnPopupClosed;
+//
+//          TempBrowser.ShowAsModal(Self.FForm);
+//
+//          TempBrowser.WaitForBrowserInitialization(
+//            procedure
+//            var
+//              DecodedContent: string;
+//            begin
+//              try
+//                if Assigned(TempBrowser.FBrowser) and Assigned(TempBrowser.FBrowser.CoreWebView2) then
+//                begin
+//                  if Assigned(TempBrowser.FBrowser.CoreWebView2.BaseIntf) then
+//                  begin
+//                    aArgs.Set_NewWindow(TempBrowser.FBrowser.CoreWebView2.BaseIntf);
+//                    aArgs.Set_Handled(1);
+//                    if UriString = 'about:blank' then
+//                    begin
+//
+//                    end
+//                    else if Pos('data:text/html', UriString) = 1 then
+//                    begin
+//                      DecodedContent := DecodeDataURL(UriString);
+//                      if DecodedContent <> '' then
+//                        TempBrowser.SetHTMLContent(DecodedContent);
+//                    end
+//                    else
+//                    begin
+//                      TempBrowser.FBrowser.Navigate(UriString);
+//                    end;
+//                  end;
+//                end;
+//              finally
+//                if Assigned(Deferral) then
+//                  Deferral.Complete;
+//              end;
+//            end
+//          );
+//        end
+//        else
+//        begin
+//          if Assigned(Deferral) then
+//            Deferral.Complete;
+//        end;
+//
+//      except
+//        on E: Exception do
+//        begin
+//          if Assigned(Deferral) then
+//            Deferral.Complete;
+//          ShowMessage('Erro ao criar popup: ' + E.Message);
+//        end;
+//      end;
+//    end;
+//
+//  except
+//    on E: Exception do
+//    begin
+//      if Assigned(Deferral) then
+//        Deferral.Complete;
+//    end;
+//  end;
+//end;
+
 procedure TCustomFormWVBrowser.OnWindowCloseRequested(Sender: TObject);
 begin
   PostMessage(FForm.Handle, WM_CLOSE, 0, 0);
@@ -1224,12 +1362,14 @@ end;
 
 procedure TCustomFormWVBrowser.OnPopupOpened(Sender: TObject);
 begin
-  ShowMessage('Popup foi concluiu a abertura! Instância: ' + TCustomFormWVBrowser(Sender).ClassName);
+  if DEBUG_MODE then
+    ShowMessage('Popup foi concluiu a abertura! Instância: ' + TCustomFormWVBrowser(Sender).ClassName);
 end;
 
 procedure TCustomFormWVBrowser.OnPopupClosed(Sender: TObject);
 begin
-  ShowMessage('Popup foi fechado! Instância: ' + TCustomFormWVBrowser(Sender).ClassName);
+  if DEBUG_MODE then
+    ShowMessage('Popup foi fechado! Instância: ' + TCustomFormWVBrowser(Sender).ClassName);
 end;
 
 function TCustomFormWVBrowser.DecodeDataURL(const DataURL: string): string;
@@ -1347,6 +1487,144 @@ begin
   end
   else
     Show;
+end;
+
+procedure TCustomFormWVBrowser.ShowAsMDI(TFormulario: TComponentClass; var Formulario; AutoShow: Boolean = True);
+var
+  Form: TForm;
+  ExistingForm: TForm;
+  i: Integer;
+begin
+  ExistingForm := nil;
+  if Assigned(Application.MainForm) then
+  begin
+    for i := 0 to Application.MainForm.MDIChildCount - 1 do
+    begin
+      if Application.MainForm.MDIChildren[i].ClassType = TFormulario then
+      begin
+        ExistingForm := Application.MainForm.MDIChildren[i];
+        Break;
+      end;
+    end;
+  end;
+
+  if Assigned(ExistingForm) then
+  begin
+    TForm(Formulario) := ExistingForm;
+    if AutoShow then
+    begin
+      ExistingForm.Show;
+      ExistingForm.BringToFront;
+      if ExistingForm.CanFocus then
+        ExistingForm.SetFocus;
+    end;
+  end
+  else
+  begin
+    try
+      if not Assigned(Application.MainForm) then
+        raise Exception.Create('Application.MainForm não está definido');
+
+      if Application.MainForm.FormStyle <> fsMDIForm then
+        raise Exception.Create('MainForm deve ter FormStyle = fsMDIForm para usar MDI');
+
+      Form := TFormulario.Create(Application.MainForm) as TForm;
+
+      Form.FormStyle := fsMDIChild;
+      Form.WindowState := wsMaximized;
+
+      TForm(Formulario) := Form;
+
+      if AutoShow then
+      begin
+        Form.Show;
+        if Form.CanFocus then
+          Form.SetFocus;
+      end;
+
+    except
+      on E: Exception do
+      begin
+        TForm(Formulario) := nil;
+        raise Exception.Create('Erro ao criar formulário MDI: ' + E.Message);
+      end;
+    end;
+  end;
+end;
+
+procedure TCustomFormWVBrowser.ShowAsMDIAdvanced(TFormulario: TComponentClass; var Formulario; AutoShow: Boolean = True; SingleInstance: Boolean = True; MaximizeOnShow: Boolean = True; BringToFrontIfExists: Boolean = True);
+var
+  Form: TForm;
+  ExistingForm: TForm;
+  i: Integer;
+  MDIParent: TForm;
+begin
+  MDIParent := Application.MainForm;
+  if not Assigned(MDIParent) then
+    raise Exception.Create('Application.MainForm não está definido');
+
+  if MDIParent.FormStyle <> fsMDIForm then
+    raise Exception.Create('MainForm deve ter FormStyle = fsMDIForm para usar MDI');
+
+  ExistingForm := nil;
+  if SingleInstance then
+  begin
+    for i := 0 to MDIParent.MDIChildCount - 1 do
+    begin
+      if MDIParent.MDIChildren[i].ClassType = TFormulario then
+      begin
+        ExistingForm := MDIParent.MDIChildren[i];
+        Break;
+      end;
+    end;
+  end;
+
+  if Assigned(ExistingForm) then
+  begin
+    TForm(Formulario) := ExistingForm;
+    if AutoShow then
+    begin
+      if ExistingForm.WindowState = wsMinimized then
+        ExistingForm.WindowState := wsNormal;
+
+      ExistingForm.Show;
+
+      if BringToFrontIfExists then
+        ExistingForm.BringToFront;
+
+      if MaximizeOnShow and (ExistingForm.WindowState <> wsMaximized) then
+        ExistingForm.WindowState := wsMaximized;
+
+      if ExistingForm.CanFocus then
+        ExistingForm.SetFocus;
+    end;
+  end
+  else
+  begin
+    try
+      Form := TFormulario.Create(MDIParent) as TForm;
+      Form.FormStyle := fsMDIChild;
+
+      if MaximizeOnShow then
+        Form.WindowState := wsMaximized;
+
+      TForm(Formulario) := Form;
+
+      if AutoShow then
+      begin
+        Form.Show;
+        if Form.CanFocus then
+          Form.SetFocus;
+      end;
+
+    except
+      on E: Exception do
+      begin
+        TForm(Formulario) := nil;
+        raise Exception.Create('Erro ao criar formulário MDI: ' + E.Message);
+      end;
+    end;
+  end;
 end;
 
 end.
