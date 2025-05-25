@@ -1137,8 +1137,10 @@ begin
         if Succeeded(aArgs.Get_uri(Uri)) then
           UriString := string(Uri);
 
-//        TempBrowser := Self.CreateInheritedPopup('about:blank');
-        TempBrowser := TCustomFormWVBrowser.CreateAsPopup('about:blank');
+        if DEBUG_MODE then
+          TempBrowser := Self.CreateInheritedPopup('about:blank')
+        else
+          TempBrowser := TCustomFormWVBrowser.CreateAsPopup('about:blank');
 
         if Assigned(TempBrowser) then
         begin
@@ -1169,13 +1171,19 @@ begin
                 if Assigned(TempBrowser.FForm) then
                 begin
                   TempBrowser.FForm.Width := Integer(WinWidth);
-                  TempBrowser.FForm.Height := Integer(WinHeight);
+                  TempBrowser.FForm.Height := Integer(WinHeight) + 22;
                 end;
               end;
             end;
           end;
 
-          TempBrowser.Show;
+          if DEBUG_MODE then
+          begin
+            TempBrowser.FOriginalOnWindowClosed := Self.OnPopupClosed;
+            TempBrowser.ShowAsModal(Self.FForm);
+          end
+          else
+            TempBrowser.Show;
 
           TempBrowser.WaitForBrowserInitialization(
             procedure
@@ -1237,124 +1245,6 @@ begin
     end;
   end;
 end;
-
-//procedure TCustomFormWVBrowser.OnNewWindowRequested(Sender: TObject; const aWebView: ICoreWebView2; const aArgs: ICoreWebView2NewWindowRequestedEventArgs);
-//var
-//  TempBrowser: TCustomFormWVBrowser;
-//  Deferral: ICoreWebView2Deferral;
-//  Uri: PWideChar;
-//  WindowFeatures: ICoreWebView2WindowFeatures;
-//  HasPosition, HasSize: Integer;
-//  WinLeft, WinTop, WinWidth, WinHeight: Cardinal;
-//  UriString: string;
-//begin
-//  try
-//    if Succeeded(aArgs.GetDeferral(Deferral)) then
-//    begin
-//      try
-//        UriString := '';
-//        if Succeeded(aArgs.Get_uri(Uri)) then
-//          UriString := string(Uri);
-//
-//        TempBrowser := Self.CreateInheritedPopup('about:blank');
-//
-//        if Assigned(TempBrowser) then
-//        begin
-//          TempBrowser.FOnWindowOpened := Self.OnPopupOpened;
-//
-//          if Succeeded(aArgs.Get_WindowFeatures(WindowFeatures)) then
-//          begin
-//            if Succeeded(WindowFeatures.Get_HasPosition(HasPosition)) and (HasPosition <> 0) then
-//            begin
-//              if Succeeded(WindowFeatures.Get_Left(WinLeft)) and
-//                 Succeeded(WindowFeatures.Get_Top(WinTop)) then
-//              begin
-//                if Assigned(TempBrowser.FForm) then
-//                begin
-//                  TempBrowser.FForm.Position := poDesigned;
-//                  TempBrowser.FForm.Left := Integer(WinLeft);
-//                  TempBrowser.FForm.Top := Integer(WinTop);
-//                end;
-//              end;
-//            end;
-//
-//            if Succeeded(WindowFeatures.Get_HasSize(HasSize)) and (HasSize <> 0) then
-//            begin
-//              if Succeeded(WindowFeatures.Get_Width(WinWidth)) and
-//                 Succeeded(WindowFeatures.Get_Height(WinHeight)) then
-//              begin
-//                if Assigned(TempBrowser.FForm) then
-//                begin
-//                  TempBrowser.FForm.Width := Integer(WinWidth);
-//                  TempBrowser.FForm.Height := Integer(WinHeight);
-//                end;
-//              end;
-//            end;
-//          end;
-//
-//          TempBrowser.FOriginalOnWindowClosed := Self.OnPopupClosed;
-//
-//          TempBrowser.ShowAsModal(Self.FForm);
-//
-//          TempBrowser.WaitForBrowserInitialization(
-//            procedure
-//            var
-//              DecodedContent: string;
-//            begin
-//              try
-//                if Assigned(TempBrowser.FBrowser) and Assigned(TempBrowser.FBrowser.CoreWebView2) then
-//                begin
-//                  if Assigned(TempBrowser.FBrowser.CoreWebView2.BaseIntf) then
-//                  begin
-//                    aArgs.Set_NewWindow(TempBrowser.FBrowser.CoreWebView2.BaseIntf);
-//                    aArgs.Set_Handled(1);
-//                    if UriString = 'about:blank' then
-//                    begin
-//
-//                    end
-//                    else if Pos('data:text/html', UriString) = 1 then
-//                    begin
-//                      DecodedContent := DecodeDataURL(UriString);
-//                      if DecodedContent <> '' then
-//                        TempBrowser.SetHTMLContent(DecodedContent);
-//                    end
-//                    else
-//                    begin
-//                      TempBrowser.FBrowser.Navigate(UriString);
-//                    end;
-//                  end;
-//                end;
-//              finally
-//                if Assigned(Deferral) then
-//                  Deferral.Complete;
-//              end;
-//            end
-//          );
-//        end
-//        else
-//        begin
-//          if Assigned(Deferral) then
-//            Deferral.Complete;
-//        end;
-//
-//      except
-//        on E: Exception do
-//        begin
-//          if Assigned(Deferral) then
-//            Deferral.Complete;
-//          ShowMessage('Erro ao criar popup: ' + E.Message);
-//        end;
-//      end;
-//    end;
-//
-//  except
-//    on E: Exception do
-//    begin
-//      if Assigned(Deferral) then
-//        Deferral.Complete;
-//    end;
-//  end;
-//end;
 
 procedure TCustomFormWVBrowser.OnWindowCloseRequested(Sender: TObject);
 begin
