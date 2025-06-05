@@ -3,7 +3,7 @@ unit BrowserFormInterface;
 interface
 
 uses
-  Vcl.Forms, System.Classes, BrowserTypes, BrowserGenericInterface;
+  Vcl.Forms, System.Classes, uWVBrowser, BrowserTypes, BrowserGenericInterface;
 
 type
   IBrowserForm = interface(IBrowserGeneric)
@@ -21,14 +21,19 @@ type
     function SetCookie(const ACookieName, ACookieValue, ACookieDomain: String; const ACookiePath: String = '/'): IBrowserForm;
     function SetAlpha(const AAlpha: Boolean): IBrowserForm;
     function SetURL(const AURL: String): IBrowserForm;
+    function SetParentForm(const AParentForm: TForm): IBrowserForm;
+    function SetParentBrowser(const AParentBrowser: TWVBrowser): IBrowserForm;
+    function SetUniqueIdentifier(const AUniqueIdentifier: String): IBrowserForm;
+    function SetMaxInstances(const AMaxInstances: Integer): IBrowserForm;
     function SetWindowOpened(const AEvent: TNotifyEvent): IBrowserForm;
     function SetWindowClosed(const AEvent: TNotifyEvent): IBrowserForm;
     function SetHTMLContent(const AHTMLContent: String): IBrowserForm;
-    procedure Show(const AType: TOpenType = TOpenType.Normal);
+    procedure Show(const AType: TOpenType = TOpenType.Default);
     procedure ShowModal(const AType: TOpenType = TOpenType.Modal);
     procedure ShowAsModal(AParentForm: TForm = nil);
-    procedure ShowAsMDI(TFormulario: TComponentClass; var Formulario; AutoShow: Boolean = True);
-    procedure ShowAsMDIAdvanced(TFormulario: TComponentClass; var Formulario; AutoShow: Boolean = True; SingleInstance: Boolean = True; MaximizeOnShow: Boolean = True; BringToFrontIfExists: Boolean = True);
+    procedure ShowAsMDICustom(AutoShow: Boolean = True);
+    procedure ShowAsMDISimple(AutoShow: Boolean; SingleInstance: Boolean; MaximizeOnShow: Boolean = True);
+    procedure ShowAsMDIAdvanced(AutoShow: Boolean = True; SingleInstance: Boolean = True; MaximizeOnShow: Boolean = True; BringToFrontIfExists: Boolean = True; const UniqueIdentifier: String = ''; MaxInstances: Integer = 1);
   end;
 
 implementation

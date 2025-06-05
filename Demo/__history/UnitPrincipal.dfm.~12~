@@ -1,0 +1,81 @@
+object FormPrincipal: TFormPrincipal
+  Left = 0
+  Top = 0
+  Caption = 'Aplica'#231#227'o MDI - Janela Principal'
+  ClientHeight = 441
+  ClientWidth = 624
+  Color = clBtnFace
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -11
+  Font.Name = 'Tahoma'
+  Font.Style = []
+  FormStyle = fsMDIForm
+  Menu = MainMenu1
+  OldCreateOrder = False
+  WindowState = wsMaximized
+  OnCreate = FormCreate
+  PixelsPerInch = 96
+  TextHeight = 13
+  object MainMenu1: TMainMenu
+    Left = 24
+    Top = 24
+    object Arquivo1: TMenuItem
+      Caption = '&Arquivo'
+      object NovoDocumento1: TMenuItem
+        Caption = '&Novo Documento (Nativo)'
+        ShortCut = 16462
+        OnClick = NovoDocumento1Click
+      end
+      object N1: TMenuItem
+        Caption = '-'
+      end
+      object NovoFormulrioDinmico1: TMenuItem
+        Caption = 'Form Din'#226'mico '#218'nico Valida'#231#227'o Ativa'
+        OnClick = NovoFormulrioDinmico1Click
+      end
+      object NovoFormulrioDinmico21: TMenuItem
+        Caption = 'Form Din'#226'mico '#218'nico Expl'#237'cito'
+        OnClick = NovoFormulrioDinmico21Click
+      end
+      object FormDinmiconicoAliasConstrutor1: TMenuItem
+        Caption = 'Form Din'#226'mico '#218'nico Alias Construtor'
+        OnClick = FormDinmiconicoAliasConstrutor1Click
+      end
+      object FormDinamiconicoConstrutorEsttico1: TMenuItem
+        Caption = 'Form Din'#226'mico '#218'nico Construtor Est'#225'tico'
+        OnClick = FormDinamiconicoConstrutorEsttico1Click
+      end
+      object N3: TMenuItem
+        Caption = '-'
+      end
+      object Sair1: TMenuItem
+        Caption = '&Sair'
+        ShortCut = 32883
+        OnClick = Sair1Click
+      end
+    end
+    object Janela1: TMenuItem
+      Caption = '&Janela'
+      object CascataVertical1: TMenuItem
+        Caption = '&Cascata'
+        OnClick = CascataVertical1Click
+      end
+      object LadoaLado1: TMenuItem
+        Caption = '&Lado a Lado'
+        OnClick = LadoaLado1Click
+      end
+      object OrganizarIcones1: TMenuItem
+        Caption = '&Organizar '#205#141'cones'
+        OnClick = OrganizarIcones1Click
+      end
+      object N2: TMenuItem
+        Caption = '-'
+      end
+      object FecharTodas1: TMenuItem
+        Caption = '&Fechar Todas'
+        OnClick = FecharTodas1Click
+      end
+    end
+  end
+end

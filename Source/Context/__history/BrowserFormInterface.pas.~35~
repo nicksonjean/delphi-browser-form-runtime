@@ -1,0 +1,38 @@
+unit BrowserFormInterface;
+
+interface
+
+uses
+  Vcl.Forms, System.Classes, BrowserTypes, BrowserGenericInterface;
+
+type
+  IBrowserForm = interface(IBrowserGeneric)
+  ['{F3F73E9C-B0C0-41D3-9B8A-FAC7F5E1E4B9}']
+    // Fluent methods
+    function SetWidth(const AWidth: Integer): IBrowserForm;
+    function SetHeight(const AHeight: Integer): IBrowserForm;
+    function SetCaption(const ACaption: String; APosition: TPositionCaption = TPositionCaption.Between): IBrowserForm;
+    function SetActionButtons(const AButtons: TBorderIcons): IBrowserForm;
+    function SetResizable(const AResize: Boolean): IBrowserForm;
+    function SetMovable(const AMove: Boolean): IBrowserForm;
+    function SetTitleBar(const ATitleBar: Boolean): IBrowserForm;
+    function SetMessageReceiver(const AMessage: TMessageReceiverCallback): IBrowserForm;
+    function SetMessageSender(const AMessage: String): IBrowserForm;
+    function SetCookie(const ACookieName, ACookieValue, ACookieDomain: String; const ACookiePath: String = '/'): IBrowserForm;
+    function SetAlpha(const AAlpha: Boolean): IBrowserForm;
+    function SetURL(const AURL: String): IBrowserForm;
+    function SetMDIParent(const AParentForm: TForm): IBrowserForm;
+    function SetWindowOpened(const AEvent: TNotifyEvent): IBrowserForm;
+    function SetWindowClosed(const AEvent: TNotifyEvent): IBrowserForm;
+    function SetHTMLContent(const AHTMLContent: String): IBrowserForm;
+    procedure Show(const AType: TOpenType = TOpenType.Default);
+    procedure ShowModal(const AType: TOpenType = TOpenType.Modal);
+    procedure ShowAsModal(AParentForm: TForm = nil);
+    procedure ShowAsMDICustom(AutoShow: Boolean = True);
+    procedure ShowAsMDISimple(AutoShow: Boolean; SingleInstance: Boolean; MaximizeOnShow: Boolean = True);
+    procedure ShowAsMDIAdvanced(AutoShow: Boolean = True; SingleInstance: Boolean = True; MaximizeOnShow: Boolean = True; BringToFrontIfExists: Boolean = True; const UniqueIdentifier: String = '');
+  end;
+
+implementation
+
+end.

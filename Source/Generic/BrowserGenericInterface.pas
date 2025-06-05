@@ -3,7 +3,7 @@ unit BrowserGenericInterface;
 interface
 
 uses
-  Vcl.Forms, System.Classes, BrowserTypes;
+  Vcl.Forms, System.Classes, uWVBrowser, BrowserTypes;
 
 type
   IBrowserGeneric = interface
@@ -24,6 +24,10 @@ type
     function GetCookiePathProp: String;
     function GetAlphaProp: Boolean;
     function GetURLProp: String;
+    function GetParentFormProp: TForm;
+    function GetParentBrowserProp: TWVBrowser;
+    function GetUniqueIdentifierProp: String;
+    function GetMaxInstancesProp: Integer;
     function ReadMessageReceiverProp: TMessageReceiverCallback;
     function ReadMessageSenderProp: String;
     function GetWindowOpenedProp: TNotifyEvent;
@@ -44,6 +48,10 @@ type
     procedure SetCookiePathProp(const Value: String = '/');
     procedure SetAlphaProp(const Value: Boolean);
     procedure SetURLProp(const Value: String);
+    procedure SetParentFormProp(const Value: TForm);
+    procedure SetParentBrowserProp(const Value: TWVBrowser);
+    procedure SetUniqueIdentifierProp(const Value: String);
+    procedure SetMaxInstancesProp(const Value: Integer);
     procedure SetMessageReceiverProp(const Value: TMessageReceiverCallback);
     procedure SetMessageSenderProp(const Value: String);
     procedure SetWindowOpenedProp(const Value: TNotifyEvent);
@@ -65,6 +73,10 @@ type
     property Instance: TComponent read GetInstanceProp;
     property Alpha: Boolean read GetAlphaProp write SetAlphaProp;
     property URL: String read GetURLProp write SetURLProp;
+    property ParentForm: TForm read GetParentFormProp write SetParentFormProp;
+    property ParentBrowser: TWVBrowser read GetParentBrowserProp write SetParentBrowserProp;
+    property UniqueIdentifier: String read GetUniqueIdentifierProp write SetUniqueIdentifierProp;
+    property MaxInstances: Integer read GetMaxInstancesProp write SetMaxInstancesProp;
     property OnMessageReceiver: TMessageReceiverCallback read ReadMessageReceiverProp write SetMessageReceiverProp;
     property OnMessageSender: String read ReadMessageSenderProp write SetMessageSenderProp;
     property OnWindowOpened: TNotifyEvent read GetWindowOpenedProp write SetWindowOpenedProp;

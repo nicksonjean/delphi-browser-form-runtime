@@ -82,7 +82,7 @@ const
     '</body>' +
     '</html>';
 begin
-  FMainBrowser := TCustomFormWVBrowser.Create('data:text/html,' + MAIN_HTML)
+  FMainBrowser := TCustomFormWVBrowser.Create('data:text/html,' + MAIN_HTML, nil)
     .SetWidth(800)
     .SetHeight(600)
     .SetCaption('Sistema Principal')
@@ -287,7 +287,7 @@ begin
     .SetCaption('Entrada de Dados')
     .SetResizable(True)
     .SetMovable(True)
-    .SetActionButtons([biSystemMenu, biMinimize]);
+    .SetActionButtons([TBorderIcon.biMinimize, TBorderIcon.biMaximize]);
 
   FPopups.Add(DataEntryBrowser);
   DataEntryBrowser.Show();

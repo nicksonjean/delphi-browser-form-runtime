@@ -16,15 +16,11 @@ uses
   BrowserFormInterface;
 
 const
-  DEBUG_MODE = False;
+  DEBUG = false;
+  DEFAULT_URL = 'about:blank';
 
 type
   TCustomFormWVBrowser = class;
-
-  TCallbackInfo = record
-    Timer: TTimer;
-    Callback: TProc;
-  end;
 
   TCustomWVForm = class(TForm)
   strict private
@@ -38,9 +34,9 @@ type
   public
     BrowserInstance: IBrowserForm;
     procedure FormShow(Sender: TObject);
+    procedure FormResize(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
-    procedure FormResize(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure CenterToScreenWithMonitor;
     constructor Create(AOwner: TComponent); override;
@@ -69,7 +65,6 @@ type
     FMessageSender: string;
     FMessageReceiver: TMessageReceiverCallback;
     FIsPopup: Boolean;
-    FParentBrowser: TWVBrowser;
     FCheckTimer: TTimer;
     FCallbackList: TList<TCallbackInfo>;
     FOnWindowOpened: TNotifyEvent;
@@ -78,10 +73,41 @@ type
     FParentFormEnabledState: Boolean;
     FOriginalOnWindowClosed: TNotifyEvent;
     FIsModalMode: Boolean;
+    FIsClosing: Boolean;
+    FIsInitializing: Boolean;
+    FComponentsCreated: Boolean;
+    FParentBrowser: TWVBrowser;
+    FParentForm: TForm;
+    FUniqueIdentifier: String;
+    FMaxInstances: Integer;
 
-    // Internal Methods
+    class var FMDIInstanceRegistry: TDictionary<string, TList<TCustomFormWVBrowser>>;
+    class function GetMDIInstanceRegistry: TDictionary<string, TList<TCustomFormWVBrowser>>;
+    class procedure RegisterMDIInstance(const AIdentifier: string; AInstance: TCustomFormWVBrowser);
+    class procedure UnregisterMDIInstance(const AIdentifier: string; AInstance: TCustomFormWVBrowser);
+    class function GetMDIInstanceCount(const AIdentifier: string): Integer;
+    class function GetOldestMDIInstance(const AIdentifier: string): TCustomFormWVBrowser;
+    class function CanCreateMDIInstance(const AIdentifier: string; AMaxInstances: Integer; ASingleInstance: Boolean): Boolean;
+
+    // Internal Generic Methods
+    function DecodeDataURL(const DataURL: string): string;
+    procedure ResizeBrowser;
+    procedure TryCreateBrowser;
+    procedure InitializePopupBrowser;
+    procedure WaitForBrowserInitialization(const ACallback: TProc);
+    procedure CheckInitializationTimer(Sender: TObject);
+    procedure RestoreParentFormState(Sender: TObject);
+    procedure EnsureComponentsCreated;
     procedure InitComponents;
+
+    // Normal and Modal Methods
     procedure CreateComponents(AParentBrowser: TWVBrowser = nil; AIsPopup: Boolean = false; const AURL: String = '');
+
+    // MDI Methods
+    procedure CreateMDIComponents(AParentForm: TForm; const AURL: String);
+    procedure ConvertToMDI(AParentForm: TForm; AutoShow: Boolean);
+
+    // Event Methods
     procedure OnTimer(Sender: TObject);
     procedure OnAfterCreated(Sender: TObject);
     procedure OnDocTitleChanged(Sender: TObject);
@@ -92,13 +118,6 @@ type
     procedure OnWindowCloseRequested(Sender: TObject);
     procedure OnPopupOpened(Sender: TObject);
     procedure OnPopupClosed(Sender: TObject);
-    procedure TryCreateBrowser;
-    procedure ResizeBrowser;
-    procedure InitializePopupBrowser;
-    procedure WaitForBrowserInitialization(const ACallback: TProc);
-    procedure CheckInitializationTimer(Sender: TObject);
-    procedure RestoreParentFormState(Sender: TObject);
-    function DecodeDataURL(const DataURL: string): string;
   protected
     // Getters
     function GetWidthProp: Integer;
@@ -116,10 +135,15 @@ type
     function GetCookiePathProp: String;
     function GetAlphaProp: Boolean;
     function GetURLProp: String;
+    function GetParentFormProp: TForm;
+    function GetParentBrowserProp: TWVBrowser;
+    function GetUniqueIdentifierProp: String;
+    function GetMaxInstancesProp: Integer;
     function GetWindowOpenedProp: TNotifyEvent;
     function GetWindowClosedProp: TNotifyEvent;
     function ReadMessageReceiverProp: TMessageReceiverCallback;
     function ReadMessageSenderProp: String;
+    function GetPopupProp: Boolean;
 
     // Setters
     procedure SetWidthProp(const Value: Integer);
@@ -136,17 +160,31 @@ type
     procedure SetCookiePathProp(const Value: String = '/');
     procedure SetAlphaProp(const Value: Boolean);
     procedure SetURLProp(const Value: String);
+    procedure SetParentFormProp(const Value: TForm);
+    procedure SetParentBrowserProp(const Value: TWVBrowser);
+    procedure SetUniqueIdentifierProp(const Value: String);
+    procedure SetMaxInstancesProp(const Value: Integer);
     procedure SetWindowOpenedProp(const Value: TNotifyEvent);
     procedure SetWindowClosedProp(const Value: TNotifyEvent);
     procedure SetMessageReceiverProp(const Value: TMessageReceiverCallback);
     procedure SetMessageSenderProp(const Value: String);
   public
     // Constructor and Destructor
-    constructor Create(const AURL: String = ''); overload;
-    constructor CreateAsPopup(AParentBrowser: TWVBrowser; const AURL: String = ''); overload;
-    function CreateInheritedPopup(const AURL: string): TCustomFormWVBrowser; overload;
-    class function CreateAsPopup(const AURL: string): TCustomFormWVBrowser; overload;
+    constructor Create; overload;
+    constructor Create(const AURL: String); overload;
+    constructor Create(const AURL: String; AParentObject: TObject); overload;
+    constructor CreateAsBrowser(AType: TBrowserConstructorType = Dummy); overload;
+    constructor CreateAsBrowser(const AURL: String = ''; AType: TBrowserConstructorType = Dummy); overload;
+    constructor CreateAsPopup(AParentBrowser: TWVBrowser; const AURL: String = '');
+    constructor CreateAsMDI(AParentForm: TForm; const AURL: String = '');
     destructor Destroy; override;
+
+    // Alias Method for Popup Childs
+    function Recreate(const AURL: string): TCustomFormWVBrowser;
+
+    // Static Method for MDI Forms
+    class function FindMDIInstance(const AIdentifier: string): TCustomFormWVBrowser;
+    class function CheckMDILimits(const AUniqueIdentifier: string; AMaxInstances: Integer = 1; ASingleInstance: Boolean = True): Boolean;
 
     // Fluent Chainable Methods
     function SetWidth(const AWidth: Integer): TCustomFormWVBrowser;
@@ -159,6 +197,10 @@ type
     function SetCookie(const ACookieName, ACookieValue, ACookieDomain: String; const ACookiePath: String = '/'): TCustomFormWVBrowser;
     function SetAlpha(const AAlpha: Boolean): TCustomFormWVBrowser;
     function SetURL(const AURL: String): TCustomFormWVBrowser;
+    function SetParentForm(const AParentForm: TForm): TCustomFormWVBrowser;
+    function SetParentBrowser(const AParentBrowser: TWVBrowser): TCustomFormWVBrowser;
+    function SetUniqueIdentifier(const AUniqueIdentifier: String): TCustomFormWVBrowser;
+    function SetMaxInstances(const AMaxInstances: Integer): TCustomFormWVBrowser;
     function SetWindowOpened(const AEvent: TNotifyEvent): TCustomFormWVBrowser;
     function SetWindowClosed(const AEvent: TNotifyEvent): TCustomFormWVBrowser;
     function SetHTMLContent(const AHTMLContent: String): TCustomFormWVBrowser;
@@ -176,11 +218,21 @@ type
     function IBrowserForm.SetCookie = ISetCookie;
     function IBrowserForm.SetAlpha = ISetAlpha;
     function IBrowserForm.SetURL = ISetURL;
+    function IBrowserForm.SetParentForm = ISetParentForm;
+    function IBrowserForm.SetParentBrowser = ISetParentBrowser;
+    function IBrowserForm.SetUniqueIdentifier = ISetUniqueIdentifier;
+    function IBrowserForm.SetMaxInstances = ISetMaxInstances;
     function IBrowserForm.SetWindowOpened = ISetWindowOpened;
     function IBrowserForm.SetWindowClosed = ISetWindowClosed;
     function IBrowserForm.SetHTMLContent = ISetHTMLContent;
     function IBrowserForm.SetMessageReceiver = ISetMessageReceiver;
     function IBrowserForm.SetMessageSender = ISetMessageSender;
+    procedure IBrowserForm.Show = IShow;
+    procedure IBrowserForm.ShowModal = IShowModal;
+    procedure IBrowserForm.ShowAsModal = IShowAsModal;
+    procedure IBrowserForm.ShowAsMDICustom = IShowAsMDICustom;
+    procedure IBrowserForm.ShowAsMDISimple = IShowAsMDISimple;
+    procedure IBrowserForm.ShowAsMDIAdvanced = IShowAsMDIAdvanced;
 
     function ISetWidth(const AWidth: Integer): IBrowserForm;
     function ISetHeight(const AHeight: Integer): IBrowserForm;
@@ -192,18 +244,33 @@ type
     function ISetCookie(const ACookieName, ACookieValue, ACookieDomain: String; const ACookiePath: String = '/'): IBrowserForm;
     function ISetAlpha(const AAlpha: Boolean): IBrowserForm;
     function ISetURL(const AURL: String): IBrowserForm;
+    function ISetParentForm(const AParentForm: TForm): IBrowserForm;
+    function ISetParentBrowser(const AParentBrowser: TWVBrowser): IBrowserForm;
+    function ISetUniqueIdentifier(const AUniqueIdentifier: String): IBrowserForm;
+    function ISetMaxInstances(const AMaxInstances: Integer): IBrowserForm;
     function ISetWindowOpened(const AEvent: TNotifyEvent): IBrowserForm;
     function ISetWindowClosed(const AEvent: TNotifyEvent): IBrowserForm;
     function ISetHTMLContent(const AHTMLContent: String): IBrowserForm;
     function ISetMessageReceiver(const AMessage: TMessageReceiverCallback): IBrowserForm;
     function ISetMessageSender(const AMessage: String): IBrowserForm;
+    procedure IShow(const AType: TOpenType = TOpenType.Default);
+    procedure IShowModal(const AType: TOpenType = TOpenType.Modal);
+    procedure IShowAsModal(AParentForm: TForm = nil);
+    procedure IShowAsMDICustom(AutoShow: Boolean = True);
+    procedure IShowAsMDISimple(AutoShow: Boolean; SingleInstance: Boolean; MaximizeOnShow: Boolean = True); overload;
+    procedure IShowAsMDIAdvanced(AutoShow: Boolean = True; SingleInstance: Boolean = True; MaximizeOnShow: Boolean = True; BringToFrontIfExists: Boolean = True; const UniqueIdentifier: String = ''; MaxInstances: Integer = 1);
 
-    // Final Method
-    procedure Show(const AType: TOpenType = TOpenType.Normal);
+    // Final Methods
+    procedure Show(const AType: TOpenType = TOpenType.Default);
     procedure ShowModal(const AType: TOpenType = TOpenType.Modal);
     procedure ShowAsModal(AParentForm: TForm = nil);
-    procedure ShowAsMDI(TFormulario: TComponentClass; var Formulario; AutoShow: Boolean = True);
-    procedure ShowAsMDIAdvanced(TFormulario: TComponentClass; var Formulario; AutoShow: Boolean = True; SingleInstance: Boolean = True; MaximizeOnShow: Boolean = True; BringToFrontIfExists: Boolean = True);
+    procedure ShowAsMDICustom(AutoShow: Boolean = True);
+    procedure ShowAsMDISimple(AutoShow: Boolean; SingleInstance: Boolean; MaximizeOnShow: Boolean = True);
+    procedure ShowAsMDIAdvanced(AutoShow: Boolean = True; SingleInstance: Boolean = True; MaximizeOnShow: Boolean = True; BringToFrontIfExists: Boolean = True; const UniqueIdentifier: String = ''; MaxInstances: Integer = 1);
+
+    // Overload Final Methods
+    procedure ShowAsMDI; overload;
+    procedure ShowAsMDI(const AOptions: TMDIOptions); overload;
 
     // Properties
     property Width: Integer read GetWidthProp write SetWidthProp;
@@ -221,11 +288,15 @@ type
     property Instance: TComponent read GetInstanceProp;
     property Alpha: Boolean read GetAlphaProp write SetAlphaProp;
     property URL: String read GetURLProp write SetURLProp;
+    property ParentForm: TForm read GetParentFormProp write SetParentFormProp;
+    property ParentBrowser: TWVBrowser read GetParentBrowserProp write SetParentBrowserProp;
+    property UniqueIdentifier: String read GetUniqueIdentifierProp write SetUniqueIdentifierProp;
+    property MaxInstances: Integer read GetMaxInstancesProp write SetMaxInstancesProp;
     property OnMessageReceiver: TMessageReceiverCallback read ReadMessageReceiverProp write SetMessageReceiverProp;
     property OnMessageSender: String read ReadMessageSenderProp write SetMessageSenderProp;
     property OnWindowOpened: TNotifyEvent read GetWindowOpenedProp write SetWindowOpenedProp;
     property OnWindowClosed: TNotifyEvent read GetWindowClosedProp write SetWindowClosedProp;
-    property IsPopup: Boolean read FIsPopup;
+    property IsPopup: Boolean read GetPopupProp;
   end;
 
 implementation
@@ -262,27 +333,101 @@ end;
 
 procedure TCustomWVForm.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
-  if Assigned(BrowserInstance) and Assigned((BrowserInstance as TCustomFormWVBrowser).FBrowser) then
-    (BrowserInstance as TCustomFormWVBrowser).FBrowser.NotifyParentWindowPositionChanged;
+  if Assigned(BrowserInstance) then
+  begin
+    (BrowserInstance as TCustomFormWVBrowser).FIsClosing := True;
 
-  if Assigned(BrowserInstance) and Assigned((BrowserInstance as TCustomFormWVBrowser).FOnWindowClosed) then
-    (BrowserInstance as TCustomFormWVBrowser).FOnWindowClosed(BrowserInstance as TCustomFormWVBrowser);
+    try
+      if Assigned((BrowserInstance as TCustomFormWVBrowser).FTimer) then
+      begin
+        (BrowserInstance as TCustomFormWVBrowser).FTimer.Enabled := False;
+        (BrowserInstance as TCustomFormWVBrowser).FTimer.OnTimer := nil;
+      end;
+
+      if Assigned((BrowserInstance as TCustomFormWVBrowser).FCheckTimer) then
+      begin
+        (BrowserInstance as TCustomFormWVBrowser).FCheckTimer.Enabled := False;
+        (BrowserInstance as TCustomFormWVBrowser).FCheckTimer.OnTimer := nil;
+      end;
+    except
+
+    end;
+
+    try
+      if Assigned((BrowserInstance as TCustomFormWVBrowser).FCallbackList) then
+      begin
+        while (BrowserInstance as TCustomFormWVBrowser).FCallbackList.Count > 0 do
+        begin
+          if Assigned((BrowserInstance as TCustomFormWVBrowser).FCallbackList[0].Timer) then
+          begin
+            (BrowserInstance as TCustomFormWVBrowser).FCallbackList[0].Timer.Enabled := False;
+            (BrowserInstance as TCustomFormWVBrowser).FCallbackList[0].Timer.OnTimer := nil;
+          end;
+          (BrowserInstance as TCustomFormWVBrowser).FCallbackList.Delete(0);
+        end;
+      end;
+    except
+
+    end;
+
+    try
+      if Assigned((BrowserInstance as TCustomFormWVBrowser).FOnWindowClosed) then
+        (BrowserInstance as TCustomFormWVBrowser).FOnWindowClosed(BrowserInstance as TCustomFormWVBrowser);
+    except
+
+    end;
+  end;
+
+  Action := caFree;
 end;
 
 procedure TCustomWVForm.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 begin
   CanClose := True;
-  if Assigned(BrowserInstance) and Assigned((BrowserInstance as TCustomFormWVBrowser).FBrowser) then
-    (BrowserInstance as TCustomFormWVBrowser).FBrowser.ExecuteScript('window.dispatchEvent(new Event("beforeunload"))');
+
+  if Assigned(BrowserInstance) then
+  begin
+    (BrowserInstance as TCustomFormWVBrowser).FIsClosing := True;
+
+    try
+      if Assigned((BrowserInstance as TCustomFormWVBrowser).FTimer) then
+        (BrowserInstance as TCustomFormWVBrowser).FTimer.Enabled := False;
+
+      if Assigned((BrowserInstance as TCustomFormWVBrowser).FCheckTimer) then
+        (BrowserInstance as TCustomFormWVBrowser).FCheckTimer.Enabled := False;
+    except
+
+    end;
+  end;
 end;
 
 procedure TCustomWVForm.FormDestroy(Sender: TObject);
 begin
+  if Assigned(BrowserInstance) then
+  begin
+    (BrowserInstance as TCustomFormWVBrowser).FIsClosing := True;
+    (BrowserInstance as TCustomFormWVBrowser).FForm := nil;
+  end;
+
   if Assigned(FDeferral) then
-    FreeAndNil(FDeferral);
+  begin
+    try
+      FreeAndNil(FDeferral);
+    except
+
+    end;
+  end;
 
   if Assigned(FArgs) then
-    FreeAndNil(FArgs);
+  begin
+    try
+      FreeAndNil(FArgs);
+    except
+
+    end;
+  end;
+
+  BrowserInstance := nil;
 end;
 
 procedure TCustomWVForm.FormResize(Sender: TObject);
@@ -336,7 +481,7 @@ procedure TCustomWVForm.WMWindowPosChanging(var aMessage: TWMWindowPosChanging);
 begin
   if Assigned(BrowserInstance) and not (BrowserInstance as TCustomFormWVBrowser).FMovable then
   begin
-    CenterToScreenWithMonitor;
+    Self.CenterToScreenWithMonitor;
     aMessage.WindowPos^.flags := aMessage.WindowPos^.flags or SWP_NOMOVE;
   end;
 
@@ -401,6 +546,30 @@ begin
   Result := Self;
 end;
 
+function TCustomFormWVBrowser.ISetParentForm(const AParentForm: TForm): IBrowserForm;
+begin
+  SetParentForm(AParentForm);
+  Result := Self;
+end;
+
+function TCustomFormWVBrowser.ISetParentBrowser(const AParentBrowser: TWVBrowser): IBrowserForm;
+begin
+  SetParentBrowser(AParentBrowser);
+  Result := Self;
+end;
+
+function TCustomFormWVBrowser.ISetUniqueIdentifier(const AUniqueIdentifier: String): IBrowserForm;
+begin
+  SetUniqueIdentifier(AUniqueIdentifier);
+  Result := Self;
+end;
+
+function TCustomFormWVBrowser.ISetMaxInstances(const AMaxInstances: Integer): IBrowserForm;
+begin
+  SetMaxInstances(AMaxInstances);
+  Result := Self;
+end;
+
 function TCustomFormWVBrowser.ISetWindowOpened(const AEvent: TNotifyEvent): IBrowserForm;
 begin
   SetWindowOpened(AEvent);
@@ -435,6 +604,36 @@ function TCustomFormWVBrowser.ISetMessageSender(const AMessage: String): IBrowse
 begin
   SetMessageSender(AMessage);
   Result := Self;
+end;
+
+procedure TCustomFormWVBrowser.IShowAsMDICustom(AutoShow: Boolean = True);
+begin
+  ShowAsMDICustom(AutoShow);
+end;
+
+procedure TCustomFormWVBrowser.IShowAsMDISimple(AutoShow: Boolean; SingleInstance: Boolean; MaximizeOnShow: Boolean = True);
+begin
+  ShowAsMDISimple(AutoShow, SingleInstance, MaximizeOnShow);
+end;
+
+procedure TCustomFormWVBrowser.IShowAsMDIAdvanced(AutoShow: Boolean = True; SingleInstance: Boolean = True; MaximizeOnShow: Boolean = True; BringToFrontIfExists: Boolean = True; const UniqueIdentifier: String = ''; MaxInstances: Integer = 1);
+begin
+  ShowAsMDIAdvanced(AutoShow, SingleInstance, MaximizeOnShow, BringToFrontIfExists, UniqueIdentifier, MaxInstances);
+end;
+
+procedure TCustomFormWVBrowser.IShow(const AType: TOpenType);
+begin
+  Show(AType);
+end;
+
+procedure TCustomFormWVBrowser.IShowAsModal(AParentForm: TForm);
+begin
+  ShowAsModal(AParentForm);
+end;
+
+procedure TCustomFormWVBrowser.IShowModal(const AType: TOpenType);
+begin
+  ShowModal(AType);
 end;
 
 // Getters
@@ -472,6 +671,11 @@ end;
 function TCustomFormWVBrowser.GetMovableProp: Boolean;
 begin
   Result := FMovable;
+end;
+
+function TCustomFormWVBrowser.GetPopupProp: Boolean;
+begin
+  Result:= FIsPopup;
 end;
 
 function TCustomFormWVBrowser.GetTitleBarProp: Boolean;
@@ -512,6 +716,26 @@ end;
 function TCustomFormWVBrowser.GetURLProp: String;
 begin
   Result := FURL;
+end;
+
+function TCustomFormWVBrowser.GetParentFormProp: TForm;
+begin
+  Result := FParentForm;
+end;
+
+function TCustomFormWVBrowser.GetParentBrowserProp: TWVBrowser;
+begin
+  Result := FParentBrowser;
+end;
+
+function TCustomFormWVBrowser.GetUniqueIdentifierProp: String;
+begin
+  Result := FUniqueIdentifier;
+end;
+
+function TCustomFormWVBrowser.GetMaxInstancesProp: Integer;
+begin
+  Result := FMaxInstances;
 end;
 
 function TCustomFormWVBrowser.GetWindowOpenedProp: TNotifyEvent;
@@ -610,6 +834,26 @@ begin
   SetURL(Value);
 end;
 
+procedure TCustomFormWVBrowser.SetParentFormProp(const Value: TForm);
+begin
+  SetParentForm(Value);
+end;
+
+procedure TCustomFormWVBrowser.SetParentBrowserProp(const Value: TWVBrowser);
+begin
+  SetParentBrowser(Value);
+end;
+
+procedure TCustomFormWVBrowser.SetUniqueIdentifierProp(const Value: String);
+begin
+  SetUniqueIdentifier(Value);
+end;
+
+procedure TCustomFormWVBrowser.SetMaxInstancesProp(const Value: Integer);
+begin
+  SetMaxInstances(Value);
+end;
+
 procedure TCustomFormWVBrowser.SetWindowOpenedProp(const Value: TNotifyEvent);
 begin
   SetWindowOpened(Value);
@@ -638,7 +882,7 @@ begin
   if Assigned(FForm) then
   begin
     FForm.ClientWidth := AWidth;
-    ResizeBrowser;
+    Self.ResizeBrowser;
   end;
   Result := Self;
 end;
@@ -649,7 +893,7 @@ begin
   if Assigned(FForm) then
   begin
     FForm.ClientHeight := AHeight;
-    ResizeBrowser;
+    Self.ResizeBrowser;
   end;
   Result := Self;
 end;
@@ -659,7 +903,7 @@ begin
   FCaption := ACaption;
   FCaptionPosition := APosition;
   if FBrowserInitialized then
-    OnDocTitleChanged(FBrowser);
+    Self.OnDocTitleChanged(FBrowser);
   Result := Self;
 end;
 
@@ -737,6 +981,71 @@ end;
 function TCustomFormWVBrowser.SetURL(const AURL: String): TCustomFormWVBrowser;
 begin
   FURL := AURL;
+  if not FComponentsCreated and (AURL <> EmptyStr) then
+  begin
+    if Assigned(FParentForm) and (FParentForm.FormStyle = fsMDIForm) then
+    begin
+      Self.CreateMDIComponents(FParentForm, AURL);
+      FComponentsCreated := True;
+    end
+    else if Assigned(FParentBrowser) then
+    begin
+      Self.CreateComponents(FParentBrowser, true, AURL);
+      FComponentsCreated := True;
+      FIsPopup := True;
+    end
+    else
+    begin
+      Self.CreateComponents(nil, false, AURL);
+      FComponentsCreated := True;
+    end;
+  end
+  else if FComponentsCreated and FBrowserInitialized and Assigned(FBrowser) then
+    FBrowser.Navigate(AURL);
+  Result := Self;
+end;
+
+function TCustomFormWVBrowser.SetParentForm(const AParentForm: TForm): TCustomFormWVBrowser;
+begin
+  FParentForm := AParentForm;
+
+  if not FComponentsCreated and Assigned(AParentForm) then
+  begin
+    if AParentForm.FormStyle = fsMDIForm then
+    begin
+      Self.CreateMDIComponents(AParentForm, FURL);
+      FComponentsCreated := True;
+    end;
+  end
+  else if FComponentsCreated and Assigned(AParentForm) and (AParentForm.FormStyle = fsMDIForm) then
+    ConvertToMDI(AParentForm, False);
+
+  Result := Self;
+end;
+
+function TCustomFormWVBrowser.SetParentBrowser(const AParentBrowser: TWVBrowser): TCustomFormWVBrowser;
+begin
+  FParentBrowser := AParentBrowser;
+
+  if not FComponentsCreated and Assigned(AParentBrowser) then
+  begin
+    Self.CreateComponents(AParentBrowser, true, FURL);
+    FComponentsCreated := True;
+    FIsPopup := True;
+  end;
+
+  Result := Self;
+end;
+
+function TCustomFormWVBrowser.SetUniqueIdentifier(const AUniqueIdentifier: String): TCustomFormWVBrowser;
+begin
+  FUniqueIdentifier := AUniqueIdentifier;
+  Result := Self;
+end;
+
+function TCustomFormWVBrowser.SetMaxInstances(const AMaxInstances: Integer): TCustomFormWVBrowser;
+begin
+  FMaxInstances := AMaxInstances;
   Result := Self;
 end;
 
@@ -785,6 +1094,120 @@ begin
   Result := Self;
 end;
 
+// Registry
+
+class function TCustomFormWVBrowser.GetMDIInstanceRegistry: TDictionary<string, TList<TCustomFormWVBrowser>>;
+begin
+  if not Assigned(FMDIInstanceRegistry) then
+    FMDIInstanceRegistry := TDictionary<string, TList<TCustomFormWVBrowser>>.Create;
+  Result := FMDIInstanceRegistry;
+end;
+
+class procedure TCustomFormWVBrowser.RegisterMDIInstance(const AIdentifier: string; AInstance: TCustomFormWVBrowser);
+var
+  InstanceList: TList<TCustomFormWVBrowser>;
+begin
+  if AIdentifier <> EmptyStr then
+  begin
+    if not GetMDIInstanceRegistry.TryGetValue(AIdentifier, InstanceList) then
+    begin
+      InstanceList := TList<TCustomFormWVBrowser>.Create;
+      GetMDIInstanceRegistry.Add(AIdentifier, InstanceList);
+    end;
+
+    if InstanceList.IndexOf(AInstance) = -1 then
+      InstanceList.Add(AInstance);
+  end;
+end;
+
+class procedure TCustomFormWVBrowser.UnregisterMDIInstance(const AIdentifier: string; AInstance: TCustomFormWVBrowser);
+var
+  InstanceList: TList<TCustomFormWVBrowser>;
+begin
+  if AIdentifier <> EmptyStr then
+  begin
+    if GetMDIInstanceRegistry.TryGetValue(AIdentifier, InstanceList) then
+    begin
+      InstanceList.Remove(AInstance);
+      if InstanceList.Count = 0 then
+      begin
+        InstanceList.Free;
+        GetMDIInstanceRegistry.Remove(AIdentifier);
+      end;
+    end;
+  end;
+end;
+
+class function TCustomFormWVBrowser.GetMDIInstanceCount(const AIdentifier: string): Integer;
+var
+  InstanceList: TList<TCustomFormWVBrowser>;
+  i: Integer;
+begin
+  Result := 0;
+  if (AIdentifier <> EmptyStr) and GetMDIInstanceRegistry.TryGetValue(AIdentifier, InstanceList) then
+  begin
+    for i := InstanceList.Count - 1 downto 0 do
+    begin
+      if not Assigned(InstanceList[i]) or not Assigned(InstanceList[i].FForm) or InstanceList[i].FIsClosing then
+      begin
+        InstanceList.Delete(i);
+      end
+      else
+        Inc(Result);
+    end;
+  end;
+end;
+
+class function TCustomFormWVBrowser.GetOldestMDIInstance(const AIdentifier: string): TCustomFormWVBrowser;
+var
+  InstanceList: TList<TCustomFormWVBrowser>;
+  i: Integer;
+begin
+  Result := nil;
+  if (AIdentifier <> EmptyStr) and GetMDIInstanceRegistry.TryGetValue(AIdentifier, InstanceList) then
+  begin
+    for i := 0 to InstanceList.Count - 1 do
+    begin
+      if Assigned(InstanceList[i]) and Assigned(InstanceList[i].FForm) and not InstanceList[i].FIsClosing then
+      begin
+        Result := InstanceList[i];
+        Break;
+      end;
+    end;
+  end;
+end;
+
+class function TCustomFormWVBrowser.FindMDIInstance(const AIdentifier: string): TCustomFormWVBrowser;
+begin
+  Result := GetOldestMDIInstance(AIdentifier);
+end;
+
+class function TCustomFormWVBrowser.CanCreateMDIInstance(const AIdentifier: string; AMaxInstances: Integer; ASingleInstance: Boolean): Boolean;
+var
+  CurrentCount: Integer;
+begin
+  Result := True;
+
+  if AIdentifier = EmptyStr then
+    Exit;
+
+  if ASingleInstance then
+  begin
+    Result := not Assigned(FindMDIInstance(AIdentifier));
+  end
+
+  else if AMaxInstances > 1 then
+  begin
+    CurrentCount := GetMDIInstanceCount(AIdentifier);
+    Result := CurrentCount < AMaxInstances;
+  end;
+end;
+
+class function TCustomFormWVBrowser.CheckMDILimits(const AUniqueIdentifier: string; AMaxInstances: Integer = 1; ASingleInstance: Boolean = True): Boolean;
+begin
+  Result := CanCreateMDIInstance(AUniqueIdentifier, AMaxInstances, ASingleInstance);
+end;
+
 // Context
 
 procedure TCustomFormWVBrowser.CreateComponents(AParentBrowser: TWVBrowser = nil; AIsPopup: Boolean = false; const AURL: String = '');
@@ -794,9 +1217,15 @@ begin
   FOriginalOnWindowClosed := nil;
   FIsModalMode := False;
 
-  FWidth := 800;
-  FHeight := 600;
-  FURL := AURL;
+  if FURL = EmptyStr then
+    FURL := AURL;
+
+  if FWidth = 0 then
+    FWidth := 800;
+
+  if FHeight = 0 then
+    FHeight := 600;
+
   FCaption := EmptyStr;
   FCaptionPosition := TPositionCaption.Between;
   FMovable := True;
@@ -839,37 +1268,202 @@ begin
   InitComponents;
 end;
 
-constructor TCustomFormWVBrowser.Create(const AURL: String = '');
+procedure TCustomFormWVBrowser.CreateMDIComponents(AParentForm: TForm; const AURL: String);
+var
+  OldForm: TCustomWVForm;
+begin
+  OldForm := FForm;
+
+  if FURL = EmptyStr then
+    FURL := AURL;
+
+  if FWidth = 0 then
+    FWidth := 800;
+
+  if FHeight = 0 then
+    FHeight := 600;
+
+  FIsClosing := False;
+  FParentForm := AParentForm;
+  FIsInitializing := False;
+
+  if not Assigned(GlobalWebView2Loader) then
+  begin
+    GlobalWebView2Loader := TWVLoader.Create(nil);
+    GlobalWebView2Loader.UserDataFolder := ExtractFilePath(ParamStr(0)) + 'CustomCache';
+    GlobalWebView2Loader.StartWebView2;
+  end;
+
+  try
+    FForm := TCustomWVForm.CreateWithArgs(AParentForm, nil);
+    FForm.BrowserInstance := Self;
+    FForm.FormStyle := fsMDIChild;
+    FForm.Caption := FCaption;
+    FForm.ClientWidth := FWidth;
+    FForm.ClientHeight := FHeight;
+
+    FForm.OnShow := FForm.FormShow;
+    FForm.OnClose := FForm.FormClose;
+    FForm.OnCloseQuery := FForm.FormCloseQuery;
+    FForm.OnDestroy := FForm.FormDestroy;
+    FForm.OnResize := FForm.FormResize;
+
+    if not Assigned(FBrowser) then
+      InitComponents;
+
+    if Assigned(OldForm) and (OldForm <> FForm) then
+    begin
+      OldForm.BrowserInstance := nil;
+      OldForm.Release;
+    end;
+
+  except
+    if Assigned(OldForm) then
+      FForm := OldForm;
+  end;
+end;
+
+constructor TCustomFormWVBrowser.Create;
 begin
   inherited Create;
 
-  Self.CreateComponents(nil, false, AURL);
+  FIsClosing := False;
+  FIsInitializing := False;
+  FParentForm := nil;
+  FParentBrowser := nil;
+  FComponentsCreated := False;
+
+  FWidth := 800;
+  FHeight := 600;
+  FURL := DEFAULT_URL;
+  FCaption := EmptyStr;
+  FCaptionPosition := TPositionCaption.Between;
+  FMovable := True;
+  FBrowserInitialized := False;
+  FIsPopup := False;
+  FMaxInstances := 1;
 end;
 
-class function TCustomFormWVBrowser.CreateAsPopup(const AURL: string): TCustomFormWVBrowser;
+constructor TCustomFormWVBrowser.Create(const AURL: String);
 begin
-  Result := TCustomFormWVBrowser.Create(AURL);
-  Result.Caption := 'Exemplo';
-  Result.Width := 2048;
-  Result.Height := 1024;
-  Result.ActionButtons := [TBorderIcon.biMinimize, TBorderIcon.biMaximize];
-  Result.Resizable := true;
-  Result.Movable := true;
-  Result.CookieName := 'CookieName';
-  Result.CookieValue := 'CookieValue';
-  Result.CookieDomain := 'CookieDomain';
+  inherited Create;
+
+  FIsClosing := False;
+  FIsInitializing := False;
+  FParentForm := nil;
+  FParentBrowser := nil;
+  FComponentsCreated := False;
+
+  if AURL <> EmptyStr then
+  begin
+    Self.CreateComponents(nil, false, AURL);
+    FComponentsCreated := True;
+  end
+  else
+  begin
+    FWidth := 800;
+    FHeight := 600;
+    FURL := DEFAULT_URL;
+    FCaption := EmptyStr;
+    FCaptionPosition := TPositionCaption.Between;
+    FMovable := True;
+    FBrowserInitialized := False;
+    FIsPopup := False;
+  end;
+end;
+
+constructor TCustomFormWVBrowser.Create(const AURL: String; AParentObject: TObject);
+begin
+  inherited Create;
+
+  FIsClosing := False;
+  FIsInitializing := False;
+  FParentForm := nil;
+  FParentBrowser := nil;
+  FComponentsCreated := False;
+
+  if AParentObject is TForm then
+  begin
+    FParentForm := TForm(AParentObject);
+    if TForm(AParentObject).FormStyle = fsMDIForm then
+    begin
+      Self.CreateMDIComponents(TForm(AParentObject), AURL);
+      FComponentsCreated := True;
+    end
+    else
+    begin
+      Self.CreateComponents(nil, false, AURL);
+      FComponentsCreated := True;
+    end;
+  end
+  else if AParentObject is TWVBrowser then
+  begin
+    FParentBrowser := TWVBrowser(AParentObject);
+    Self.CreateComponents(TWVBrowser(AParentObject), true, AURL);
+    FComponentsCreated := True;
+  end
+  else
+  begin
+    Self.CreateComponents(nil, false, AURL);
+    FComponentsCreated := True;
+  end;
+end;
+
+constructor TCustomFormWVBrowser.CreateAsBrowser(AType: TBrowserConstructorType = Dummy);
+begin
+  Create;
+end;
+
+constructor TCustomFormWVBrowser.CreateAsBrowser(const AURL: String = ''; AType: TBrowserConstructorType = Dummy);
+begin
+  inherited Create;
+
+  FIsClosing := False;
+  FIsInitializing := False;
+  FParentForm := nil;
+  FParentBrowser := nil;
+
+  Self.CreateComponents(nil, false, AURL);
+  FComponentsCreated := True;
 end;
 
 constructor TCustomFormWVBrowser.CreateAsPopup(AParentBrowser: TWVBrowser; const AURL: String = '');
 begin
   inherited Create;
 
+  if not Assigned(AParentBrowser) then
+    raise Exception.Create('ParentBrowser não pode ser nil para Popup');
+
+  FIsClosing := False;
+  FIsInitializing := False;
+  FParentForm := nil;
+  FParentBrowser := AParentBrowser;
+
   Self.CreateComponents(AParentBrowser, true, AURL);
+  FComponentsCreated := True;
 end;
 
-function TCustomFormWVBrowser.CreateInheritedPopup(const AURL: string): TCustomFormWVBrowser;
+constructor TCustomFormWVBrowser.CreateAsMDI(AParentForm: TForm; const AURL: String = '');
 begin
-  Result := TCustomFormWVBrowser.Create(AURL);
+  inherited Create;
+
+  if not Assigned(AParentForm) then
+    raise Exception.Create('ParentForm não pode ser nil para MDI');
+  if AParentForm.FormStyle <> fsMDIForm then
+    raise Exception.Create('ParentForm deve ter FormStyle = fsMDIForm para usar MDI');
+
+  FIsClosing := False;
+  FIsInitializing := False;
+  FParentForm := AParentForm;
+  FParentBrowser := nil;
+
+  Self.CreateMDIComponents(AParentForm, AURL);
+  FComponentsCreated := True;
+end;
+
+function TCustomFormWVBrowser.Recreate(const AURL: string): TCustomFormWVBrowser;
+begin
+  Result := TCustomFormWVBrowser.Create(AURL, nil);
 
   Result.Caption := Self.Caption;
   Result.Width := Self.Width;
@@ -897,26 +1491,99 @@ end;
 
 destructor TCustomFormWVBrowser.Destroy;
 begin
-  if Assigned(FBrowser) then
-    FBrowser.Free;
-  if Assigned(FWindowParent) then
-    FWindowParent.Free;
-  if Assigned(FTimer) then
-    FTimer.Free;
-  if Assigned(FForm) then
-    FForm.Free;
-  if Assigned(FCheckTimer) then
-    FCheckTimer.Free;
-   if Assigned(FCallbackList) then
-   begin
-     while FCallbackList.Count > 0 do
-     begin
-       FCallbackList[0].Timer.Free;
-       FCallbackList.Delete(0);
-     end;
-     FCallbackList.Free;
-   end;
-   inherited;
+  FIsClosing := True;
+
+  if FUniqueIdentifier <> EmptyStr then
+    UnregisterMDIInstance(FUniqueIdentifier, Self);
+
+  try
+    if Assigned(FTimer) then
+    begin
+      FTimer.Enabled := False;
+      FTimer.OnTimer := nil;
+      FreeAndNil(FTimer);
+    end;
+  except
+
+  end;
+
+  try
+    if Assigned(FCheckTimer) then
+    begin
+      FCheckTimer.Enabled := False;
+      FCheckTimer.OnTimer := nil;
+      FreeAndNil(FCheckTimer);
+    end;
+  except
+
+  end;
+
+  try
+    if Assigned(FCallbackList) then
+    begin
+      while FCallbackList.Count > 0 do
+      begin
+        if Assigned(FCallbackList[0].Timer) then
+        begin
+          FCallbackList[0].Timer.Enabled := False;
+          FCallbackList[0].Timer.OnTimer := nil;
+          FCallbackList[0].Timer.Free;
+        end;
+        FCallbackList.Delete(0);
+      end;
+      FreeAndNil(FCallbackList);
+    end;
+  except
+
+  end;
+
+  try
+    if Assigned(FBrowser) then
+    begin
+      FBrowser.OnAfterCreated := nil;
+      FBrowser.OnDocumentTitleChanged := nil;
+      FBrowser.OnInitializationError := nil;
+      FBrowser.OnNewWindowRequested := nil;
+      FBrowser.OnWindowCloseRequested := nil;
+      FBrowser.OnNavigationCompleted := nil;
+      FBrowser.OnWebMessageReceived := nil;
+
+      FreeAndNil(FBrowser);
+    end;
+  except
+
+  end;
+
+  try
+    if Assigned(FWindowParent) then
+    begin
+      FWindowParent.Browser := nil;
+      FreeAndNil(FWindowParent);
+    end;
+  except
+
+  end;
+
+  FForm := nil;
+
+  inherited;
+end;
+
+procedure TCustomFormWVBrowser.EnsureComponentsCreated;
+begin
+  if not FComponentsCreated then
+  begin
+    if Assigned(FParentForm) and (FParentForm.FormStyle = fsMDIForm) then
+      Self.CreateMDIComponents(FParentForm, FURL)
+    else if Assigned(FParentBrowser) then
+    begin
+      Self.CreateComponents(FParentBrowser, true, FURL);
+      FIsPopup := True;
+    end
+    else
+      Self.CreateComponents(nil, false, FURL);
+    FComponentsCreated := True;
+  end;
 end;
 
 procedure TCustomFormWVBrowser.InitComponents;
@@ -924,13 +1591,13 @@ begin
   // WebBrowser
   FBrowser := TWVBrowser.Create(FForm);
   FBrowser.DefaultURL := EmptyStr;
-  FBrowser.OnAfterCreated := OnAfterCreated;
-  FBrowser.OnDocumentTitleChanged := OnDocTitleChanged;
-  FBrowser.OnInitializationError := OnInitError;
-  FBrowser.OnNewWindowRequested := OnNewWindowRequested;
-  FBrowser.OnWindowCloseRequested := OnWindowCloseRequested;
-  FBrowser.OnNavigationCompleted := OnNavigationCompleted;
-  FBrowser.OnWebMessageReceived := OnWebMessageReceived;
+  FBrowser.OnAfterCreated := Self.OnAfterCreated;
+  FBrowser.OnDocumentTitleChanged := Self.OnDocTitleChanged;
+  FBrowser.OnInitializationError := Self.OnInitError;
+  FBrowser.OnNewWindowRequested := Self.OnNewWindowRequested;
+  FBrowser.OnWindowCloseRequested := Self.OnWindowCloseRequested;
+  FBrowser.OnNavigationCompleted := Self.OnNavigationCompleted;
+  FBrowser.OnWebMessageReceived := Self.OnWebMessageReceived;
 
   // WebView2 Container
   FWindowParent := TWVWindowParent.Create(FForm);
@@ -955,7 +1622,7 @@ begin
   begin
     FBrowser.CreateBrowser(FWindowParent.Handle);
 
-    if FURL <> '' then
+    if FURL <> EmptyStr then
     begin
       FCookie := FBrowser.CreateCookie(FCookieName, FCookieValue, FCookieDomain, FCookiePath);
       if Assigned(FCookie) then
@@ -964,7 +1631,7 @@ begin
     end;
 
     FBrowserInitialized := True;
-    ResizeBrowser;
+    Self.ResizeBrowser;
   end;
 end;
 
@@ -1044,11 +1711,11 @@ begin
   FBrowserInitialized := True;
   ResizeBrowser;
 
-  if FURL <> '' then
+  if FURL <> EmptyStr then
   begin
     if Assigned(FBrowser) then
     begin
-       if (FCookieName <> '') and (FCookieValue <> '') and (FCookieDomain <> '') then
+       if (FCookieName <> EmptyStr) and (FCookieValue <> EmptyStr) and (FCookieDomain <> EmptyStr) then
       begin
         FCookie := FBrowser.CreateCookie(FCookieName, FCookieValue, FCookieDomain, FCookiePath);
         if Assigned(FCookie) then
@@ -1080,18 +1747,18 @@ end;
 
 procedure TCustomFormWVBrowser.OnInitError(Sender: TObject; aErrorCode: HRESULT; const aErrorMessage: wvstring);
 begin
-  ShowMessage('WebView2 Initialization Error: ' + aErrorMessage);
+  raise Exception.Create('WebView2 Initialization Error: ' + aErrorMessage);
 end;
 
 procedure TCustomFormWVBrowser.OnNavigationCompleted(Sender: TObject; const aWebView: ICoreWebView2; const aArgs: ICoreWebView2NavigationCompletedEventArgs);
 begin
-  ResizeBrowser;
+  Self.ResizeBrowser;
 end;
 
 procedure TCustomFormWVBrowser.OnTimer(Sender: TObject);
 begin
   FTimer.Enabled := False;
-  TryCreateBrowser;
+  Self.TryCreateBrowser;
 end;
 
 procedure TCustomFormWVBrowser.OnWebMessageReceived(Sender: TObject; const aWebView: ICoreWebView2; const aArgs: ICoreWebView2WebMessageReceivedEventArgs);
@@ -1128,19 +1795,18 @@ var
   HasPosition, HasSize: Integer;
   WinLeft, WinTop, WinWidth, WinHeight: Cardinal;
   UriString: string;
+  DummyAction: Integer;
 begin
+  DummyAction := 0;
   try
     if Succeeded(aArgs.GetDeferral(Deferral)) then
     begin
       try
-        UriString := '';
+        UriString := EmptyStr;
         if Succeeded(aArgs.Get_uri(Uri)) then
           UriString := string(Uri);
 
-        if DEBUG_MODE then
-          TempBrowser := Self.CreateInheritedPopup('about:blank')
-        else
-          TempBrowser := TCustomFormWVBrowser.CreateAsPopup('about:blank');
+        TempBrowser := Self.Recreate(DEFAULT_URL);
 
         if Assigned(TempBrowser) then
         begin
@@ -1177,13 +1843,7 @@ begin
             end;
           end;
 
-          if DEBUG_MODE then
-          begin
-            TempBrowser.FOriginalOnWindowClosed := Self.OnPopupClosed;
-            TempBrowser.ShowAsModal(Self.FForm);
-          end
-          else
-            TempBrowser.Show;
+          TempBrowser.Show;
 
           TempBrowser.WaitForBrowserInitialization(
             procedure
@@ -1197,21 +1857,16 @@ begin
                   begin
                     aArgs.Set_NewWindow(TempBrowser.FBrowser.CoreWebView2.BaseIntf);
                     aArgs.Set_Handled(1);
-                    if UriString = 'about:blank' then
-                    begin
-                      // Para about:blank, aguarda o JavaScript injetar o conteúdo
-                      // Não fazemos nada aqui, o conteúdo será injetado pelo JS
-                    end
+                    if UriString = DEFAULT_URL then
+                      DummyAction := 1
                     else if Pos('data:text/html', UriString) = 1 then
                     begin
                       DecodedContent := DecodeDataURL(UriString);
-                      if DecodedContent <> '' then
+                      if DecodedContent <> EmptyStr then
                         TempBrowser.SetHTMLContent(DecodedContent);
                     end
                     else
-                    begin
                       TempBrowser.FBrowser.Navigate(UriString);
-                    end;
                   end;
                 end;
               finally
@@ -1232,7 +1887,7 @@ begin
         begin
           if Assigned(Deferral) then
             Deferral.Complete;
-          ShowMessage('Erro ao criar popup: ' + E.Message);
+          raise Exception.Create('Erro ao criar popup: ' + E.Message);
         end;
       end;
     end;
@@ -1253,13 +1908,13 @@ end;
 
 procedure TCustomFormWVBrowser.OnPopupOpened(Sender: TObject);
 begin
-  if DEBUG_MODE then
+  if DEBUG then
     ShowMessage('Popup foi concluiu a abertura! Instância: ' + TCustomFormWVBrowser(Sender).ClassName);
 end;
 
 procedure TCustomFormWVBrowser.OnPopupClosed(Sender: TObject);
 begin
-  if DEBUG_MODE then
+  if DEBUG then
     ShowMessage('Popup foi fechado! Instância: ' + TCustomFormWVBrowser(Sender).ClassName);
 end;
 
@@ -1268,7 +1923,7 @@ var
   CommaPos: Integer;
   DataPart: string;
 begin
-  Result := '';
+  Result := EmptyStr;
   CommaPos := Pos(',', DataURL);
   if CommaPos > 0 then
   begin
@@ -1292,7 +1947,7 @@ begin
     FWindowParent.HandleNeeded;
 
   if GlobalWebView2Loader.InitializationError then
-    ShowMessage(GlobalWebView2Loader.ErrorMessage)
+    raise Exception.Create(GlobalWebView2Loader.ErrorMessage)
   else if GlobalWebView2Loader.Initialized then
   begin
     ResizeBrowser;
@@ -1327,11 +1982,13 @@ begin
   end;
 end;
 
-procedure TCustomFormWVBrowser.Show(const AType: TOpenType = TOpenType.Normal);
+procedure TCustomFormWVBrowser.Show(const AType: TOpenType = TOpenType.Default);
 begin
+  Self.EnsureComponentsCreated;
+
   if Assigned(FForm) then
   begin
-    if AType = TOpenType.Normal then
+    if AType = TOpenType.Default then
       FForm.Show
     else
       FForm.ShowModal;
@@ -1340,6 +1997,8 @@ end;
 
 procedure TCustomFormWVBrowser.ShowModal(const AType: TOpenType = TOpenType.Modal);
 begin
+  Self.EnsureComponentsCreated;
+
   if Assigned(FForm) then
   begin
     if AType = TOpenType.Modal then
@@ -1380,142 +2039,213 @@ begin
     Show;
 end;
 
-procedure TCustomFormWVBrowser.ShowAsMDI(TFormulario: TComponentClass; var Formulario; AutoShow: Boolean = True);
-var
-  Form: TForm;
-  ExistingForm: TForm;
-  i: Integer;
+procedure TCustomFormWVBrowser.ConvertToMDI(AParentForm: TForm; AutoShow: Boolean);
 begin
-  ExistingForm := nil;
-  if Assigned(Application.MainForm) then
+  FIsClosing := False;
+  FParentForm := AParentForm;
+
+  if not Assigned(FForm) then
+    Self.CreateMDIComponents(AParentForm, FURL)
+  else
   begin
-    for i := 0 to Application.MainForm.MDIChildCount - 1 do
-    begin
-      if Application.MainForm.MDIChildren[i].ClassType = TFormulario then
+    try
+      if Assigned(FTimer) then
+        FTimer.Enabled := False;
+
+      FForm.FormStyle := fsMDIChild;
+
+      if FForm.Parent <> AParentForm then
+        FForm.Parent := AParentForm;
+
+      if FCaption <> EmptyStr then
+        FForm.Caption := FCaption;
+
+      if not FBrowserInitialized and Assigned(FWindowParent) then
       begin
-        ExistingForm := Application.MainForm.MDIChildren[i];
-        Break;
+        if not FWindowParent.HandleAllocated then
+          FWindowParent.HandleNeeded;
+
+        if GlobalWebView2Loader.Initialized and FWindowParent.HandleAllocated then
+        begin
+          try
+            if not FBrowserInitialized then
+              FBrowser.CreateBrowser(FWindowParent.Handle);
+          except
+
+            if Assigned(FTimer) then
+              FTimer.Enabled := True;
+          end;
+        end
+        else
+        begin
+          if Assigned(FTimer) then
+            FTimer.Enabled := True;
+        end;
+      end;
+
+    except
+
+      try
+        Self.CreateMDIComponents(AParentForm, FURL);
+      except
+
+        Exit;
       end;
     end;
   end;
 
-  if Assigned(ExistingForm) then
+  if AutoShow and Assigned(FForm) then
   begin
-    TForm(Formulario) := ExistingForm;
-    if AutoShow then
-    begin
-      ExistingForm.Show;
-      ExistingForm.BringToFront;
-      if ExistingForm.CanFocus then
-        ExistingForm.SetFocus;
-    end;
-  end
-  else
-  begin
-    try
-      if not Assigned(Application.MainForm) then
-        raise Exception.Create('Application.MainForm não está definido');
-
-      if Application.MainForm.FormStyle <> fsMDIForm then
-        raise Exception.Create('MainForm deve ter FormStyle = fsMDIForm para usar MDI');
-
-      Form := TFormulario.Create(Application.MainForm) as TForm;
-
-      Form.FormStyle := fsMDIChild;
-      Form.WindowState := wsMaximized;
-
-      TForm(Formulario) := Form;
-
-      if AutoShow then
-      begin
-        Form.Show;
-        if Form.CanFocus then
-          Form.SetFocus;
-      end;
-
-    except
-      on E: Exception do
-      begin
-        TForm(Formulario) := nil;
-        raise Exception.Create('Erro ao criar formulário MDI: ' + E.Message);
-      end;
-    end;
+    FForm.Show;
+    if FForm.CanFocus then
+      FForm.SetFocus;
   end;
 end;
 
-procedure TCustomFormWVBrowser.ShowAsMDIAdvanced(TFormulario: TComponentClass; var Formulario; AutoShow: Boolean = True; SingleInstance: Boolean = True; MaximizeOnShow: Boolean = True; BringToFrontIfExists: Boolean = True);
+procedure TCustomFormWVBrowser.ShowAsMDI;
 var
-  Form: TForm;
-  ExistingForm: TForm;
-  i: Integer;
-  MDIParent: TForm;
+  Options: TMDIOptions;
 begin
-  MDIParent := Application.MainForm;
-  if not Assigned(MDIParent) then
-    raise Exception.Create('Application.MainForm não está definido');
+  Options.AutoShow := True;
+  Options.SingleInstance := True;
+  Options.MaximizeOnShow := True;
+  Options.BringToFrontIfExists := True;
+  Options.UniqueIdentifier := FUniqueIdentifier;
 
-  if MDIParent.FormStyle <> fsMDIForm then
-    raise Exception.Create('MainForm deve ter FormStyle = fsMDIForm para usar MDI');
+  Self.ShowAsMDI(Options);
+end;
 
-  ExistingForm := nil;
-  if SingleInstance then
+procedure TCustomFormWVBrowser.ShowAsMDI(const AOptions: TMDIOptions);
+var
+  ExistingInstance: TCustomFormWVBrowser;
+begin
+  if AOptions.SingleInstance and (AOptions.UniqueIdentifier <> EmptyStr) then
   begin
-    for i := 0 to MDIParent.MDIChildCount - 1 do
+    ExistingInstance := FindMDIInstance(AOptions.UniqueIdentifier);
+
+    if Assigned(ExistingInstance) then
     begin
-      if MDIParent.MDIChildren[i].ClassType = TFormulario then
-      begin
-        ExistingForm := MDIParent.MDIChildren[i];
-        Break;
-      end;
+      ExistingInstance.ShowAsMDIAdvanced(
+        AOptions.AutoShow,
+        AOptions.SingleInstance,
+        AOptions.MaximizeOnShow,
+        AOptions.BringToFrontIfExists,
+        AOptions.UniqueIdentifier,
+        AOptions.MaxInstances
+      );
+
+      if Self <> ExistingInstance then
+        Self.Free;
+
+      Exit;
     end;
   end;
 
-  if Assigned(ExistingForm) then
+  Self.ShowAsMDIAdvanced(
+    AOptions.AutoShow,
+    AOptions.SingleInstance,
+    AOptions.MaximizeOnShow,
+    AOptions.BringToFrontIfExists,
+    AOptions.UniqueIdentifier,
+    AOptions.MaxInstances
+  );
+end;
+
+procedure TCustomFormWVBrowser.ShowAsMDICustom(AutoShow: Boolean = True);
+begin
+  Self.EnsureComponentsCreated;
+
+  if not Assigned(FParentForm) then
+    Exit;
+
+  if FParentForm.FormStyle <> fsMDIForm then
+    Exit;
+
+  if Assigned(FForm) and (FForm.FormStyle = fsMDIChild) and (FForm.Parent = FParentForm) then
   begin
-    TForm(Formulario) := ExistingForm;
     if AutoShow then
     begin
-      if ExistingForm.WindowState = wsMinimized then
-        ExistingForm.WindowState := wsNormal;
-
-      ExistingForm.Show;
-
-      if BringToFrontIfExists then
-        ExistingForm.BringToFront;
-
-      if MaximizeOnShow and (ExistingForm.WindowState <> wsMaximized) then
-        ExistingForm.WindowState := wsMaximized;
-
-      if ExistingForm.CanFocus then
-        ExistingForm.SetFocus;
+      FForm.Show;
+      if FForm.CanFocus then
+        FForm.SetFocus;
     end;
   end
   else
+    Self.ConvertToMDI(FParentForm, AutoShow);
+end;
+
+procedure TCustomFormWVBrowser.ShowAsMDISimple(AutoShow: Boolean; SingleInstance: Boolean; MaximizeOnShow: Boolean = True);
+begin
+  if not Assigned(FParentForm) then
+    Exit;
+
+  if FParentForm.FormStyle <> fsMDIForm then
+    Exit;
+
+  Self.ShowAsMDICustom(AutoShow);
+
+  if AutoShow and Assigned(FForm) and MaximizeOnShow then
+    FForm.WindowState := wsMaximized;
+end;
+
+procedure TCustomFormWVBrowser.ShowAsMDIAdvanced(AutoShow: Boolean = True; SingleInstance: Boolean = True; MaximizeOnShow: Boolean = True; BringToFrontIfExists: Boolean = True; const UniqueIdentifier: String = ''; MaxInstances: Integer = 1);
+var
+  ExistingBrowser: TCustomFormWVBrowser;
+  FormIdentifier: String;
+begin
+  if not Assigned(FParentForm) then
+    Exit;
+
+  if FParentForm.FormStyle <> fsMDIForm then
+    Exit;
+
+  FormIdentifier := UniqueIdentifier;
+  if FormIdentifier = EmptyStr then
+    FormIdentifier := FUniqueIdentifier;
+  if FormIdentifier = EmptyStr then
+    FormIdentifier := FURL;
+
+  if SingleInstance and (FormIdentifier <> EmptyStr) then
   begin
-    try
-      Form := TFormulario.Create(MDIParent) as TForm;
-      Form.FormStyle := fsMDIChild;
-
-      if MaximizeOnShow then
-        Form.WindowState := wsMaximized;
-
-      TForm(Formulario) := Form;
-
+    ExistingBrowser := FindMDIInstance(FormIdentifier);
+    if Assigned(ExistingBrowser) then
+    begin
       if AutoShow then
       begin
-        Form.Show;
-        if Form.CanFocus then
-          Form.SetFocus;
+        if ExistingBrowser.FForm.WindowState = wsMinimized then
+          ExistingBrowser.FForm.WindowState := wsNormal;
+
+        ExistingBrowser.FForm.Show;
+
+        if BringToFrontIfExists then
+          ExistingBrowser.FForm.BringToFront;
+
+        if MaximizeOnShow and (ExistingBrowser.FForm.WindowState <> wsMaximized) then
+          ExistingBrowser.FForm.WindowState := wsMaximized;
+
+        if ExistingBrowser.FForm.CanFocus then
+          ExistingBrowser.FForm.SetFocus;
       end;
 
-    except
-      on E: Exception do
-      begin
-        TForm(Formulario) := nil;
-        raise Exception.Create('Erro ao criar formulário MDI: ' + E.Message);
-      end;
+      Exit;
     end;
+  end
+  else if not SingleInstance and (MaxInstances > 1) and (FormIdentifier <> EmptyStr) then
+  begin
+    if not CanCreateMDIInstance(FormIdentifier, MaxInstances, SingleInstance) then
+      Exit;
   end;
+
+  if FormIdentifier <> EmptyStr then
+  begin
+    FUniqueIdentifier := FormIdentifier;
+    FMaxInstances := MaxInstances;
+    RegisterMDIInstance(FormIdentifier, Self);
+  end;
+
+  Self.ConvertToMDI(FParentForm, AutoShow);
+  if AutoShow and Assigned(FForm) and MaximizeOnShow then
+    FForm.WindowState := wsMaximized;
 end;
 
 end.
