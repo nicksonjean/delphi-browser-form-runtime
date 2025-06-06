@@ -88,10 +88,10 @@ var
   BrowserForm1: TCustomFormWVBrowser;
   Options: TMDIOptions;
 begin
-//  BrowserForm1 := TCustomFormWVBrowser.CreateAsMDI(FormPrincipal, 'file:///' + ExtractFilePath(ParamStr(0)) + 'index.html');
-  BrowserForm1 := TCustomFormWVBrowser.Create;
-  BrowserForm1.ParentForm := FormPrincipal;
-  BrowserForm1.URL := 'file:///' + ExtractFilePath(ParamStr(0)) + 'index.html';
+  BrowserForm1 := TCustomFormWVBrowser.CreateAsMDI(FormPrincipal, 'file:///' + ExtractFilePath(ParamStr(0)) + 'index.html');
+//  BrowserForm1 := TCustomFormWVBrowser.Create;
+//  BrowserForm1.ParentForm := FormPrincipal;
+//  BrowserForm1.URL := 'file:///' + ExtractFilePath(ParamStr(0)) + 'index.html';
   BrowserForm1.Caption := 'Exemplo de Teste';
   BrowserForm1.Width := 800;
   BrowserForm1.Height := 600;
