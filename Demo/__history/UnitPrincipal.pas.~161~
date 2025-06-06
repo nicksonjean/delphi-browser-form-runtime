@@ -39,8 +39,9 @@ type
     NovoFormulrioDinmico3: TMenuItem;
     FormDinmicoComum1: TMenuItem;
     N4: TMenuItem;
-    FormDinmicoMax5Instncias1: TMenuItem;
+    FormDinmicoMax3Instncias1: TMenuItem;
     N5: TMenuItem;
+    FormDinmicocomApplicationCreateForm1: TMenuItem;
     procedure NovoDocumento1Click(Sender: TObject);
     procedure Sair1Click(Sender: TObject);
     procedure CascataVertical1Click(Sender: TObject);
@@ -53,7 +54,8 @@ type
     procedure NovoFormulrioDinmico3Click(Sender: TObject);
     procedure NovoFormulrioDinmico4Click(Sender: TObject);
     procedure FormDinmicoComum1Click(Sender: TObject);
-    procedure FormDinmicoMax5Instncias1Click(Sender: TObject);
+    procedure FormDinmicoMax3Instncias1Click(Sender: TObject);
+    procedure FormDinmicocomApplicationCreateForm1Click(Sender: TObject);
   private
     FContadorJanelas: Integer;
   public
@@ -83,12 +85,36 @@ begin
   NovoForm.Show;
 end;
 
+procedure TFormPrincipal.FormDinmicocomApplicationCreateForm1Click(Sender: TObject);
+var
+  BrowserForm1: TCustomFormWVBrowser;
+begin
+  BrowserForm1 := TCustomFormWVBrowser.CreateAsBrowser('file:///' + ExtractFilePath(ParamStr(0)) + 'index.html');
+  BrowserForm1.Caption := 'Exemplo de Teste';
+  BrowserForm1.Width := 800;
+  BrowserForm1.Height := 600;
+  BrowserForm1.ActionButtons := [];
+  BrowserForm1.Resizable := true;
+  BrowserForm1.Movable := true;
+  BrowserForm1.CookieName := 'CookieName';
+  BrowserForm1.CookieValue := 'CookieValue';
+  BrowserForm1.CookieDomain := 'CookieDomain';
+  BrowserForm1.OnMessageReceiver := procedure(Sender: TObject; const MessageText: string)
+  begin
+    Showmessage(MessageText);
+  end;
+  BrowserForm1.ShowAsForm(FormPrincipal, true);
+end;
+
 procedure TFormPrincipal.FormDinmicoComum1Click(Sender: TObject);
 var
   BrowserForm1: TCustomFormWVBrowser;
   Options: TMDIOptions;
 begin
   BrowserForm1 := TCustomFormWVBrowser.CreateAsMDI(FormPrincipal, 'file:///' + ExtractFilePath(ParamStr(0)) + 'index.html');
+//  BrowserForm1 := TCustomFormWVBrowser.Create;
+//  BrowserForm1.ParentForm := FormPrincipal;
+//  BrowserForm1.URL := 'file:///' + ExtractFilePath(ParamStr(0)) + 'index.html';
   BrowserForm1.Caption := 'Exemplo de Teste';
   BrowserForm1.Width := 800;
   BrowserForm1.Height := 600;
@@ -107,7 +133,7 @@ begin
   BrowserForm1.ShowAsMDI(Options);
 end;
 
-procedure TFormPrincipal.FormDinmicoMax5Instncias1Click(Sender: TObject);
+procedure TFormPrincipal.FormDinmicoMax3Instncias1Click(Sender: TObject);
 var
   BrowserForm1: TCustomFormWVBrowser;
   Options: TMDIOptions;
@@ -134,7 +160,10 @@ begin
     begin
       Showmessage(MessageText);
     end;
-    Options := TMDIOptions.MultiInstanceMode(3, UniqueID);
+    Options := TMDIOptions.Default;
+    Options.SingleInstance := false;
+    Options.UniqueIdentifier := UniqueID;
+    Options.MaxInstances := 3;
     BrowserForm1.ShowAsMDI(Options);
   end;
 end;

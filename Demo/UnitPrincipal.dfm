@@ -56,6 +56,10 @@ object FormPrincipal: TFormPrincipal
       object N3: TMenuItem
         Caption = '-'
       end
+      object FormDinmicocomApplicationCreateForm1: TMenuItem
+        Caption = 'Form Din'#226'mico com Application.CreateForm'
+        OnClick = FormDinmicocomApplicationCreateForm1Click
+      end
       object FormDinmicoMax3Instncias1: TMenuItem
         Caption = 'Form Din'#226'mico Max 3 Inst'#226'ncias '
         OnClick = FormDinmicoMax3Instncias1Click
