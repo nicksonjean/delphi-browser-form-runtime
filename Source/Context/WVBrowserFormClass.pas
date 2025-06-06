@@ -103,10 +103,11 @@ type
     procedure InitComponents;
 
     // Normal and Modal Methods
-    procedure CreateComponents(AParentBrowser: TWVBrowser = nil; AIsPopup: Boolean = false; const AURL: String = '');
+    procedure CreateComponents(AParentBrowser: TWVBrowser = nil; AIsPopup: Boolean = false; const AURL: String = ''; UseApplicationCreateForm: Boolean = False);
+
 
     // MDI Methods
-    procedure CreateMDIComponents(AParentForm: TForm; const AURL: String);
+    procedure CreateMDIComponents(AParentForm: TForm; const AURL: String; UseApplicationCreateForm: Boolean = True);
     procedure ConvertToMDI(AParentForm: TForm; AutoShow: Boolean);
 
     // Event Methods
@@ -971,18 +972,18 @@ begin
   begin
     if Assigned(FParentForm) and (FParentForm.FormStyle = fsMDIForm) then
     begin
-      Self.CreateMDIComponents(FParentForm, AURL);
+      Self.CreateMDIComponents(FParentForm, AURL, True); // UseApplicationCreateForm = True para MDI
       FComponentsCreated := True;
     end
     else if Assigned(FParentBrowser) then
     begin
-      Self.CreateComponents(FParentBrowser, true, AURL);
+      Self.CreateComponents(FParentBrowser, true, AURL, False); // UseApplicationCreateForm = False para popup
       FComponentsCreated := True;
       FIsPopup := True;
     end
     else
     begin
-      Self.CreateComponents(nil, false, AURL);
+      Self.CreateComponents(nil, false, AURL, False); // UseApplicationCreateForm = False para normal
       FComponentsCreated := True;
     end;
   end
@@ -991,6 +992,7 @@ begin
   Result := Self;
 end;
 
+// No método SetParentForm:
 function TCustomFormWVBrowser.SetParentForm(const AParentForm: TForm): TCustomFormWVBrowser;
 begin
   FParentForm := AParentForm;
@@ -999,7 +1001,7 @@ begin
   begin
     if AParentForm.FormStyle = fsMDIForm then
     begin
-      Self.CreateMDIComponents(AParentForm, FURL);
+      Self.CreateMDIComponents(AParentForm, FURL, True); // UseApplicationCreateForm = True para MDI
       FComponentsCreated := True;
     end;
   end
@@ -1196,7 +1198,7 @@ end;
 
 // Context
 
-procedure TCustomFormWVBrowser.CreateComponents(AParentBrowser: TWVBrowser = nil; AIsPopup: Boolean = false; const AURL: String = '');
+procedure TCustomFormWVBrowser.CreateComponents(AParentBrowser: TWVBrowser = nil; AIsPopup: Boolean = false; const AURL: String = ''; UseApplicationCreateForm: Boolean = False);
 begin
   FParentFormToRestore := nil;
   FParentFormEnabledState := True;
@@ -1223,7 +1225,22 @@ begin
     GlobalWebView2Loader.StartWebView2;
   end;
 
-  FForm := TCustomWVForm.CreateWithArgs(nil, nil);
+  // Usar Application.CreateForm quando solicitado, CreateWithArgs nos outros casos
+  if UseApplicationCreateForm then
+  begin
+    Application.CreateForm(TCustomWVForm, FForm);
+    // Para formulários criados com Application.CreateForm, garantir que tenham parent correto
+    if Assigned(FParentForm) then
+    begin
+      FForm.Parent := FParentForm;
+      FForm.ParentWindow := FParentForm.Handle;
+    end;
+  end
+  else
+  begin
+    FForm := TCustomWVForm.CreateWithArgs(nil, nil);
+  end;
+
   FForm.BrowserInstance := Self;
   FForm.Caption := FCaption;
   FForm.Position := poScreenCenter;
@@ -1249,7 +1266,7 @@ begin
   InitComponents;
 end;
 
-procedure TCustomFormWVBrowser.CreateMDIComponents(AParentForm: TForm; const AURL: String);
+procedure TCustomFormWVBrowser.CreateMDIComponents(AParentForm: TForm; const AURL: String; UseApplicationCreateForm: Boolean = True);
 var
   OldForm: TCustomWVForm;
 begin
@@ -1271,7 +1288,22 @@ begin
   end;
 
   try
-    FForm := TCustomWVForm.CreateWithArgs(AParentForm, nil);
+    // Usar Application.CreateForm quando solicitado
+    if UseApplicationCreateForm then
+    begin
+      Application.CreateForm(TCustomWVForm, FForm);
+      // IMPORTANTE: Definir o parent após criar com Application.CreateForm
+      if Assigned(AParentForm) then
+      begin
+        FForm.Parent := AParentForm;
+        FForm.ParentWindow := AParentForm.Handle;
+      end;
+    end
+    else
+    begin
+      FForm := TCustomWVForm.CreateWithArgs(AParentForm, nil);
+    end;
+
     FForm.BrowserInstance := Self;
     FForm.FormStyle := fsMDIChild;
     FForm.Caption := FCaption;
@@ -1543,14 +1575,14 @@ begin
   if not FComponentsCreated then
   begin
     if Assigned(FParentForm) and (FParentForm.FormStyle = fsMDIForm) then
-      Self.CreateMDIComponents(FParentForm, FURL)
+      Self.CreateMDIComponents(FParentForm, FURL, True) // UseApplicationCreateForm = True para MDI
     else if Assigned(FParentBrowser) then
     begin
-      Self.CreateComponents(FParentBrowser, true, FURL);
+      Self.CreateComponents(FParentBrowser, true, FURL, False); // UseApplicationCreateForm = False para popup
       FIsPopup := True;
     end
     else
-      Self.CreateComponents(nil, false, FURL);
+      Self.CreateComponents(nil, false, FURL, False); // UseApplicationCreateForm = False para normal
     FComponentsCreated := True;
   end;
 end;
@@ -2219,6 +2251,10 @@ begin
 end;
 
 procedure TCustomFormWVBrowser.ShowAsForm(AParentForm: TForm; AutoShow: Boolean = True);
+var
+  NeedsRecreation: Boolean;
+  OldURL, OldCaption: String;
+  OldWidth, OldHeight: Integer;
 begin
   if not Assigned(AParentForm) then
     raise Exception.Create('ParentForm não pode ser nil para ShowAsForm');
@@ -2226,7 +2262,45 @@ begin
   if AParentForm.FormStyle <> fsMDIForm then
     raise Exception.Create('ParentForm deve ter FormStyle = fsMDIForm para usar ShowAsForm');
 
+  // Garantir que os componentes foram criados
   Self.EnsureComponentsCreated;
+
+  // Verificar se precisa recriar com Application.CreateForm
+  // Isso é necessário porque CreateAsBrowser usa CreateWithArgs por padrão
+  NeedsRecreation := Assigned(FForm) and (FForm.Owner <> Application);
+
+  if NeedsRecreation then
+  begin
+    LockWindowUpdate(AParentForm.Handle);
+    try
+      // Salvar configurações atuais
+      OldURL := FURL;
+      OldCaption := FCaption;
+      OldWidth := FWidth;
+      OldHeight := FHeight;
+
+      // Forçar recriação com Application.CreateForm
+      FComponentsCreated := False; // Reset flag para forçar recriação
+      FParentForm := AParentForm;
+      Self.CreateMDIComponents(AParentForm, OldURL, True); // UseApplicationCreateForm = True
+      FComponentsCreated := True;
+
+      // Restaurar configurações
+      FCaption := OldCaption;
+      FWidth := OldWidth;
+      FHeight := OldHeight;
+
+    finally
+      LockWindowUpdate(0);
+    end;
+  end
+  else if not FComponentsCreated then
+  begin
+    // Primeira criação para MDI
+    FParentForm := AParentForm;
+    Self.CreateMDIComponents(AParentForm, FURL, True); // UseApplicationCreateForm = True
+    FComponentsCreated := True;
+  end;
 
   if not Assigned(FForm) then
     raise Exception.Create('Formulário interno não foi criado');
@@ -2235,8 +2309,14 @@ begin
   try
     FParentForm := AParentForm;
 
-    FForm.FormStyle := fsMDIChild;
+    // Garantir que o formulário tenha o parent correto
+    if FForm.Parent <> AParentForm then
+    begin
+      FForm.Parent := AParentForm;
+      FForm.ParentWindow := AParentForm.Handle;
+    end;
 
+    FForm.FormStyle := fsMDIChild;
     FForm.BorderIcons := [biSystemMenu, biMinimize, biMaximize];
 
     if Assigned(FWindowParent) then
@@ -2261,9 +2341,7 @@ begin
       if not FBrowserInitialized then
       begin
         Application.ProcessMessages;
-
         Self.TryCreateBrowser;
-
         if not FBrowserInitialized and Assigned(FTimer) then
           FTimer.Enabled := True;
       end

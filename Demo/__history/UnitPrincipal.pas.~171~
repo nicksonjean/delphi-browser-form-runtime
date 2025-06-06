@@ -89,22 +89,22 @@ procedure TFormPrincipal.FormDinmicocomApplicationCreateForm1Click(Sender: TObje
 var
   BrowserForm1: TCustomFormWVBrowser;
 begin
-  BrowserForm1 := TCustomFormWVBrowser.Create;
-//  BrowserForm1.ParentForm := FormPrincipal;
-  BrowserForm1.URL := 'file:///' + ExtractFilePath(ParamStr(0)) + 'index.html';
-  BrowserForm1.Caption := 'Exemplo de Teste';
-  BrowserForm1.Width := 800;
-  BrowserForm1.Height := 600;
-  BrowserForm1.ActionButtons := [];
-  BrowserForm1.Resizable := true;
-  BrowserForm1.Movable := true;
-  BrowserForm1.CookieName := 'CookieName';
-  BrowserForm1.CookieValue := 'CookieValue';
-  BrowserForm1.CookieDomain := 'CookieDomain';
-  BrowserForm1.OnMessageReceiver := procedure(Sender: TObject; const MessageText: string)
-  begin
-    Showmessage(MessageText);
-  end;
+//  BrowserForm1 := TCustomFormWVBrowser.Create;
+//  BrowserForm1.URL := 'file:///' + ExtractFilePath(ParamStr(0)) + 'index.html';
+//  BrowserForm1.Caption := 'Exemplo de Teste';
+//  BrowserForm1.Width := 800;
+//  BrowserForm1.Height := 600;
+//  BrowserForm1.ActionButtons := [];
+//  BrowserForm1.Resizable := true;
+//  BrowserForm1.Movable := true;
+//  BrowserForm1.CookieName := 'CookieName';
+//  BrowserForm1.CookieValue := 'CookieValue';
+//  BrowserForm1.CookieDomain := 'CookieDomain';
+//  BrowserForm1.OnMessageReceiver := procedure(Sender: TObject; const MessageText: string)
+//  begin
+//    Showmessage(MessageText);
+//  end;
+  BrowserForm1 := TCustomFormWVBrowser.CreateAsBrowser('https://www.google.com');
   BrowserForm1.ShowAsForm(FormPrincipal, true);
 end;
 
