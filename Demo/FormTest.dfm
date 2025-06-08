@@ -180,7 +180,7 @@ object FormBrowserTest: TFormBrowserTest
     end
     object BtnCreateAdvPopup: TButton
       Left = 24
-      Top = 197
+      Top = 189
       Width = 123
       Height = 25
       Caption = 'Create Adv Popup'

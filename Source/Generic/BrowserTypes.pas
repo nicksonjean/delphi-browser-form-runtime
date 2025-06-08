@@ -38,18 +38,18 @@ implementation
 class function TMDIOptions.Default: TMDIOptions;
 begin
   Result.AutoShow := True;
-  Result.SingleInstance := False;
+  Result.SingleInstance := True;
   Result.MaximizeOnShow := True;
   Result.BringToFrontIfExists := True;
-  Result.UniqueIdentifier := '';
-  Result.MaxInstances := 999;
+  Result.UniqueIdentifier := EmptyStr;
+  Result.MaxInstances := 1;
 end;
 
 class function TMDIOptions.Simple: TMDIOptions;
 begin
   Result := Default;
   Result.SingleInstance := False;
-  Result.MaxInstances := 999;
+  Result.MaxInstances := 0;
 end;
 
 class function TMDIOptions.SingleInstanceMode(const AUniqueID: String): TMDIOptions;

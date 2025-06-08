@@ -30,13 +30,6 @@ object FormPrincipal: TFormPrincipal
       object N1: TMenuItem
         Caption = '-'
       end
-      object FormDinmicoComum1: TMenuItem
-        Caption = 'Form Din'#226'mico Comum'
-        OnClick = FormDinmicoComum1Click
-      end
-      object N4: TMenuItem
-        Caption = '-'
-      end
       object NovoFormulrioDinmico1: TMenuItem
         Caption = 'Form Din'#226'mico '#218'nico #1 (Bing)'
         OnClick = NovoFormulrioDinmico1Click
@@ -56,9 +49,17 @@ object FormPrincipal: TFormPrincipal
       object N3: TMenuItem
         Caption = '-'
       end
-      object FormDinmicocomApplicationCreateForm1: TMenuItem
-        Caption = 'Form Din'#226'mico com Application.CreateForm'
-        OnClick = FormDinmicocomApplicationCreateForm1Click
+      object FormDinmicoMSN1: TMenuItem
+        Caption = 'Form Din'#226'mico (MSN)'
+        OnClick = FormDinmicoMSN1Click
+      end
+      object FormDinmicoBing1: TMenuItem
+        Caption = 'Form Din'#226'mico (Bing)'
+        OnClick = FormDinmicoBing1Click
+      end
+      object FormDinmicoGoogle1: TMenuItem
+        Caption = 'Form Din'#226'mico (Google)'
+        OnClick = FormDinmicoGoogle1Click
       end
       object FormDinmicoMax3Instncias1: TMenuItem
         Caption = 'Form Din'#226'mico Max 3 Inst'#226'ncias '

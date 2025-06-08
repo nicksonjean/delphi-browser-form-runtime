@@ -6,6 +6,8 @@ uses
   Winapi.Windows, Winapi.Messages, Winapi.Dwmapi, Winapi.ShellAPI,
   Vcl.Controls, Vcl.Forms, Vcl.ExtCtrls, Vcl.Dialogs, Vcl.ComCtrls, Vcl.AppEvnts,
   System.JSON, System.Generics.Collections, System.SysUtils, System.Classes, System.StrUtils,
+  System.NetEncoding,
+
   uWVBrowser, uWVWinControl, uWVWindowParent, uWVTypes, uWVTypeLibrary,
   uWVBrowserBase, uWVCoreWebView2Args, uWVCoreWebView2Deferral, uWVLoader,
   uWVLibFunctions, uWVConstants, uWVCoreWebView2, uWVInterfaces,
@@ -17,7 +19,6 @@ type
     FMainBrowser: TCustomFormWVBrowser;
     FPopups: TList<TCustomFormWVBrowser>;
     procedure OnMessageReceived(Sender: TObject; const Message: string);
-//    procedure CreateCustomHTMLPopup;
   public
     constructor Create;
     destructor Destroy; override;
@@ -29,6 +30,11 @@ type
 
 implementation
 
+function EncodeHTML(const HTML: string): string;
+begin
+  Result := 'data:text/html;charset=utf-8;base64,' + TNetEncoding.Base64.Encode(HTML);
+end;
+
 constructor TAdvancedPopupManager.Create;
 begin
   inherited;
@@ -39,7 +45,6 @@ destructor TAdvancedPopupManager.Destroy;
 var
   i: Integer;
 begin
-  // Limpar todos os popups
   for i := 0 to FPopups.Count - 1 do
     FPopups[i].Free;
   FPopups.Free;
@@ -57,10 +62,12 @@ const
     '<html>' +
     '<head>' +
     '  <title>Sistema Principal</title>' +
+    '  <meta charset="utf-8">' +
     '  <style>' +
     '    body { font-family: Arial, sans-serif; padding: 20px; }' +
     '    button { padding: 10px 20px; margin: 5px; cursor: pointer; }' +
     '    .main-button { background: #007bff; color: white; border: none; border-radius: 5px; }' +
+    '    .main-button:hover { background: #0056b3; }' +
     '  </style>' +
     '</head>' +
     '<body>' +
@@ -70,19 +77,48 @@ const
     '  <button class="main-button" onclick="openDataEntryPopup()">Abrir Entrada de Dados</button>' +
     '  <script>' +
     '    function openLoginPopup() {' +
-    '      window.chrome.webview.postMessage({action: "openLogin"});' +
+    '      try {' +
+    '        if (window.chrome && window.chrome.webview) {' +
+    '          window.chrome.webview.postMessage(JSON.stringify({action: "openLogin"}));' +
+    '        } else {' +
+    '          console.log("WebView API not available");' +
+    '        }' +
+    '      } catch(e) {' +
+    '        console.error("Error in openLoginPopup:", e);' +
+    '      }' +
     '    }' +
     '    function openNotificationPopup() {' +
-    '      window.chrome.webview.postMessage({action: "openNotification"});' +
+    '      try {' +
+    '        if (window.chrome && window.chrome.webview) {' +
+    '          window.chrome.webview.postMessage(JSON.stringify({action: "openNotification"}));' +
+    '        } else {' +
+    '          console.log("WebView API not available");' +
+    '        }' +
+    '      } catch(e) {' +
+    '        console.error("Error in openNotificationPopup:", e);' +
+    '      }' +
     '    }' +
     '    function openDataEntryPopup() {' +
-    '      window.chrome.webview.postMessage({action: "openDataEntry"});' +
+    '      try {' +
+    '        if (window.chrome && window.chrome.webview) {' +
+    '          window.chrome.webview.postMessage(JSON.stringify({action: "openDataEntry"}));' +
+    '        } else {' +
+    '          console.log("WebView API not available");' +
+    '        }' +
+    '      } catch(e) {' +
+    '        console.error("Error in openDataEntryPopup:", e);' +
+    '      }' +
     '    }' +
+    '    // Verificar se a API está disponível quando a página carregar' +
+    '    window.addEventListener("DOMContentLoaded", function() {' +
+    '      console.log("WebView API available:", !!(window.chrome && window.chrome.webview));' +
+    '    });' +
     '  </script>' +
     '</body>' +
     '</html>';
 begin
-  FMainBrowser := TCustomFormWVBrowser.Create('data:text/html,' + MAIN_HTML, nil)
+  FMainBrowser := TCustomFormWVBrowser.Create(EncodeHTML(MAIN_HTML), nil)
+
     .SetWidth(800)
     .SetHeight(600)
     .SetCaption('Sistema Principal')
@@ -102,17 +138,24 @@ begin
     JsonMsg := TJSONObject.ParseJSONValue(Message) as TJSONObject;
     if Assigned(JsonMsg) then
     try
-      Action := JsonMsg.GetValue<string>('action');
-      case IndexStr(Action, ['openLogin', 'openNotification', 'openDataEntry']) of
-        0: CreateLoginPopup;
-        1: CreateNotificationPopup;
-        2: CreateDataEntryPopup;
+      if JsonMsg.TryGetValue<string>('action', Action) then
+      begin
+        if Action = 'openLogin' then
+          CreateLoginPopup
+        else if Action = 'openNotification' then
+          CreateNotificationPopup
+        else if Action = 'openDataEntry' then
+          CreateDataEntryPopup;
       end;
     finally
       JsonMsg.Free;
     end;
   except
-    // Ignorar erros de parsing JSON
+    on E: Exception do
+    begin
+      // Debug: mostrar erro se necessário
+      // ShowMessage('Erro ao processar mensagem: ' + E.Message);
+    end;
   end;
 end;
 
@@ -155,16 +198,13 @@ const
 var
   LoginBrowser: TCustomFormWVBrowser;
 begin
-  LoginBrowser := TCustomFormWVBrowser.CreateAsPopup(
-    FMainBrowser.Instance as TWVBrowser,
-    'data:text/html,' + LOGIN_HTML
-  )
+  LoginBrowser := TCustomFormWVBrowser.CreateAsPopup(FMainBrowser.Instance as TWVBrowser, EncodeHTML(LOGIN_HTML))
     .SetWidth(400)
     .SetHeight(300)
     .SetCaption('Login')
     .SetResizable(False)
     .SetMovable(True)
-    .SetActionButtons([biSystemMenu]);
+    .SetActionButtons([TBorderIcon.biMinimize, TBorderIcon.biMaximize, TBorderIcon.biSystemMenu]);
 
   FPopups.Add(LoginBrowser);
   LoginBrowser.Show();
@@ -196,17 +236,14 @@ begin
     '</body>' +
     '</html>';
 
-  NotificationBrowser := TCustomFormWVBrowser.CreateAsPopup(
-    FMainBrowser.Instance as TWVBrowser,
-    'data:text/html,' + NotificationHTML
-  )
+  NotificationBrowser := TCustomFormWVBrowser.CreateAsPopup(FMainBrowser.Instance as TWVBrowser, EncodeHTML(NotificationHTML))
     .SetWidth(350)
     .SetHeight(200)
     .SetCaption('Notificação')
     .SetResizable(False)
     .SetMovable(True)
     .SetTitleBar(False)
-    .SetAlpha(True);
+    .SetAlpha(False);
 
   FPopups.Add(NotificationBrowser);
   NotificationBrowser.Show();
@@ -278,10 +315,7 @@ const
 var
   DataEntryBrowser: TCustomFormWVBrowser;
 begin
-  DataEntryBrowser := TCustomFormWVBrowser.CreateAsPopup(
-    FMainBrowser.Instance as TWVBrowser,
-    'data:text/html,' + DATA_ENTRY_HTML
-  )
+  DataEntryBrowser := TCustomFormWVBrowser.CreateAsPopup(FMainBrowser.Instance as TWVBrowser, EncodeHTML(DATA_ENTRY_HTML))
     .SetWidth(500)
     .SetHeight(450)
     .SetCaption('Entrada de Dados')

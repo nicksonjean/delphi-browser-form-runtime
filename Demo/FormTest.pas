@@ -93,8 +93,7 @@ end;
 
 procedure TFormBrowserTest.BtnWVBrowserClassChainableTestClick(Sender: TObject);
 begin
-  BrowserForm := TCustomFormWVBrowser.Create
-    .SetURL('file:///' + ExtractFilePath(ParamStr(0)) + 'index.html')
+  BrowserForm := TCustomFormWVBrowser.Create('file:///' + ExtractFilePath(ParamStr(0)) + 'index.html')
     .SetCaption('Exemplo de Teste')
     .SetWidth(2048)
     .SetHeight(1800)
@@ -297,7 +296,8 @@ begin
     '</body>' +
     '</html>';
 
-  Browser := TCustomFormWVBrowser.Create()
+  Browser := TCustomFormWVBrowser.Create
+    .SetHTMLContent(HTMLContent)
     .SetWidth(800)
     .SetHeight(800)
     .SetCaption('HTML Personalizado')
@@ -305,8 +305,7 @@ begin
     .SetMovable(True)
     .SetActionButtons([TBorderIcon.biMinimize, TBorderIcon.biMaximize])
     .SetWindowClosed(OnBrowserWindowClosed)
-    .SetMessageReceiver(OnMessageReceived)
-    .SetHTMLContent(HTMLContent);
+    .SetMessageReceiver(OnMessageReceived);
 
   Browser.ShowAsModal;
   LogMessage('Browser com HTML customizado criado');

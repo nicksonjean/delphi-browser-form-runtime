@@ -25,6 +25,7 @@ type
     function SetParentBrowser(const AParentBrowser: TWVBrowser): IBrowserForm;
     function SetUniqueIdentifier(const AUniqueIdentifier: String): IBrowserForm;
     function SetMaxInstances(const AMaxInstances: Integer): IBrowserForm;
+    function SetLegacyForm(const ALegacyForm: Boolean): IBrowserForm;
     function SetWindowOpened(const AEvent: TNotifyEvent): IBrowserForm;
     function SetWindowClosed(const AEvent: TNotifyEvent): IBrowserForm;
     function SetHTMLContent(const AHTMLContent: String): IBrowserForm;
@@ -34,7 +35,9 @@ type
     procedure ShowAsMDICustom(AutoShow: Boolean = True);
     procedure ShowAsMDISimple(AutoShow: Boolean; SingleInstance: Boolean; MaximizeOnShow: Boolean = True);
     procedure ShowAsMDIAdvanced(AutoShow: Boolean = True; SingleInstance: Boolean = True; MaximizeOnShow: Boolean = True; BringToFrontIfExists: Boolean = True; const UniqueIdentifier: String = ''; MaxInstances: Integer = 1);
-    procedure ShowAsForm(AParentForm: TForm; AutoShow: Boolean = True);
+//    procedure ShowAsFormCustom(AutoShow: Boolean = True);
+//    procedure ShowAsFormSimple(AutoShow: Boolean; SingleInstance: Boolean; MaximizeOnShow: Boolean = True);
+//    procedure ShowAsFormAdvanced(AutoShow: Boolean = True; SingleInstance: Boolean = True; MaximizeOnShow: Boolean = True; BringToFrontIfExists: Boolean = True; const UniqueIdentifier: String = ''; MaxInstances: Integer = 1);
   end;
 
 implementation
