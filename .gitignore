@@ -5,9 +5,15 @@
 *.bak
 *.#*
 
-# Pastas de histórico
+# Pastas de histórico (em qualquer nível)
 __history/
 __recovery/
+**/__history/
+**/__recovery/
+
+# Pasta .qodo (em qualquer nível)
+.qodo/
+**/.qodo/
 
 # Arquivos de backup automático
 *.~pas
@@ -17,41 +23,6 @@ __recovery/
 *.~dpr
 *.~dpk
 *.~dproj
-
-# Arquivos compilados
-#*.dcu
-#*.dcp
-#*.bpl
-#*.dpl
-#*.exe
-#*.dll
-#*.map
-#*.rsm
-#*.tds
-#*.jdbg
-
-# Arquivos de recursos compilados
-#*.res
-#*.identcache
-#*.projdata
-#*.tvsconfig
-#*.stat
-
-# Pastas de saída do compilador
-#Win32/
-#Win64/
-#Android/
-#iOS/
-#OSX32/
-#OSX64/
-#Linux64/
-
-# Arquivos do RAD Studio/Delphi IDE
-*.local
-*.cfg
-*.deployproj
-*.groupproj.local
-*.dproj.local
 
 # Arquivos de debug
 *.pdb
