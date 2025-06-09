@@ -93,7 +93,7 @@ var
   UniqueID: String;
 begin
   UniqueID := 'CustomID7';
-  BrowserForm1 := TCustomFormWVBrowser.CreateAsMDI(FormPrincipal, 'http://bing.com.br/', false);
+  BrowserForm1 := TCustomFormWVBrowser.CreateAsMDI(FormPrincipal, 'http://bing.com.br/', true);
   BrowserForm1.Caption := 'Exemplo de Teste';
   BrowserForm1.Width := 800;
   BrowserForm1.Height := 600;
@@ -123,7 +123,7 @@ var
 begin
   UniqueID := 'CustomID6';
   BrowserForm1 := TCustomFormWVBrowser.Create;
-  BrowserForm1.LegacyForm := false;
+  BrowserForm1.LegacyForm := true;
   BrowserForm1.ParentForm := FormPrincipal;
   BrowserForm1.URL := 'http://google.com.br/';
   BrowserForm1.Caption := 'Exemplo de Teste';
@@ -152,7 +152,7 @@ var
   BrowserForm1: TCustomFormWVBrowser;
   Options: TMDIOptions;
 begin
-  BrowserForm1 := TCustomFormWVBrowser.Create('https://www.msn.com/', FormPrincipal, false);
+  BrowserForm1 := TCustomFormWVBrowser.Create('https://www.msn.com/', FormPrincipal, true);
   BrowserForm1.Caption := 'Exemplo de Teste';
   BrowserForm1.Width := 800;
   BrowserForm1.Height := 600;
@@ -378,7 +378,6 @@ end;
 
 procedure TFormPrincipal.CascataVertical1Click(Sender: TObject);
 begin
-  // Organiza as janelas em cascata
   Cascade;
 end;
 

@@ -1,148 +1,31 @@
-0:00:14 Microsoft.UnloadController.HasCompletedUnloadProcessing_True
-0:00:14 Microsoft.Shutdown.OnWindowClosing
-0:00:14 Microsoft.UnloadController.IsUnclosableApp_IsNotWebApp
-0:00:14 Microsoft.UnloadController.HasCompletedUnloadProcessing_True
-0:00:14 Microsoft.Shutdown.OnWindowClosingPostClearBrowsingData_NoBrowsingDataCleared
-0:00:14 Widget Closed: BrowserFrame
-0:00:14 Microsoft.UnloadController.HasCompletedUnloadProcessing_True
-0:00:14 Microsoft.Shutdown.OnWindowClosing
-0:00:14 Microsoft.Browser_Removed
-0:00:14 Tab12 FinishNav63
-0:00:14 Tab12 PageLoad
-0:00:14 Tab8 PageLoad
-0:00:14 Tab12 StartNav65 #typed
-0:00:14 Tab8 FinishNav60
-0:00:14 Tab8 PageLoad #google
-0:00:14 Tab12 FinishNav65 ERR_ABORTED
-0:00:14 Tab12 StartNav66 #typed
-0:00:14 Tab8 StartNav67 #renderer-script #auto_subframe
-0:00:14 Tab8 FinishNav67
-0:00:14 Tab8 PageLoad
-0:00:15 Tab12 FinishNav66
-0:00:15 Tab12 StartNav68 #renderer-script #link
-0:00:15 Tab12 FinishNav68
-0:00:15 Tab12 PageLoad
-0:00:16 Tab8 StartNav69 #renderer-script #auto_subframe
-0:00:16 Tab8 FinishNav69
-0:00:16 Tab8 PageLoad
-0:00:16 Tab8 StartNav70 #renderer-script #auto_subframe
-0:00:16 Tab8 FinishNav70
-0:00:16 Tab8 PageLoad
-0:00:18 Tab8 StartNav71 #renderer-script #auto_subframe
-0:00:18 Tab8 FinishNav71
-0:00:18 Tab8 PageLoad
-0:00:19 Tab2 StartNav72 #renderer-script #auto_subframe
-0:00:19 Tab2 FinishNav72
-0:00:19 Tab2 PageLoad
-0:00:19 Tab2 StartNav73 #renderer-script #auto_subframe
-0:00:19 Tab2 FinishNav73
-0:00:19 Tab2 PageLoad
-0:00:19 Tab8 StartNav74 #renderer-script #auto_subframe
-0:00:19 Tab2 StartNav75 #renderer-script #auto_subframe
-0:00:19 Tab2 FinishNav75
-0:00:19 Tab2 PageLoad
-0:00:19 Tab2 StartNav76 #renderer-script #auto_subframe
-0:00:19 Tab8 FinishNav74
-0:00:19 Tab8 PageLoad
-0:00:19 Tab2 FinishNav76
-0:00:19 Tab2 PageLoad
-0:00:19 Tab2 StartNav77 #renderer-script #auto_subframe
-0:00:19 Tab2 FinishNav77
-0:00:19 Tab2 PageLoad
-0:00:19 Tab8 StartNav78 #renderer-script #auto_subframe
-0:00:19 Tab8 StartNav79 #renderer-script #auto_subframe
-0:00:19 Tab8 StartNav80 #renderer-script #auto_subframe
-0:00:19 Tab8 StartNav81 #renderer-script #auto_subframe
-0:00:19 Tab8 FinishNav80
-0:00:19 Tab8 PageLoad
-0:00:19 Tab8 FinishNav81
-0:00:19 Tab8 PageLoad
-0:00:19 Tab8 StartNav82 #renderer-script #auto_subframe
-0:00:19 Tab8 FinishNav82
-0:00:19 Tab8 PageLoad
-0:00:19 Tab8 FinishNav78
-0:00:19 Tab8 PageLoad
-0:00:19 Tab8 StartNav83 #renderer-script #auto_subframe
-0:00:19 Tab2 StartNav84 #renderer-script #auto_subframe
-0:00:19 Tab8 StartNav85 #renderer-script #auto_subframe
-0:00:19 Tab2 FinishNav84
-0:00:19 Tab2 PageLoad
-0:00:19 Tab8 FinishNav79
-0:00:19 Tab8 PageLoad
-0:00:19 Tab2 StartNav86 #renderer-script #auto_subframe
-0:00:19 Tab2 FinishNav86 ERR_ABORTED
-0:00:19 Tab2 StartNav87 #renderer-script #auto_subframe
-0:00:19 Tab2 FinishNav87
-0:00:19 Tab2 PageLoad
-0:00:19 Tab2 StartNav88 #renderer-script #auto_subframe
-0:00:19 Tab2 FinishNav88
-0:00:19 Tab2 PageLoad
-0:00:19 Tab2 StartNav89 #renderer-script #auto_subframe
-0:00:19 Tab2 FinishNav89 ERR_ABORTED
-0:00:19 Tab2 StartNav90 #renderer-script #auto_subframe
-0:00:19 Tab2 FinishNav90 ERR_ABORTED
-0:00:19 Tab8 FinishNav83
-0:00:19 Tab8 StartNav91 #renderer-script #auto_subframe
-0:00:19 Tab8 FinishNav91
-0:00:19 Tab8 PageLoad
-0:00:19 Tab8 PageLoad
-0:00:19 Tab8 StartNav92 #renderer-script #auto_subframe
-0:00:19 Tab8 FinishNav92 ERR_ABORTED
-0:00:19 Tab8 StartNav93 #renderer-script #auto_subframe
-0:00:19 Tab8 FinishNav93
-0:00:19 Tab8 PageLoad
-0:00:19 Tab8 StartNav94 #renderer-script #auto_subframe
-0:00:19 Tab8 FinishNav94
-0:00:19 Tab8 PageLoad
-0:00:19 Tab8 StartNav95 #renderer-script #auto_subframe
-0:00:19 Tab8 FinishNav95 ERR_ABORTED
-0:00:19 Tab8 StartNav96 #renderer-script #auto_subframe
-0:00:19 Tab8 FinishNav96 ERR_ABORTED
-0:00:19 Tab8 StartNav97 #renderer-script #auto_subframe
-0:00:19 Tab8 FinishNav97
-0:00:19 Tab8 PageLoad
-0:00:19 Tab8 FinishNav85
-0:00:19 Tab8 StartNav98 #renderer-script #auto_subframe
-0:00:19 Tab8 FinishNav98
-0:00:19 Tab8 PageLoad
-0:00:19 Tab8 PageLoad
-0:00:20 Tab2 StartNav99 #renderer-script #auto_subframe
-0:00:20 Tab2 FinishNav99
-0:00:20 Tab2 PageLoad
-0:00:20 Tab8 StartNav100 #renderer-script #auto_subframe
-0:00:20 Tab8 FinishNav100
-0:00:20 Tab8 PageLoad
-0:00:20 Tab2 StartNav101 #renderer-script #auto_subframe
-0:00:20 Tab2 FinishNav101
-0:00:20 Tab2 PageLoad
-0:00:20 Tab2 StartNav102 #renderer-script #auto_subframe
-0:00:20 Tab2 FinishNav102
-0:00:20 Tab2 PageLoad
-0:00:20 Tab8 StartNav103 #renderer-script #auto_subframe
-0:00:20 Tab8 FinishNav103
-0:00:20 Tab8 PageLoad
-0:00:21 Tab2 StartNav104 #renderer-script #auto_subframe
-0:00:21 Tab2 FinishNav104
-0:00:21 Tab2 PageLoad
-0:00:21 Tab8 StartNav105 #renderer-script #auto_subframe
-0:00:21 Tab8 FinishNav105
-0:00:21 Tab8 PageLoad
-0:00:21 Tab8 StartNav106 #renderer-script #auto_subframe
-0:00:21 Tab8 FinishNav106
-0:00:21 Tab8 PageLoad
-0:00:21 Tab8 StartNav107 #renderer-script #auto_subframe
-0:00:21 Tab8 FinishNav107
-0:00:21 Tab8 PageLoad
-0:00:21 Tab2 StartNav108 #renderer-script #auto_subframe
-0:00:21 Tab2 FinishNav108
-0:00:21 Tab2 PageLoad
-0:00:21 Tab8 StartNav109 #renderer-script #auto_subframe
-0:00:21 Tab8 FinishNav109
-0:00:21 Tab8 PageLoad
-0:00:22 Tab2 StartNav110 #renderer-script #auto_subframe
-0:00:22 Tab2 FinishNav110
-0:00:22 Tab2 PageLoad
-0:00:22 Tab2 StartNav111 #renderer-script #auto_subframe
-0:00:22 Tab2 FinishNav111
-0:00:22 Tab2 PageLoad
-0:00:23 Microsoft.UnloadController.IsUnclosableApp_IsNotWebApp
+0:00:03 Microsoft.Shutdown.TabStripModel.CloseWebContentses_FastShutdown
+0:00:03 Microsoft.Shutdown.TabStripModel.ShouldRunUnloadListenerBeforeClosing_false
+0:00:03 Tab5 RenderProcessGone
+0:00:03 Microsoft.UnloadController.ClearUnloadState
+0:00:03 Microsoft.Shutdown.TabStripModel.RunUnloadListenerBeforeClosing_false
+0:00:03 Microsoft.Shutdown.TabStripModel.InternalCloseTabsImpl_ClosedAll
+0:00:03 Microsoft.Shutdown.TabStripModel.SendDetachWebContentsNotifications
+0:00:03 Microsoft.UnloadController.ClearUnloadState
+0:00:03 Browser5 Close Tab5 at 0
+0:00:03 Tab5 FinishNav15
+0:00:03 Tab5 WebContentsDestroyed
+0:00:03 Microsoft.UnloadController.TabStripEmpty
+0:00:03 Microsoft.UnloadController.IsUnclosableApp_IsNotWebApp
+0:00:03 Microsoft.UnloadController.HasCompletedUnloadProcessing_True
+0:00:03 Microsoft.Shutdown.OnWindowClosing
+0:00:03 Microsoft.UnloadController.IsUnclosableApp_IsNotWebApp
+0:00:03 Microsoft.UnloadController.HasCompletedUnloadProcessing_True
+0:00:03 Microsoft.Shutdown.OnWindowClosingPostClearBrowsingData_NoBrowsingDataCleared
+0:00:03 Widget Closed: BrowserFrame
+0:00:03 Microsoft.UnloadController.HasCompletedUnloadProcessing_True
+0:00:03 Microsoft.Shutdown.OnWindowClosing
+0:00:03 Microsoft.Browser_Removed
+0:00:04 Tab6 StartNav16 #typed
+0:00:04 Tab6 FinishNav14
+0:00:04 Tab6 FinishNav16 ERR_ABORTED
+0:00:04 Tab6 StartNav17 #typed
+0:00:04 Tab6 PageLoad
+0:00:04 Tab4 PageLoad #bing
+0:00:04 Tab6 FinishNav17
+0:00:04 Tab6 PageLoad #bing
+0:00:07 Microsoft.UnloadController.IsUnclosableApp_IsNotWebApp

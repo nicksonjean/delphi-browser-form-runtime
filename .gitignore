@@ -1,0 +1,72 @@
+# Arquivos temporários do Delphi
+*.~*
+*.tmp
+*.temp
+*.bak
+*.#*
+
+# Pastas de histórico
+__history/
+__recovery/
+
+# Arquivos de backup automático
+*.~pas
+*.~dfm
+*.~fmx
+*.~inc
+*.~dpr
+*.~dpk
+*.~dproj
+
+# Arquivos compilados
+#*.dcu
+#*.dcp
+#*.bpl
+#*.dpl
+#*.exe
+#*.dll
+#*.map
+#*.rsm
+#*.tds
+#*.jdbg
+
+# Arquivos de recursos compilados
+#*.res
+#*.identcache
+#*.projdata
+#*.tvsconfig
+#*.stat
+
+# Pastas de saída do compilador
+#Win32/
+#Win64/
+#Android/
+#iOS/
+#OSX32/
+#OSX64/
+#Linux64/
+
+# Arquivos do RAD Studio/Delphi IDE
+*.local
+*.cfg
+*.deployproj
+*.groupproj.local
+*.dproj.local
+
+# Arquivos de debug
+*.pdb
+*.il
+
+# Arquivos de documentação gerados
+*.chm
+*.hlp
+
+# Arquivos de teste
+*.~test*
+
+# Logs
+*.log
+
+# Outros arquivos temporários
+Thumbs.db
+.DS_Store
