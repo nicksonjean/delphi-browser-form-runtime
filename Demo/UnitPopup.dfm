@@ -1,8 +1,8 @@
-object FormBrowserTest: TFormBrowserTest
+object FormPopup: TFormPopup
   Left = 0
   Top = 0
   BorderStyle = bsDialog
-  Caption = 'FormBrowserTest'
+  Caption = 'FormPopup'
   ClientHeight = 729
   ClientWidth = 356
   Color = clBtnFace

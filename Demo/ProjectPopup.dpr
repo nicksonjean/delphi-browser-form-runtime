@@ -2,18 +2,18 @@ program ProjectTest;
 
 uses
   Vcl.Forms,
-  FormTest in 'FormTest.pas' {FormBrowserTest},
+  UnitPopup in 'UnitPopup.pas' {FormPopup},
   BrowserTypes in '..\Source\Generic\BrowserTypes.pas',
   BrowserGenericInterface in '..\Source\Generic\BrowserGenericInterface.pas',
   BrowserFormInterface in '..\Source\Context\BrowserFormInterface.pas',
   WVBrowserFormClass in '..\Source\Context\WVBrowserFormClass.pas',
   AdvancedPopupExample in '..\Source\Example\AdvancedPopupExample.pas';
 
-{$R *.res}
+{$R ProjectPopup.res}
 
 begin
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
-  Application.CreateForm(TFormBrowserTest, FormBrowserTest);
+  Application.CreateForm(TFormPopup, FormPopup);
   Application.Run;
 end.

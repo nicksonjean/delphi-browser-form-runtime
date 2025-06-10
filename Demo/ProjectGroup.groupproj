@@ -3,7 +3,7 @@
         <ProjectGuid>{1E657E9C-76AC-499E-8BFC-DD3652A076D3}</ProjectGuid>
     </PropertyGroup>
     <ItemGroup>
-        <Projects Include="ProjectTest.dproj">
+        <Projects Include="ProjectPopup.dproj">
             <Dependencies/>
         </Projects>
         <Projects Include="ProjectMDI.dproj">
@@ -17,14 +17,14 @@
             <Default.Personality/>
         </BorlandProject>
     </ProjectExtensions>
-    <Target Name="ProjectTest">
-        <MSBuild Projects="ProjectTest.dproj"/>
+    <Target Name="ProjectPopup">
+        <MSBuild Projects="ProjectPopup.dproj"/>
     </Target>
-    <Target Name="ProjectTest:Clean">
-        <MSBuild Projects="ProjectTest.dproj" Targets="Clean"/>
+    <Target Name="ProjectPopup:Clean">
+        <MSBuild Projects="ProjectPopup.dproj" Targets="Clean"/>
     </Target>
-    <Target Name="ProjectTest:Make">
-        <MSBuild Projects="ProjectTest.dproj" Targets="Make"/>
+    <Target Name="ProjectPopup:Make">
+        <MSBuild Projects="ProjectPopup.dproj" Targets="Make"/>
     </Target>
     <Target Name="ProjectMDI">
         <MSBuild Projects="ProjectMDI.dproj"/>
@@ -36,13 +36,13 @@
         <MSBuild Projects="ProjectMDI.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
-        <CallTarget Targets="ProjectTest;ProjectMDI"/>
+        <CallTarget Targets="ProjectPopup;ProjectMDI"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="ProjectTest:Clean;ProjectMDI:Clean"/>
+        <CallTarget Targets="ProjectPopup:Clean;ProjectMDI:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="ProjectTest:Make;ProjectMDI:Make"/>
+        <CallTarget Targets="ProjectPopup:Make;ProjectMDI:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

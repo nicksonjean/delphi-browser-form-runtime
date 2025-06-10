@@ -1,4 +1,4 @@
-﻿unit FormTest;
+﻿unit UnitPopup;
 
 interface
 
@@ -15,11 +15,10 @@ uses
   BrowserTypes,
   BrowserFormInterface,
   WVBrowserFormClass,
-  AdvancedPopupExample
-  ;
+  AdvancedPopupExample;
 
 type
-  TFormBrowserTest = class(TForm)
+  TFormPopup = class(TForm)
     GroupBoxWVBrowser: TGroupBox;
     GroupBoxWVBrowserWithClass: TGroupBox;
     BtnWVBrowserClassChainableTest: TButton;
@@ -67,7 +66,7 @@ type
   end;
 
 var
-  FormBrowserTest: TFormBrowserTest;
+  FormPopup: TFormPopup;
   BrowserForm: TCustomFormWVBrowser;
 //  BrowserForm: IBrowserForm;
   PopupManager: TAdvancedPopupManager;
@@ -76,22 +75,22 @@ implementation
 
 {$R *.dfm}
 
-procedure TFormBrowserTest.LogMessage(const AMessage: string);
+procedure TFormPopup.LogMessage(const AMessage: string);
 begin
   memoLog.Lines.Add(FormatDateTime('hh:nn:ss', Now) + ' - ' + AMessage);
 end;
 
-procedure TFormBrowserTest.OnBrowserWindowClosed(Sender: TObject);
+procedure TFormPopup.OnBrowserWindowClosed(Sender: TObject);
 begin
   LogMessage('Janela do browser foi fechada: ' + Sender.ClassName);
 end;
 
-procedure TFormBrowserTest.OnMessageReceived(ASender: TObject; const AMessage: string);
+procedure TFormPopup.OnMessageReceived(ASender: TObject; const AMessage: string);
 begin
   MemoMessageReceiver.Lines.Add('Mensagem recebida do browser: ' + AMessage);
 end;
 
-procedure TFormBrowserTest.BtnWVBrowserClassChainableTestClick(Sender: TObject);
+procedure TFormPopup.BtnWVBrowserClassChainableTestClick(Sender: TObject);
 begin
   BrowserForm := TCustomFormWVBrowser.Create('file:///' + ExtractFilePath(ParamStr(0)) + 'index.html')
     .SetCaption('Exemplo de Teste')
@@ -109,7 +108,7 @@ begin
   BrowserForm.ShowModal;
 end;
 
-procedure TFormBrowserTest.BtnWVBrowserClassPropertiesTestClick(Sender: TObject);
+procedure TFormPopup.BtnWVBrowserClassPropertiesTestClick(Sender: TObject);
 begin
   BrowserForm := TCustomFormWVBrowser.Create;
   BrowserForm.URL := 'file:///' + ExtractFilePath(ParamStr(0)) + 'index.html';
@@ -130,7 +129,7 @@ begin
   BrowserForm.ShowModal;
 end;
 
-procedure TFormBrowserTest.BtnWVBrowserInterfaceChainableTestClick(Sender: TObject);
+procedure TFormPopup.BtnWVBrowserInterfaceChainableTestClick(Sender: TObject);
 begin
   BrowserForm := TCustomFormWVBrowser.Create('file:///' + ExtractFilePath(ParamStr(0)) + 'index.html')
     .SetCaption('Exemplo de Teste')
@@ -148,7 +147,7 @@ begin
   BrowserForm.Show;
 end;
 
-procedure TFormBrowserTest.BtnWVBrowserInterfacePropertiesTestClick(Sender: TObject);
+procedure TFormPopup.BtnWVBrowserInterfacePropertiesTestClick(Sender: TObject);
 begin
   BrowserForm := TCustomFormWVBrowser.Create('file:///' + ExtractFilePath(ParamStr(0)) + 'index.html');
   BrowserForm.Caption := 'Exemplo de Teste';
@@ -168,7 +167,7 @@ begin
   BrowserForm.Show;
 end;
 
-procedure TFormBrowserTest.FormCreate(Sender: TObject);
+procedure TFormPopup.FormCreate(Sender: TObject);
 begin
   MemoMessageSender.Lines.Text := ' { ' + sLineBreak
   + '   "operation": "putMessage", ' + sLineBreak
@@ -183,13 +182,13 @@ begin
   memoLog.Lines.Add('');
 end;
 
-procedure TFormBrowserTest.BtnCreateAdvPopupClick(Sender: TObject);
+procedure TFormPopup.BtnCreateAdvPopupClick(Sender: TObject);
 begin
   PopupManager := TAdvancedPopupManager.Create;
   PopupManager.CreateMainBrowser;
 end;
 
-procedure TFormBrowserTest.BtnCreateMainBrowserClick(Sender: TObject);
+procedure TFormPopup.BtnCreateMainBrowserClick(Sender: TObject);
 begin
   try
     LogMessage('Criando browser principal...');
@@ -219,7 +218,7 @@ begin
   end;
 end;
 
-procedure TFormBrowserTest.BtnCreatePopupClick(Sender: TObject);
+procedure TFormPopup.BtnCreatePopupClick(Sender: TObject);
 begin
   try
     if not Assigned(FMainBrowser) then
@@ -256,7 +255,7 @@ begin
   end;
 end;
 
-procedure TFormBrowserTest.BtnCreatePopupHtmlClick(Sender: TObject);
+procedure TFormPopup.BtnCreatePopupHtmlClick(Sender: TObject);
 var
   Browser: IBrowserForm;
   HTMLContent: string;
@@ -311,7 +310,7 @@ begin
   LogMessage('Browser com HTML customizado criado');
 end;
 
-procedure TFormBrowserTest.OnMainBrowserMessage(Sender: TObject; const Message: string);
+procedure TFormPopup.OnMainBrowserMessage(Sender: TObject; const Message: string);
 begin
   LogMessage('Mensagem do Browser Principal: ' + Message);
 
@@ -322,7 +321,7 @@ begin
   end;
 end;
 
-procedure TFormBrowserTest.OnPopupBrowserMessage(Sender: TObject; const Message: string);
+procedure TFormPopup.OnPopupBrowserMessage(Sender: TObject; const Message: string);
 begin
   LogMessage('Mensagem do Popup: ' + Message);
 
@@ -333,7 +332,7 @@ begin
   end;
 end;
 
-procedure TFormBrowserTest.ProcessarJSON(JSONString: String);
+procedure TFormPopup.ProcessarJSON(JSONString: String);
 var
   JSONObject: TJSONObject;
   Operation: string;
@@ -360,13 +359,13 @@ begin
   end;
 end;
 
-procedure TFormBrowserTest.BtnMessageSenderByChainableClick(Sender: TObject);
+procedure TFormPopup.BtnMessageSenderByChainableClick(Sender: TObject);
 begin
   if Assigned(BrowserForm) then
     BrowserForm.SetMessageSender(MemoMessageSender.Text);
 end;
 
-procedure TFormBrowserTest.BtnMessageSenderByPropertyClick(Sender: TObject);
+procedure TFormPopup.BtnMessageSenderByPropertyClick(Sender: TObject);
 begin
   if Assigned(BrowserForm) then
     BrowserForm.OnMessageSender := MemoMessageSender.Text;
