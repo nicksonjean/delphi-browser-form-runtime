@@ -53,7 +53,6 @@ type
     FBrowser: TWVBrowser;
     FWindowParent: TWVWindowParent;
     FCookie: ICoreWebView2Cookie;
-    FWebView2Profile: ICoreWebView2Profile;
     FCookieName: String;
     FCookieValue: String;
     FCookieDomain: String;
@@ -96,6 +95,7 @@ type
     class function GetOldestMDIInstance(const AIdentifier: string): TCustomFormWVBrowser;
     class function CanCreateMDIInstance(const AIdentifier: string; AMaxInstances: Integer; ASingleInstance: Boolean): Boolean;
     class procedure CleanupMDIRegistry;
+    class procedure ForceCleanupAllInstances;
 
     // Internal Generic Methods
     function DecodeDataURL(const DataURL: string): string;
@@ -110,6 +110,7 @@ type
 
     // Normal and Modal Methods
     procedure CreateComponents(AParentBrowser: TWVBrowser = nil; AIsPopup: Boolean = false; const AURL: String = '');
+    procedure CleanupWebViewResources;
 
     // MDI Methods
     procedure CreateMDIComponents(AParentForm: TForm; const AURL: String; ALegacyForm: Boolean = DEFAULT_LEGACY_FORM);
@@ -356,36 +357,62 @@ begin
   begin
     (BrowserInstance as TCustomFormWVBrowser).FIsClosing := True;
 
-   if Assigned((BrowserInstance as TCustomFormWVBrowser).FTimer) then
-   begin
-     (BrowserInstance as TCustomFormWVBrowser).FTimer.Enabled := False;
-     (BrowserInstance as TCustomFormWVBrowser).FTimer.OnTimer := nil;
-   end;
+    // Para todos os timers
+    if Assigned((BrowserInstance as TCustomFormWVBrowser).FTimer) then
+    begin
+      (BrowserInstance as TCustomFormWVBrowser).FTimer.Enabled := False;
+      (BrowserInstance as TCustomFormWVBrowser).FTimer.OnTimer := nil;
+    end;
 
-   if Assigned((BrowserInstance as TCustomFormWVBrowser).FCheckTimer) then
-   begin
-     (BrowserInstance as TCustomFormWVBrowser).FCheckTimer.Enabled := False;
-     (BrowserInstance as TCustomFormWVBrowser).FCheckTimer.OnTimer := nil;
-   end;
+    if Assigned((BrowserInstance as TCustomFormWVBrowser).FCheckTimer) then
+    begin
+      (BrowserInstance as TCustomFormWVBrowser).FCheckTimer.Enabled := False;
+      (BrowserInstance as TCustomFormWVBrowser).FCheckTimer.OnTimer := nil;
+    end;
 
-   if Assigned((BrowserInstance as TCustomFormWVBrowser).FCallbackList) then
-   begin
-     while (BrowserInstance as TCustomFormWVBrowser).FCallbackList.Count > 0 do
-     begin
-       if Assigned((BrowserInstance as TCustomFormWVBrowser).FCallbackList[0].Timer) then
-       begin
-         (BrowserInstance as TCustomFormWVBrowser).FCallbackList[0].Timer.Enabled := False;
-         (BrowserInstance as TCustomFormWVBrowser).FCallbackList[0].Timer.OnTimer := nil;
-       end;
-       (BrowserInstance as TCustomFormWVBrowser).FCallbackList.Delete(0);
-     end;
-   end;
+    // Limpa callbacks
+    if Assigned((BrowserInstance as TCustomFormWVBrowser).FCallbackList) then
+    begin
+      while (BrowserInstance as TCustomFormWVBrowser).FCallbackList.Count > 0 do
+      begin
+        if Assigned((BrowserInstance as TCustomFormWVBrowser).FCallbackList[0].Timer) then
+        begin
+          (BrowserInstance as TCustomFormWVBrowser).FCallbackList[0].Timer.Enabled := False;
+          (BrowserInstance as TCustomFormWVBrowser).FCallbackList[0].Timer.OnTimer := nil;
+        end;
+        (BrowserInstance as TCustomFormWVBrowser).FCallbackList.Delete(0);
+      end;
+    end;
 
-   if Assigned((BrowserInstance as TCustomFormWVBrowser).FBrowser) then
-     (BrowserInstance as TCustomFormWvBrowser).FBrowser.NotifyParentWindowPositionChanged;
+    // CORREÇÃO: Limpa recursos do WebView2 na ordem correta
+    if Assigned((BrowserInstance as TCustomFormWVBrowser).FBrowser) then
+    begin
+      // Primeiro: Limpa cookie antes de qualquer outra operação
+      if Assigned((BrowserInstance as TCustomFormWVBrowser).FCookie) then
+        (BrowserInstance as TCustomFormWVBrowser).FCookie := nil;
 
-   if Assigned((BrowserInstance as TCustomFormWVBrowser).FOnWindowClosed) then
-     (BrowserInstance as TCustomFormWVBrowser).FOnWindowClosed(BrowserInstance as TCustomFormWVBrowser);
+      // Segundo: Remove todos os event handlers se ainda estiver inicializado
+      if (BrowserInstance as TCustomFormWVBrowser).FBrowserInitialized then
+      begin
+        try
+          // CORREÇÃO: Usa método centralizado de limpeza
+          (BrowserInstance as TCustomFormWVBrowser).CleanupWebViewResources;
+        except
+          // Ignora exceções durante limpeza de handlers
+        end;
+      end;
+
+      // Terceiro: Notifica mudança de posição (pode ser necessário para limpeza interna)
+      try
+        (BrowserInstance as TCustomFormWVBrowser).FBrowser.NotifyParentWindowPositionChanged;
+      except
+        // Ignora exceções durante notificação
+      end;
+    end;
+
+    // Chama evento de fechamento
+    if Assigned((BrowserInstance as TCustomFormWVBrowser).FOnWindowClosed) then
+      (BrowserInstance as TCustomFormWVBrowser).FOnWindowClosed(BrowserInstance as TCustomFormWVBrowser);
   end;
 
   Action := caFree;
@@ -399,14 +426,30 @@ begin
   begin
     (BrowserInstance as TCustomFormWVBrowser).FIsClosing := True;
 
-   if Assigned((BrowserInstance as TCustomFormWVBrowser).FTimer) then
-     (BrowserInstance as TCustomFormWVBrowser).FTimer.Enabled := False;
+    // Para timers
+    if Assigned((BrowserInstance as TCustomFormWVBrowser).FTimer) then
+      (BrowserInstance as TCustomFormWVBrowser).FTimer.Enabled := False;
 
-   if Assigned((BrowserInstance as TCustomFormWVBrowser).FCheckTimer) then
-     (BrowserInstance as TCustomFormWVBrowser).FCheckTimer.Enabled := False;
+    if Assigned((BrowserInstance as TCustomFormWVBrowser).FCheckTimer) then
+      (BrowserInstance as TCustomFormWVBrowser).FCheckTimer.Enabled := False;
 
-   if Assigned((BrowserInstance as TCustomFormWVBrowser).FBrowser) then
-     (BrowserInstance as TCustomFormWVBrowser).FBrowser.ExecuteScript('window.dispatchEvent(new Event("beforeunload"))');
+    // CORREÇÃO: Limpeza prévia do cookie no CloseQuery
+    if Assigned((BrowserInstance as TCustomFormWVBrowser).FBrowser) then
+    begin
+      try
+        // Executa beforeunload
+        if (BrowserInstance as TCustomFormWVBrowser).FBrowserInitialized then
+          (BrowserInstance as TCustomFormWVBrowser).FBrowser.ExecuteScript('window.dispatchEvent(new Event("beforeunload"))');
+
+        // Limpeza prévia do cookie no CloseQuery
+        if Assigned((BrowserInstance as TCustomFormWVBrowser).FCookie) then
+        begin
+          (BrowserInstance as TCustomFormWVBrowser).FCookie := nil;
+        end;
+      except
+        // Ignora exceções durante CloseQuery
+      end;
+    end;
   end;
 end;
 
@@ -984,6 +1027,7 @@ begin
 
   if FBrowserInitialized and Assigned(FBrowser) and Assigned(FBrowser.CoreWebView2) then
   begin
+    TempProfile := nil;
     try
       TempProfile := FBrowser.CoreWebView2.Profile;
       if Assigned(TempProfile) then
@@ -991,11 +1035,13 @@ begin
         FCookie := FBrowser.CreateCookie(FCookieName, FCookieValue, FCookieDomain, FCookiePath);
         if Assigned(FCookie) then
           FBrowser.AddOrUpdateCookie(FCookie);
-        TempProfile := nil;
       end;
     except
 
     end;
+
+    if Assigned(TempProfile) then
+      TempProfile := nil;
   end;
 
   Result := Self;
@@ -1217,7 +1263,20 @@ begin
   begin
     if Assigned(InstanceList) then
     begin
+      // CORREÇÃO: Usa método centralizado de limpeza
+      if Assigned(AInstance) then
+      begin
+        try
+          AInstance.CleanupWebViewResources;
+        except
+          // Ignora exceções durante limpeza
+        end;
+      end;
+
+      // Remove da lista
       InstanceList.Remove(AInstance);
+
+      // Se a lista ficou vazia, remove e libera
       if InstanceList.Count = 0 then
       begin
         FMDIInstanceRegistry.Remove(AIdentifier);
@@ -1344,6 +1403,40 @@ begin
   end;
 end;
 
+class procedure TCustomFormWVBrowser.ForceCleanupAllInstances;
+var
+  Pair: TPair<string, TList<TCustomFormWVBrowser>>;
+  InstanceList: TList<TCustomFormWVBrowser>;
+  i: Integer;
+  Instance: TCustomFormWVBrowser;
+begin
+  if not Assigned(FMDIInstanceRegistry) then
+    Exit;
+
+  // Força limpeza de todas as instâncias em memória
+  for Pair in FMDIInstanceRegistry do
+  begin
+    InstanceList := Pair.Value;
+    if Assigned(InstanceList) then
+    begin
+      for i := InstanceList.Count - 1 downto 0 do
+      begin
+        Instance := InstanceList[i];
+        if Assigned(Instance) then
+        begin
+          try
+            // CORREÇÃO: Usa método centralizado de limpeza
+            Instance.CleanupWebViewResources;
+            Instance.FIsClosing := True;
+          except
+            // Ignora exceções
+          end;
+        end;
+      end;
+    end;
+  end;
+end;
+
 // Context
 
 procedure TCustomFormWVBrowser.CreateComponents(AParentBrowser: TWVBrowser = nil; AIsPopup: Boolean = false; const AURL: String = '');
@@ -1402,6 +1495,32 @@ begin
   end;
 
   InitComponents;
+end;
+
+procedure TCustomFormWVBrowser.CleanupWebViewResources;
+begin
+  if Assigned(FCookie) then
+  begin
+    FCookie := nil;
+  end;
+
+  if Assigned(FBrowser) and FBrowserInitialized then
+  begin
+    try
+      // Remove event handlers e marca como não inicializado
+      FBrowser.OnAfterCreated := nil;
+      FBrowser.OnDocumentTitleChanged := nil;
+      FBrowser.OnInitializationError := nil;
+      FBrowser.OnNewWindowRequested := nil;
+      FBrowser.OnWindowCloseRequested := nil;
+      FBrowser.OnNavigationCompleted := nil;
+      FBrowser.OnWebMessageReceived := nil;
+
+      FBrowserInitialized := False;
+    except
+      // Ignora exceções durante limpeza
+    end;
+  end;
 end;
 
 procedure TCustomFormWVBrowser.CreateMDIComponents(AParentForm: TForm; const AURL: String; ALegacyForm: Boolean = DEFAULT_LEGACY_FORM);
@@ -1645,9 +1764,11 @@ destructor TCustomFormWVBrowser.Destroy;
 begin
   FIsClosing := True;
 
+  // Registra a remoção da instância MDI antes de liberar recursos
   if (FUniqueIdentifier <> EmptyStr) and not TCustomFormWVBrowser.FFinalizationStarted then
     UnregisterMDIInstance(FUniqueIdentifier, Self);
 
+  // Libera timers
   if Assigned(FTimer) then
   begin
     FTimer.Enabled := False;
@@ -1662,6 +1783,7 @@ begin
     FreeAndNil(FCheckTimer);
   end;
 
+  // Libera callbacks
   if Assigned(FCallbackList) then
   begin
     while FCallbackList.Count > 0 do
@@ -1677,11 +1799,19 @@ begin
     FreeAndNil(FCallbackList);
   end;
 
+  // CORREÇÃO: Libera cookie antes de liberar o browser
   if Assigned(FCookie) then
+  begin
     FCookie := nil;
+  end;
 
+  // CORREÇÃO: Chama limpeza específica dos recursos WebView2
+  CleanupWebViewResources;
+
+  // Libera browser e seus eventos
   if Assigned(FBrowser) then
   begin
+    // Remove todos os event handlers antes de liberar
     FBrowser.OnAfterCreated := nil;
     FBrowser.OnDocumentTitleChanged := nil;
     FBrowser.OnInitializationError := nil;
@@ -1690,18 +1820,24 @@ begin
     FBrowser.OnNavigationCompleted := nil;
     FBrowser.OnWebMessageReceived := nil;
 
+    // CORREÇÃO: Remove event handlers e libera adequadamente
+    if FBrowserInitialized and Assigned(FBrowser) then
+    begin
+      // Chama método centralizado de limpeza
+      Self.CleanupWebViewResources;
+    end;
+
     FreeAndNil(FBrowser);
   end;
 
-  if Assigned(FWebView2Profile) then
-    FWebView2Profile := nil;
-
+  // Libera WindowParent
   if Assigned(FWindowParent) then
   begin
     FWindowParent.Browser := nil;
     FreeAndNil(FWindowParent);
   end;
 
+  // Libera referência do form
   FForm := nil;
 
   inherited;
@@ -1857,6 +1993,7 @@ begin
     begin
       if (FCookieName <> EmptyStr) and (FCookieValue <> EmptyStr) and (FCookieDomain <> EmptyStr) then
       begin
+        TempProfile := nil;
         try
           TempProfile := FBrowser.CoreWebView2.Profile;
           if Assigned(TempProfile) then
@@ -1864,11 +2001,13 @@ begin
             FCookie := FBrowser.CreateCookie(FCookieName, FCookieValue, FCookieDomain, FCookiePath);
             if Assigned(FCookie) then
               FBrowser.AddOrUpdateCookie(FCookie);
-            TempProfile := nil;
           end;
         except
 
         end;
+
+        if Assigned(TempProfile) then
+          TempProfile := nil;
       end;
       FBrowser.Navigate(FURL);
     end;
