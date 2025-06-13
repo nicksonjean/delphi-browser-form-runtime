@@ -85,6 +85,7 @@ type
     FUniqueIdentifier: String;
     FMaxInstances: Integer;
     FLegacyForm: Boolean;
+    FWebView2Profile: ICoreWebView2Profile;
 
     class var FFinalizationStarted: Boolean;
     class var FMDIInstanceRegistry: TDictionary<string, TList<TCustomFormWVBrowser>>;
@@ -1665,12 +1666,23 @@ begin
     FreeAndNil(FBrowser);
   end;
 
+
+  if Assigned(FWebView2Profile) then
+  begin
+    try
+      FWebView2Profile := nil;
+    except
+
+    end;
+  end;
+
   if Assigned(FWindowParent) then
   begin
     FWindowParent.Browser := nil;
     FreeAndNil(FWindowParent);
   end;
 
+  FCookie := nil;
   FForm := nil;
 
   inherited;
@@ -1817,6 +1829,15 @@ procedure TCustomFormWVBrowser.OnAfterCreated(Sender: TObject);
 begin
   FBrowserInitialized := True;
   ResizeBrowser;
+
+  if Assigned(FBrowser) and Assigned(FBrowser.CoreWebView2) then
+  begin
+    try
+      FWebView2Profile := FBrowser.CoreWebView2.Profile;
+    except
+
+    end;
+  end;
 
   if FURL <> EmptyStr then
   begin
@@ -2180,7 +2201,6 @@ begin
             if not FBrowserInitialized then
               FBrowser.CreateBrowser(FWindowParent.Handle);
           except
-
             if Assigned(FTimer) then
               FTimer.Enabled := True;
           end;
@@ -2193,11 +2213,9 @@ begin
       end;
 
     except
-
       try
         Self.CreateMDIComponents(AParentForm, FURL);
       except
-
         Exit;
       end;
     end;

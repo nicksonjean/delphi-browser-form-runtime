@@ -1,3 +1,15 @@
-2025/06/12-18:06:23.500 67e0 Reusing MANIFEST F:\Projetos\delphi-browser-form-runtime\Demo\Win32\Debug\CustomCache\EBWebView\Default\Session Storage/MANIFEST-000001
-2025/06/12-18:06:23.503 67e0 Recovering log #159
-2025/06/12-18:06:23.505 67e0 Reusing old log F:\Projetos\delphi-browser-form-runtime\Demo\Win32\Debug\CustomCache\EBWebView\Default\Session Storage/000159.log 
+2025/06/13-12:17:40.145 a9b4 Reusing MANIFEST F:\Projetos\delphi-browser-form-runtime\Demo\Win32\Debug\CustomCache\EBWebView\Default\Session Storage/MANIFEST-000001
+2025/06/13-12:17:40.149 a9b4 Recovering log #159
+2025/06/13-12:17:40.151 a9b4 Reusing old log F:\Projetos\delphi-browser-form-runtime\Demo\Win32\Debug\CustomCache\EBWebView\Default\Session Storage/000159.log 
+2025/06/13-12:18:00.586 104c8 Level-0 table #163: started
+2025/06/13-12:18:00.590 104c8 Level-0 table #163: 31755 bytes OK
+2025/06/13-12:18:00.592 104c8 Delete type=0 #159
+2025/06/13-12:18:00.593 104c8 Compacting 4@0 + 1@1 files
+2025/06/13-12:18:00.598 104c8 Generated table #164@0: 2925 keys, 71741 bytes
+2025/06/13-12:18:00.598 104c8 Compacted 4@0 + 1@1 files => 71741 bytes
+2025/06/13-12:18:00.599 104c8 compacted to: files[ 0 1 1 0 0 0 0 ]
+2025/06/13-12:18:00.600 104c8 Delete type=2 #151
+2025/06/13-12:18:00.600 104c8 Delete type=2 #154
+2025/06/13-12:18:00.600 104c8 Delete type=2 #157
+2025/06/13-12:18:00.600 104c8 Delete type=2 #160
+2025/06/13-12:18:00.601 104c8 Delete type=2 #163
