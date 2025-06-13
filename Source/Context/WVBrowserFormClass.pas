@@ -86,6 +86,7 @@ type
     FMaxInstances: Integer;
     FLegacyForm: Boolean;
 
+    class var FFinalizationStarted: Boolean;
     class var FMDIInstanceRegistry: TDictionary<string, TList<TCustomFormWVBrowser>>;
     class function GetMDIInstanceRegistry: TDictionary<string, TList<TCustomFormWVBrowser>>;
     class procedure RegisterMDIInstance(const AIdentifier: string; AInstance: TCustomFormWVBrowser);
@@ -93,6 +94,7 @@ type
     class function GetMDIInstanceCount(const AIdentifier: string): Integer;
     class function GetOldestMDIInstance(const AIdentifier: string): TCustomFormWVBrowser;
     class function CanCreateMDIInstance(const AIdentifier: string; AMaxInstances: Integer; ASingleInstance: Boolean): Boolean;
+    class procedure CleanupMDIRegistry;
 
     // Internal Generic Methods
     function DecodeDataURL(const DataURL: string): string;
@@ -184,7 +186,7 @@ type
     constructor CreateAsPopup(AParentBrowser: TWVBrowser; const AURL: String = '');
     constructor CreateAsMDI(AParentForm: TForm; const AURL: String = ''; ALegacyForm: Boolean = DEFAULT_LEGACY_FORM);
     destructor Destroy; override;
-	
+
     // Alias Static Constructors
     class function NewBrowser(const AURL: string): TCustomFormWVBrowser;
     class function NewPopup(const AURL: string; AParentBrowser: TWVBrowser = nil): TCustomFormWVBrowser;
@@ -1146,6 +1148,12 @@ end;
 
 class function TCustomFormWVBrowser.GetMDIInstanceRegistry: TDictionary<string, TList<TCustomFormWVBrowser>>;
 begin
+  if FFinalizationStarted then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
   if not Assigned(FMDIInstanceRegistry) then
     FMDIInstanceRegistry := TDictionary<string, TList<TCustomFormWVBrowser>>.Create;
   Result := FMDIInstanceRegistry;
@@ -1154,33 +1162,41 @@ end;
 class procedure TCustomFormWVBrowser.RegisterMDIInstance(const AIdentifier: string; AInstance: TCustomFormWVBrowser);
 var
   InstanceList: TList<TCustomFormWVBrowser>;
+  Registry: TDictionary<string, TList<TCustomFormWVBrowser>>;
 begin
-  if AIdentifier <> EmptyStr then
-  begin
-    if not GetMDIInstanceRegistry.TryGetValue(AIdentifier, InstanceList) then
-    begin
-      InstanceList := TList<TCustomFormWVBrowser>.Create;
-      GetMDIInstanceRegistry.Add(AIdentifier, InstanceList);
-    end;
+  if FFinalizationStarted or (AIdentifier = EmptyStr) then
+    Exit;
 
-    if InstanceList.IndexOf(AInstance) = -1 then
-      InstanceList.Add(AInstance);
+  Registry := GetMDIInstanceRegistry;
+  if not Assigned(Registry) then
+    Exit;
+
+  if not Registry.TryGetValue(AIdentifier, InstanceList) then
+  begin
+    InstanceList := TList<TCustomFormWVBrowser>.Create;
+    Registry.Add(AIdentifier, InstanceList);
   end;
+
+  if InstanceList.IndexOf(AInstance) = -1 then
+    InstanceList.Add(AInstance);
 end;
 
 class procedure TCustomFormWVBrowser.UnregisterMDIInstance(const AIdentifier: string; AInstance: TCustomFormWVBrowser);
 var
   InstanceList: TList<TCustomFormWVBrowser>;
 begin
-  if AIdentifier <> EmptyStr then
+  if FFinalizationStarted or (AIdentifier = EmptyStr) or not Assigned(FMDIInstanceRegistry) then
+    Exit;
+
+  if FMDIInstanceRegistry.TryGetValue(AIdentifier, InstanceList) then
   begin
-    if GetMDIInstanceRegistry.TryGetValue(AIdentifier, InstanceList) then
+    if Assigned(InstanceList) then
     begin
       InstanceList.Remove(AInstance);
       if InstanceList.Count = 0 then
       begin
+        FMDIInstanceRegistry.Remove(AIdentifier);
         InstanceList.Free;
-        GetMDIInstanceRegistry.Remove(AIdentifier);
       end;
     end;
   end;
@@ -1189,19 +1205,38 @@ end;
 class function TCustomFormWVBrowser.GetMDIInstanceCount(const AIdentifier: string): Integer;
 var
   InstanceList: TList<TCustomFormWVBrowser>;
+  Registry: TDictionary<string, TList<TCustomFormWVBrowser>>;
   i: Integer;
 begin
   Result := 0;
-  if (AIdentifier <> EmptyStr) and GetMDIInstanceRegistry.TryGetValue(AIdentifier, InstanceList) then
+  if FFinalizationStarted or (AIdentifier = EmptyStr) then
+    Exit;
+
+  Registry := GetMDIInstanceRegistry;
+  if not Assigned(Registry) then
+    Exit;
+
+  if Registry.TryGetValue(AIdentifier, InstanceList) then
   begin
-    for i := InstanceList.Count - 1 downto 0 do
+    if Assigned(InstanceList) then
     begin
-      if not Assigned(InstanceList[i]) or not Assigned(InstanceList[i].FForm) or InstanceList[i].FIsClosing then
+      for i := InstanceList.Count - 1 downto 0 do
       begin
-        InstanceList.Delete(i);
-      end
-      else
-        Inc(Result);
+        if not Assigned(InstanceList[i]) or
+           not Assigned(InstanceList[i].FForm) or
+           InstanceList[i].FIsClosing then
+        begin
+          InstanceList.Delete(i);
+        end
+        else
+          Inc(Result);
+      end;
+
+      if InstanceList.Count = 0 then
+      begin
+        Registry.Remove(AIdentifier);
+        InstanceList.Free;
+      end;
     end;
   end;
 end;
@@ -1209,17 +1244,28 @@ end;
 class function TCustomFormWVBrowser.GetOldestMDIInstance(const AIdentifier: string): TCustomFormWVBrowser;
 var
   InstanceList: TList<TCustomFormWVBrowser>;
+  Registry: TDictionary<string, TList<TCustomFormWVBrowser>>;
   i: Integer;
 begin
   Result := nil;
-  if (AIdentifier <> EmptyStr) and GetMDIInstanceRegistry.TryGetValue(AIdentifier, InstanceList) then
+  if FFinalizationStarted or (AIdentifier = EmptyStr) then
+    Exit;
+
+  Registry := GetMDIInstanceRegistry;
+  if not Assigned(Registry) then
+    Exit;
+
+  if Registry.TryGetValue(AIdentifier, InstanceList) then
   begin
-    for i := 0 to InstanceList.Count - 1 do
+    if Assigned(InstanceList) then
     begin
-      if Assigned(InstanceList[i]) and Assigned(InstanceList[i].FForm) and not InstanceList[i].FIsClosing then
+      for i := 0 to InstanceList.Count - 1 do
       begin
-        Result := InstanceList[i];
-        Break;
+        if Assigned(InstanceList[i]) and Assigned(InstanceList[i].FForm) and not InstanceList[i].FIsClosing then
+        begin
+          Result := InstanceList[i];
+          Break;
+        end;
       end;
     end;
   end;
@@ -1254,6 +1300,23 @@ end;
 class function TCustomFormWVBrowser.CheckMDILimits(const AUniqueIdentifier: string; AMaxInstances: Integer = 1; ASingleInstance: Boolean = True): Boolean;
 begin
   Result := CanCreateMDIInstance(AUniqueIdentifier, AMaxInstances, ASingleInstance);
+end;
+
+class procedure TCustomFormWVBrowser.CleanupMDIRegistry;
+var
+  Pair: TPair<string, TList<TCustomFormWVBrowser>>;
+begin
+  FFinalizationStarted := True;
+
+  if Assigned(FMDIInstanceRegistry) then
+  begin
+    for Pair in FMDIInstanceRegistry do
+    begin
+      if Assigned(Pair.Value) then
+        Pair.Value.Free;
+    end;
+    FreeAndNil(FMDIInstanceRegistry);
+  end;
 end;
 
 // Context
@@ -1508,18 +1571,21 @@ class function TCustomFormWVBrowser.NewBrowser(const AURL: string): TCustomFormW
 begin
   Result := TCustomFormWVBrowser.Create(AURL);
   Result.ActionButtons := [TBorderIcon.biMinimize, TBorderIcon.biMaximize];
+  Result.FForm.FormStyle := TFormStyle.fsStayOnTop;
 end;
 
 class function TCustomFormWVBrowser.NewPopup(const AURL: string; AParentBrowser: TWVBrowser = nil): TCustomFormWVBrowser;
 begin
   Result := TCustomFormWVBrowser.Create(AURL, AParentBrowser);
   Result.ActionButtons := [TBorderIcon.biMinimize, TBorderIcon.biMaximize];
+  Result.FForm.FormStyle := TFormStyle.fsStayOnTop;
 end;
 
 class function TCustomFormWVBrowser.NewMDI(const AURL: String; AParentForm: TForm): TCustomFormWVBrowser;
 begin
   Result := TCustomFormWVBrowser.Create(AURL, AParentForm);
   Result.ActionButtons := [TBorderIcon.biMinimize, TBorderIcon.biMaximize];
+  Result.FForm.FormStyle := TFormStyle.fsStayOnTop;
 end;
 
 function TCustomFormWVBrowser.Recreate(const AURL: string): TCustomFormWVBrowser;
@@ -1554,7 +1620,7 @@ destructor TCustomFormWVBrowser.Destroy;
 begin
   FIsClosing := True;
 
-  if FUniqueIdentifier <> EmptyStr then
+  if (FUniqueIdentifier <> EmptyStr) and not TCustomFormWVBrowser.FFinalizationStarted then
     UnregisterMDIInstance(FUniqueIdentifier, Self);
 
   if Assigned(FTimer) then
@@ -2291,4 +2357,11 @@ begin
     FForm.WindowState := wsMaximized;
 end;
 
+initialization
+  TCustomFormWVBrowser.FFinalizationStarted := False;
+
+finalization
+  TCustomFormWVBrowser.CleanupMDIRegistry;
+
 end.
+
