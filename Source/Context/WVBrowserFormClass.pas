@@ -1020,6 +1020,7 @@ begin
   FCookieDomain := ACookieDomain;
   FCookiePath := ACookiePath;
 
+  // Libera cookie anterior se existir
   if Assigned(FCookie) then
   begin
     FCookie := nil;
@@ -1037,9 +1038,10 @@ begin
           FBrowser.AddOrUpdateCookie(FCookie);
       end;
     except
-
+      // Em caso de exceção, não faz nada - apenas garante que TempProfile seja liberado
     end;
 
+    // Garante que a referência seja liberada
     if Assigned(TempProfile) then
       TempProfile := nil;
   end;
@@ -1799,6 +1801,13 @@ begin
     FreeAndNil(FCallbackList);
   end;
 
+  // CORREÇÃO: Chama ForceCleanupAllInstances antes de outras limpezas
+  try
+    Self.ForceCleanupAllInstances;
+  except
+    // Ignora exceções durante limpeza forçada
+  end;
+
   // CORREÇÃO: Libera cookie antes de liberar o browser
   if Assigned(FCookie) then
   begin
@@ -1824,7 +1833,7 @@ begin
     if FBrowserInitialized and Assigned(FBrowser) then
     begin
       // Chama método centralizado de limpeza
-      Self.CleanupWebViewResources;
+      CleanupWebViewResources;
     end;
 
     FreeAndNil(FBrowser);
@@ -2003,9 +2012,10 @@ begin
               FBrowser.AddOrUpdateCookie(FCookie);
           end;
         except
-
+          // Em caso de exceção, não faz nada
         end;
 
+        // Garante que a referência seja liberada
         if Assigned(TempProfile) then
           TempProfile := nil;
       end;
