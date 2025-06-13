@@ -1559,16 +1559,6 @@ begin
         
       // Força a liberação do Profile
       FProfile := nil;
-      
-      // Garante que o Profile seja liberado
-      if Assigned(FBrowser) and FBrowserInitialized and Assigned(FBrowser.CoreWebView2) then
-      begin
-        try
-          FBrowser.CoreWebView2.Profile := nil;
-        except
-          // Ignora exceções durante liberação do Profile
-        end;
-      end;
     except
       // Ignora exceções durante liberação do Profile
     end;
