@@ -1873,6 +1873,9 @@ begin
         FBrowserInitialized := False;
         
         // Libera o browser
+        if Assigned(FWindowParent) then
+          FWindowParent.Browser := nil;
+          
         FreeAndNil(FBrowser);
       except
         // Ignora exceções durante limpeza
@@ -1921,32 +1924,31 @@ end;
 
 procedure TCustomFormWVBrowser.InitComponents;
 begin
-  // WebBrowser
-  FBrowser := TWVBrowser.Create(FForm);
-  FBrowser.DefaultURL := EmptyStr;
-  FBrowser.OnAfterCreated := Self.OnAfterCreated;
-  FBrowser.OnDocumentTitleChanged := Self.OnDocTitleChanged;
-  FBrowser.OnInitializationError := Self.OnInitError;
-  FBrowser.OnNewWindowRequested := Self.OnNewWindowRequested;
-  FBrowser.OnWindowCloseRequested := Self.OnWindowCloseRequested;
-  FBrowser.OnNavigationCompleted := Self.OnNavigationCompleted;
-  FBrowser.OnWebMessageReceived := Self.OnWebMessageReceived;
+  if not Assigned(FWindowParent) then
+  begin
+    FWindowParent := TWVWindowParent.Create(FForm);
+    FWindowParent.Parent := FForm;
+    FWindowParent.Align := alClient;
+  end;
 
-  // WebView2 Container
-  FWindowParent := TWVWindowParent.Create(FForm);
-  FWindowParent.Parent := FForm;
-  FWindowParent.Align := alClient;
-  FWindowParent.Left := 0;
-  FWindowParent.Top := 0;
-  FWindowParent.Width := FForm.Width;
-  FWindowParent.Height := FForm.Height;
-  FWindowParent.Browser := FBrowser;
+  if not Assigned(FBrowser) then
+  begin
+    FBrowser := TWVBrowser.Create(FForm);
+    FBrowser.DefaultURL := FURL;
+    FBrowser.OnAfterCreated := OnAfterCreated;
+    FBrowser.OnDocumentTitleChanged := OnDocTitleChanged;
+    FBrowser.OnInitializationError := OnInitError;
+    FBrowser.OnNewWindowRequested := OnNewWindowRequested;
+    FBrowser.OnWindowCloseRequested := OnWindowCloseRequested;
+    FBrowser.OnNavigationCompleted := OnNavigationCompleted;
+    FBrowser.OnWebMessageReceived := OnWebMessageReceived;
+  end;
 
-  // Timer
-  FTimer := TTimer.Create(FForm);
-  FTimer.Enabled := False;
-  FTimer.Interval := 100;
-  FTimer.OnTimer := OnTimer;
+  if Assigned(FWindowParent) and Assigned(FBrowser) then
+  begin
+    FWindowParent.Browser := FBrowser;
+    FBrowser.CreateBrowser(FWindowParent.Handle);
+  end;
 end;
 
 procedure TCustomFormWVBrowser.InitializePopupBrowser;
