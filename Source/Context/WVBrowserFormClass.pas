@@ -53,6 +53,7 @@ type
     FBrowser: TWVBrowser;
     FWindowParent: TWVWindowParent;
     FCookie: ICoreWebView2Cookie;
+    FProfile: ICoreWebView2Profile;
     FCookieName: String;
     FCookieValue: String;
     FCookieDomain: String;
@@ -95,7 +96,6 @@ type
     class function GetOldestMDIInstance(const AIdentifier: string): TCustomFormWVBrowser;
     class function CanCreateMDIInstance(const AIdentifier: string; AMaxInstances: Integer; ASingleInstance: Boolean): Boolean;
     class procedure CleanupMDIRegistry;
-    class procedure ForceCleanupAllInstances;
 
     // Internal Generic Methods
     function DecodeDataURL(const DataURL: string): string;
@@ -111,6 +111,7 @@ type
     // Normal and Modal Methods
     procedure CreateComponents(AParentBrowser: TWVBrowser = nil; AIsPopup: Boolean = false; const AURL: String = '');
     procedure CleanupWebViewResources;
+    procedure CleanupProfile;
 
     // MDI Methods
     procedure CreateMDIComponents(AParentForm: TForm; const AURL: String; ALegacyForm: Boolean = DEFAULT_LEGACY_FORM);
@@ -384,25 +385,35 @@ begin
       end;
     end;
 
-    // CORREÇÃO: Limpa recursos do WebView2 na ordem correta
+    // CORREÇÃO: Limpeza específica do Profile
     if Assigned((BrowserInstance as TCustomFormWVBrowser).FBrowser) then
     begin
-      // Primeiro: Limpa cookie antes de qualquer outra operação
+      // 1º - Limpa Profile explicitamente
+      (BrowserInstance as TCustomFormWVBrowser).CleanupProfile;
+
+      // 2º - Limpa cookie
       if Assigned((BrowserInstance as TCustomFormWVBrowser).FCookie) then
         (BrowserInstance as TCustomFormWVBrowser).FCookie := nil;
 
-      // Segundo: Remove todos os event handlers se ainda estiver inicializado
+      // 3º - Remove event handlers
       if (BrowserInstance as TCustomFormWVBrowser).FBrowserInitialized then
       begin
         try
-          // CORREÇÃO: Usa método centralizado de limpeza
-          (BrowserInstance as TCustomFormWVBrowser).CleanupWebViewResources;
+          (BrowserInstance as TCustomFormWVBrowser).FBrowser.OnAfterCreated := nil;
+          (BrowserInstance as TCustomFormWVBrowser).FBrowser.OnDocumentTitleChanged := nil;
+          (BrowserInstance as TCustomFormWVBrowser).FBrowser.OnInitializationError := nil;
+          (BrowserInstance as TCustomFormWVBrowser).FBrowser.OnNewWindowRequested := nil;
+          (BrowserInstance as TCustomFormWVBrowser).FBrowser.OnWindowCloseRequested := nil;
+          (BrowserInstance as TCustomFormWVBrowser).FBrowser.OnNavigationCompleted := nil;
+          (BrowserInstance as TCustomFormWVBrowser).FBrowser.OnWebMessageReceived := nil;
+
+          (BrowserInstance as TCustomFormWVBrowser).FBrowserInitialized := False;
         except
           // Ignora exceções durante limpeza de handlers
         end;
       end;
 
-      // Terceiro: Notifica mudança de posição (pode ser necessário para limpeza interna)
+      // 4º - Notifica mudança de posição
       try
         (BrowserInstance as TCustomFormWVBrowser).FBrowser.NotifyParentWindowPositionChanged;
       except
@@ -433,7 +444,7 @@ begin
     if Assigned((BrowserInstance as TCustomFormWVBrowser).FCheckTimer) then
       (BrowserInstance as TCustomFormWVBrowser).FCheckTimer.Enabled := False;
 
-    // CORREÇÃO: Limpeza prévia do cookie no CloseQuery
+    // CORREÇÃO: Limpeza antecipada do Profile no CloseQuery
     if Assigned((BrowserInstance as TCustomFormWVBrowser).FBrowser) then
     begin
       try
@@ -441,7 +452,10 @@ begin
         if (BrowserInstance as TCustomFormWVBrowser).FBrowserInitialized then
           (BrowserInstance as TCustomFormWVBrowser).FBrowser.ExecuteScript('window.dispatchEvent(new Event("beforeunload"))');
 
-        // Limpeza prévia do cookie no CloseQuery
+        // CORREÇÃO: Limpa Profile antecipadamente no CloseQuery
+        (BrowserInstance as TCustomFormWVBrowser).CleanupProfile;
+
+        // Limpeza do cookie
         if Assigned((BrowserInstance as TCustomFormWVBrowser).FCookie) then
         begin
           (BrowserInstance as TCustomFormWVBrowser).FCookie := nil;
@@ -1012,8 +1026,6 @@ begin
 end;
 
 function TCustomFormWVBrowser.SetCookie(const ACookieName, ACookieValue, ACookieDomain: String; const ACookiePath: String = '/'): TCustomFormWVBrowser;
-var
-  TempProfile: ICoreWebView2Profile;
 begin
   FCookieName := ACookieName;
   FCookieValue := ACookieValue;
@@ -1026,24 +1038,28 @@ begin
     FCookie := nil;
   end;
 
+  // CORREÇÃO: Libera Profile anterior se existir
+  if Assigned(FProfile) then
+  begin
+    FProfile := nil;
+  end;
+
   if FBrowserInitialized and Assigned(FBrowser) and Assigned(FBrowser.CoreWebView2) then
   begin
-    TempProfile := nil;
     try
-      TempProfile := FBrowser.CoreWebView2.Profile;
-      if Assigned(TempProfile) then
+      // CORREÇÃO: Armazena o Profile em campo próprio para controle de liberação
+      FProfile := FBrowser.CoreWebView2.Profile;
+      if Assigned(FProfile) then
       begin
         FCookie := FBrowser.CreateCookie(FCookieName, FCookieValue, FCookieDomain, FCookiePath);
         if Assigned(FCookie) then
           FBrowser.AddOrUpdateCookie(FCookie);
       end;
     except
-      // Em caso de exceção, não faz nada - apenas garante que TempProfile seja liberado
+      // Em caso de exceção, garante que Profile seja liberado
+      if Assigned(FProfile) then
+        FProfile := nil;
     end;
-
-    // Garante que a referência seja liberada
-    if Assigned(TempProfile) then
-      TempProfile := nil;
   end;
 
   Result := Self;
@@ -1391,51 +1407,47 @@ end;
 class procedure TCustomFormWVBrowser.CleanupMDIRegistry;
 var
   Pair: TPair<string, TList<TCustomFormWVBrowser>>;
+  InstanceList: TList<TCustomFormWVBrowser>;
+  i: Integer;
+  Instance: TCustomFormWVBrowser;
 begin
   FFinalizationStarted := True;
 
   if Assigned(FMDIInstanceRegistry) then
   begin
+    // CORREÇÃO: Foca especificamente na limpeza do Profile
     for Pair in FMDIInstanceRegistry do
     begin
-      if Assigned(Pair.Value) then
-        Pair.Value.Free;
-    end;
-    FreeAndNil(FMDIInstanceRegistry);
-  end;
-end;
-
-class procedure TCustomFormWVBrowser.ForceCleanupAllInstances;
-var
-  Pair: TPair<string, TList<TCustomFormWVBrowser>>;
-  InstanceList: TList<TCustomFormWVBrowser>;
-  i: Integer;
-  Instance: TCustomFormWVBrowser;
-begin
-  if not Assigned(FMDIInstanceRegistry) then
-    Exit;
-
-  // Força limpeza de todas as instâncias em memória
-  for Pair in FMDIInstanceRegistry do
-  begin
-    InstanceList := Pair.Value;
-    if Assigned(InstanceList) then
-    begin
-      for i := InstanceList.Count - 1 downto 0 do
+      InstanceList := Pair.Value;
+      if Assigned(InstanceList) then
       begin
-        Instance := InstanceList[i];
-        if Assigned(Instance) then
+        for i := InstanceList.Count - 1 downto 0 do
         begin
-          try
-            // CORREÇÃO: Usa método centralizado de limpeza
-            Instance.CleanupWebViewResources;
-            Instance.FIsClosing := True;
-          except
-            // Ignora exceções
+          Instance := InstanceList[i];
+          if Assigned(Instance) then
+          begin
+            try
+              // CORREÇÃO: Limpeza específica do Profile
+              Instance.CleanupProfile;
+
+              // Libera cookie
+              if Assigned(Instance.FCookie) then
+                Instance.FCookie := nil;
+
+              Instance.FIsClosing := True;
+            except
+              // Ignora exceções durante limpeza forçada
+            end;
           end;
         end;
+
+        InstanceList.Clear;
+        InstanceList.Free;
       end;
     end;
+
+    FMDIInstanceRegistry.Clear;
+    FreeAndNil(FMDIInstanceRegistry);
   end;
 end;
 
@@ -1501,6 +1513,9 @@ end;
 
 procedure TCustomFormWVBrowser.CleanupWebViewResources;
 begin
+  // CORREÇÃO: Limpa Profile ANTES do cookie
+  CleanupProfile;
+
   if Assigned(FCookie) then
   begin
     FCookie := nil;
@@ -1521,6 +1536,19 @@ begin
       FBrowserInitialized := False;
     except
       // Ignora exceções durante limpeza
+    end;
+  end;
+end;
+
+procedure TCustomFormWVBrowser.CleanupProfile;
+begin
+  // CORREÇÃO: Libera Profile explicitamente
+  if Assigned(FProfile) then
+  begin
+    try
+      FProfile := nil;
+    except
+      // Ignora exceções durante liberação do Profile
     end;
   end;
 end;
@@ -1766,11 +1794,10 @@ destructor TCustomFormWVBrowser.Destroy;
 begin
   FIsClosing := True;
 
-  // Registra a remoção da instância MDI antes de liberar recursos
   if (FUniqueIdentifier <> EmptyStr) and not TCustomFormWVBrowser.FFinalizationStarted then
     UnregisterMDIInstance(FUniqueIdentifier, Self);
 
-  // Libera timers
+  // Para todos os timers
   if Assigned(FTimer) then
   begin
     FTimer.Enabled := False;
@@ -1785,7 +1812,7 @@ begin
     FreeAndNil(FCheckTimer);
   end;
 
-  // Libera callbacks
+  // Limpa callbacks
   if Assigned(FCallbackList) then
   begin
     while FCallbackList.Count > 0 do
@@ -1801,26 +1828,20 @@ begin
     FreeAndNil(FCallbackList);
   end;
 
-  // CORREÇÃO: Chama ForceCleanupAllInstances antes de outras limpezas
-  try
-    Self.ForceCleanupAllInstances;
-  except
-    // Ignora exceções durante limpeza forçada
-  end;
+  // CORREÇÃO: Ordem específica de liberação para resolver memory leak do Profile
 
-  // CORREÇÃO: Libera cookie antes de liberar o browser
+  // 1º - Libera Profile explicitamente ANTES de tudo
+  CleanupProfile;
+
+  // 2º - Libera Cookie
   if Assigned(FCookie) then
   begin
     FCookie := nil;
   end;
 
-  // CORREÇÃO: Chama limpeza específica dos recursos WebView2
-  CleanupWebViewResources;
-
-  // Libera browser e seus eventos
+  // 3º - Remove event handlers e limpa browser
   if Assigned(FBrowser) then
   begin
-    // Remove todos os event handlers antes de liberar
     FBrowser.OnAfterCreated := nil;
     FBrowser.OnDocumentTitleChanged := nil;
     FBrowser.OnInitializationError := nil;
@@ -1829,24 +1850,17 @@ begin
     FBrowser.OnNavigationCompleted := nil;
     FBrowser.OnWebMessageReceived := nil;
 
-    // CORREÇÃO: Remove event handlers e libera adequadamente
-    if FBrowserInitialized and Assigned(FBrowser) then
-    begin
-      // Chama método centralizado de limpeza
-      CleanupWebViewResources;
-    end;
-
     FreeAndNil(FBrowser);
   end;
 
-  // Libera WindowParent
+  // 4º - Libera WindowParent
   if Assigned(FWindowParent) then
   begin
     FWindowParent.Browser := nil;
     FreeAndNil(FWindowParent);
   end;
 
-  // Libera referência do form
+  // 5º - Libera referência do form
   FForm := nil;
 
   inherited;
@@ -1990,8 +2004,6 @@ begin
 end;
 
 procedure TCustomFormWVBrowser.OnAfterCreated(Sender: TObject);
-var
-  TempProfile: ICoreWebView2Profile;
 begin
   FBrowserInitialized := True;
   ResizeBrowser;
@@ -2002,22 +2014,24 @@ begin
     begin
       if (FCookieName <> EmptyStr) and (FCookieValue <> EmptyStr) and (FCookieDomain <> EmptyStr) then
       begin
-        TempProfile := nil;
         try
-          TempProfile := FBrowser.CoreWebView2.Profile;
-          if Assigned(TempProfile) then
+          // CORREÇÃO: Libera Profile anterior se existir
+          if Assigned(FProfile) then
+            FProfile := nil;
+
+          // CORREÇÃO: Armazena o Profile em campo próprio
+          FProfile := FBrowser.CoreWebView2.Profile;
+          if Assigned(FProfile) then
           begin
             FCookie := FBrowser.CreateCookie(FCookieName, FCookieValue, FCookieDomain, FCookiePath);
             if Assigned(FCookie) then
               FBrowser.AddOrUpdateCookie(FCookie);
           end;
         except
-          // Em caso de exceção, não faz nada
+          // Em caso de exceção, garante que Profile seja liberado
+          if Assigned(FProfile) then
+            FProfile := nil;
         end;
-
-        // Garante que a referência seja liberada
-        if Assigned(TempProfile) then
-          TempProfile := nil;
       end;
       FBrowser.Navigate(FURL);
     end;
