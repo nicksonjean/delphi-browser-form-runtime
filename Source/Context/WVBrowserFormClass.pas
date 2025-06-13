@@ -2057,12 +2057,16 @@ begin
           // Armazena o Profile em campo próprio
           if Assigned(FBrowser.CoreWebView2) then
           begin
-            FProfile := FBrowser.CoreWebView2.Profile;
-            if Assigned(FProfile) then
+            // Não armazena o Profile se não for necessário
+            if (FCookieName <> EmptyStr) and (FCookieValue <> EmptyStr) and (FCookieDomain <> EmptyStr) then
             begin
-              FCookie := FBrowser.CreateCookie(FCookieName, FCookieValue, FCookieDomain, FCookiePath);
-              if Assigned(FCookie) then
-                FBrowser.AddOrUpdateCookie(FCookie);
+              FProfile := FBrowser.CoreWebView2.Profile;
+              if Assigned(FProfile) then
+              begin
+                FCookie := FBrowser.CreateCookie(FCookieName, FCookieValue, FCookieDomain, FCookiePath);
+                if Assigned(FCookie) then
+                  FBrowser.AddOrUpdateCookie(FCookie);
+              end;
             end;
           end;
         except
