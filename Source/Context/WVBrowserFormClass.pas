@@ -1517,9 +1517,6 @@ end;
 
 procedure TCustomFormWVBrowser.CleanupWebViewResources;
 begin
-  // Limpa Profile ANTES do cookie
-  CleanupProfile;
-
   if Assigned(FCookie) then
   begin
     FCookie := nil;
@@ -1528,7 +1525,6 @@ begin
   if Assigned(FBrowser) and FBrowserInitialized then
   begin
     try
-      // Remove event handlers e marca como não inicializado
       FBrowser.OnAfterCreated := nil;
       FBrowser.OnDocumentTitleChanged := nil;
       FBrowser.OnInitializationError := nil;
@@ -1538,9 +1534,6 @@ begin
       FBrowser.OnWebMessageReceived := nil;
 
       FBrowserInitialized := False;
-      
-      // Garante que o Profile seja liberado após limpar os handlers
-      CleanupProfile;
     except
       // Ignora exceções durante limpeza
     end;
@@ -1842,17 +1835,11 @@ begin
     end;
 
     // Ordem específica de liberação para resolver memory leak do Profile
-
-    // 1º - Libera Profile explicitamente ANTES de tudo
-    CleanupProfile;
-
-    // 2º - Libera Cookie
     if Assigned(FCookie) then
     begin
       FCookie := nil;
     end;
 
-    // 3º - Remove event handlers e limpa browser
     if Assigned(FBrowser) then
     begin
       try
@@ -1867,22 +1854,13 @@ begin
           FBrowser.OnWebMessageReceived := nil;
         end;
         
-        // Garante que o Profile seja liberado após limpar os handlers
-        CleanupProfile;
-        
         FBrowserInitialized := False;
-        
-        // Libera o browser
-        if Assigned(FWindowParent) then
-          FWindowParent.Browser := nil;
-          
         FreeAndNil(FBrowser);
       except
         // Ignora exceções durante limpeza
       end;
     end;
 
-    // 4º - Libera WindowParent
     if Assigned(FWindowParent) then
     begin
       try
@@ -1893,11 +1871,7 @@ begin
       end;
     end;
 
-    // 5º - Libera referência do form
     FForm := nil;
-
-    // 6º - Garante que o Profile seja liberado uma última vez
-    CleanupProfile;
 
     inherited;
   except
@@ -1924,31 +1898,32 @@ end;
 
 procedure TCustomFormWVBrowser.InitComponents;
 begin
-  if not Assigned(FWindowParent) then
-  begin
-    FWindowParent := TWVWindowParent.Create(FForm);
-    FWindowParent.Parent := FForm;
-    FWindowParent.Align := alClient;
-  end;
+  // WebBrowser
+  FBrowser := TWVBrowser.Create(FForm);
+  FBrowser.DefaultURL := EmptyStr;
+  FBrowser.OnAfterCreated := Self.OnAfterCreated;
+  FBrowser.OnDocumentTitleChanged := Self.OnDocTitleChanged;
+  FBrowser.OnInitializationError := Self.OnInitError;
+  FBrowser.OnNewWindowRequested := Self.OnNewWindowRequested;
+  FBrowser.OnWindowCloseRequested := Self.OnWindowCloseRequested;
+  FBrowser.OnNavigationCompleted := Self.OnNavigationCompleted;
+  FBrowser.OnWebMessageReceived := Self.OnWebMessageReceived;
 
-  if not Assigned(FBrowser) then
-  begin
-    FBrowser := TWVBrowser.Create(FForm);
-    FBrowser.DefaultURL := FURL;
-    FBrowser.OnAfterCreated := OnAfterCreated;
-    FBrowser.OnDocumentTitleChanged := OnDocTitleChanged;
-    FBrowser.OnInitializationError := OnInitError;
-    FBrowser.OnNewWindowRequested := OnNewWindowRequested;
-    FBrowser.OnWindowCloseRequested := OnWindowCloseRequested;
-    FBrowser.OnNavigationCompleted := OnNavigationCompleted;
-    FBrowser.OnWebMessageReceived := OnWebMessageReceived;
-  end;
+  // WebView2 Container
+  FWindowParent := TWVWindowParent.Create(FForm);
+  FWindowParent.Parent := FForm;
+  FWindowParent.Align := alClient;
+  FWindowParent.Left := 0;
+  FWindowParent.Top := 0;
+  FWindowParent.Width := FForm.Width;
+  FWindowParent.Height := FForm.Height;
+  FWindowParent.Browser := FBrowser;
 
-  if Assigned(FWindowParent) and Assigned(FBrowser) then
-  begin
-    FWindowParent.Browser := FBrowser;
-    FBrowser.CreateBrowser(FWindowParent.Handle);
-  end;
+  // Timer
+  FTimer := TTimer.Create(FForm);
+  FTimer.Enabled := False;
+  FTimer.Interval := 100;
+  FTimer.OnTimer := OnTimer;
 end;
 
 procedure TCustomFormWVBrowser.InitializePopupBrowser;
@@ -2053,27 +2028,18 @@ begin
       if (FCookieName <> EmptyStr) and (FCookieValue <> EmptyStr) and (FCookieDomain <> EmptyStr) then
       begin
         try
-          // Libera Profile anterior se existir
-          CleanupProfile;
-
-          // Armazena o Profile em campo próprio
           if Assigned(FBrowser.CoreWebView2) then
           begin
-            // Não armazena o Profile se não for necessário
-            if (FCookieName <> EmptyStr) and (FCookieValue <> EmptyStr) and (FCookieDomain <> EmptyStr) then
+            FProfile := FBrowser.CoreWebView2.Profile;
+            if Assigned(FProfile) then
             begin
-              FProfile := FBrowser.CoreWebView2.Profile;
-              if Assigned(FProfile) then
-              begin
-                FCookie := FBrowser.CreateCookie(FCookieName, FCookieValue, FCookieDomain, FCookiePath);
-                if Assigned(FCookie) then
-                  FBrowser.AddOrUpdateCookie(FCookie);
-              end;
+              FCookie := FBrowser.CreateCookie(FCookieName, FCookieValue, FCookieDomain, FCookiePath);
+              if Assigned(FCookie) then
+                FBrowser.AddOrUpdateCookie(FCookie);
             end;
           end;
         except
-          // Em caso de exceção, garante que Profile seja liberado
-          CleanupProfile;
+          // Ignora exceções durante criação do cookie
         end;
       end;
       FBrowser.Navigate(FURL);
