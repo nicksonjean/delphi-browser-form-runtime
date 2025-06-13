@@ -53,6 +53,7 @@ type
     FBrowser: TWVBrowser;
     FWindowParent: TWVWindowParent;
     FCookie: ICoreWebView2Cookie;
+    FWebView2Profile: ICoreWebView2Profile;
     FCookieName: String;
     FCookieValue: String;
     FCookieDomain: String;
@@ -85,7 +86,6 @@ type
     FUniqueIdentifier: String;
     FMaxInstances: Integer;
     FLegacyForm: Boolean;
-    FWebView2Profile: ICoreWebView2Profile;
 
     class var FFinalizationStarted: Boolean;
     class var FMDIInstanceRegistry: TDictionary<string, TList<TCustomFormWVBrowser>>;
@@ -969,11 +969,35 @@ begin
 end;
 
 function TCustomFormWVBrowser.SetCookie(const ACookieName, ACookieValue, ACookieDomain: String; const ACookiePath: String = '/'): TCustomFormWVBrowser;
+var
+  TempProfile: ICoreWebView2Profile;
 begin
   FCookieName := ACookieName;
   FCookieValue := ACookieValue;
   FCookieDomain := ACookieDomain;
   FCookiePath := ACookiePath;
+
+  if Assigned(FCookie) then
+  begin
+    FCookie := nil;
+  end;
+
+  if FBrowserInitialized and Assigned(FBrowser) and Assigned(FBrowser.CoreWebView2) then
+  begin
+    try
+      TempProfile := FBrowser.CoreWebView2.Profile;
+      if Assigned(TempProfile) then
+      begin
+        FCookie := FBrowser.CreateCookie(FCookieName, FCookieValue, FCookieDomain, FCookiePath);
+        if Assigned(FCookie) then
+          FBrowser.AddOrUpdateCookie(FCookie);
+        TempProfile := nil;
+      end;
+    except
+
+    end;
+  end;
+
   Result := Self;
 end;
 
@@ -1653,6 +1677,9 @@ begin
     FreeAndNil(FCallbackList);
   end;
 
+  if Assigned(FCookie) then
+    FCookie := nil;
+
   if Assigned(FBrowser) then
   begin
     FBrowser.OnAfterCreated := nil;
@@ -1666,15 +1693,8 @@ begin
     FreeAndNil(FBrowser);
   end;
 
-
   if Assigned(FWebView2Profile) then
-  begin
-    try
-      FWebView2Profile := nil;
-    except
-
-    end;
-  end;
+    FWebView2Profile := nil;
 
   if Assigned(FWindowParent) then
   begin
@@ -1682,7 +1702,6 @@ begin
     FreeAndNil(FWindowParent);
   end;
 
-  FCookie := nil;
   FForm := nil;
 
   inherited;
@@ -1826,28 +1845,30 @@ begin
 end;
 
 procedure TCustomFormWVBrowser.OnAfterCreated(Sender: TObject);
+var
+  TempProfile: ICoreWebView2Profile;
 begin
   FBrowserInitialized := True;
   ResizeBrowser;
-
-  if Assigned(FBrowser) and Assigned(FBrowser.CoreWebView2) then
-  begin
-    try
-      FWebView2Profile := FBrowser.CoreWebView2.Profile;
-    except
-
-    end;
-  end;
 
   if FURL <> EmptyStr then
   begin
     if Assigned(FBrowser) then
     begin
-       if (FCookieName <> EmptyStr) and (FCookieValue <> EmptyStr) and (FCookieDomain <> EmptyStr) then
+      if (FCookieName <> EmptyStr) and (FCookieValue <> EmptyStr) and (FCookieDomain <> EmptyStr) then
       begin
-        FCookie := FBrowser.CreateCookie(FCookieName, FCookieValue, FCookieDomain, FCookiePath);
-        if Assigned(FCookie) then
-          FBrowser.AddOrUpdateCookie(FCookie);
+        try
+          TempProfile := FBrowser.CoreWebView2.Profile;
+          if Assigned(TempProfile) then
+          begin
+            FCookie := FBrowser.CreateCookie(FCookieName, FCookieValue, FCookieDomain, FCookiePath);
+            if Assigned(FCookie) then
+              FBrowser.AddOrUpdateCookie(FCookie);
+            TempProfile := nil;
+          end;
+        except
+
+        end;
       end;
       FBrowser.Navigate(FURL);
     end;
