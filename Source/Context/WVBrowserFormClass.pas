@@ -356,74 +356,82 @@ procedure TCustomWVForm.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   if Assigned(BrowserInstance) then
   begin
-    (BrowserInstance as TCustomFormWVBrowser).FIsClosing := True;
-
-    // Para todos os timers
-    if Assigned((BrowserInstance as TCustomFormWVBrowser).FTimer) then
-    begin
-      (BrowserInstance as TCustomFormWVBrowser).FTimer.Enabled := False;
-      (BrowserInstance as TCustomFormWVBrowser).FTimer.OnTimer := nil;
-    end;
-
-    if Assigned((BrowserInstance as TCustomFormWVBrowser).FCheckTimer) then
-    begin
-      (BrowserInstance as TCustomFormWVBrowser).FCheckTimer.Enabled := False;
-      (BrowserInstance as TCustomFormWVBrowser).FCheckTimer.OnTimer := nil;
-    end;
-
-    // Limpa callbacks
-    if Assigned((BrowserInstance as TCustomFormWVBrowser).FCallbackList) then
-    begin
-      while (BrowserInstance as TCustomFormWVBrowser).FCallbackList.Count > 0 do
+    try
+      // Marca como fechando antes de qualquer operação
+      (BrowserInstance as TCustomFormWVBrowser).FIsClosing := True;
+      
+      // Para timers
+      if Assigned((BrowserInstance as TCustomFormWVBrowser).FTimer) then
       begin
-        if Assigned((BrowserInstance as TCustomFormWVBrowser).FCallbackList[0].Timer) then
-        begin
-          (BrowserInstance as TCustomFormWVBrowser).FCallbackList[0].Timer.Enabled := False;
-          (BrowserInstance as TCustomFormWVBrowser).FCallbackList[0].Timer.OnTimer := nil;
-        end;
-        (BrowserInstance as TCustomFormWVBrowser).FCallbackList.Delete(0);
+        (BrowserInstance as TCustomFormWVBrowser).FTimer.Enabled := False;
+        (BrowserInstance as TCustomFormWVBrowser).FTimer.OnTimer := nil;
       end;
-    end;
 
-    // CORREO: Limpeza especfica do Profile
-    if Assigned((BrowserInstance as TCustomFormWVBrowser).FBrowser) then
-    begin
-      // 1 - Limpa Profile explicitamente
-      (BrowserInstance as TCustomFormWVBrowser).CleanupProfile;
+      if Assigned((BrowserInstance as TCustomFormWVBrowser).FCheckTimer) then
+      begin
+        (BrowserInstance as TCustomFormWVBrowser).FCheckTimer.Enabled := False;
+        (BrowserInstance as TCustomFormWVBrowser).FCheckTimer.OnTimer := nil;
+      end;
 
-      // 2 - Limpa cookie
-      if Assigned((BrowserInstance as TCustomFormWVBrowser).FCookie) then
-        (BrowserInstance as TCustomFormWVBrowser).FCookie := nil;
+      // Limpa callbacks
+      if Assigned((BrowserInstance as TCustomFormWVBrowser).FCallbackList) then
+      begin
+        while (BrowserInstance as TCustomFormWVBrowser).FCallbackList.Count > 0 do
+        begin
+          if Assigned((BrowserInstance as TCustomFormWVBrowser).FCallbackList[0].Timer) then
+          begin
+            (BrowserInstance as TCustomFormWVBrowser).FCallbackList[0].Timer.Enabled := False;
+            (BrowserInstance as TCustomFormWVBrowser).FCallbackList[0].Timer.OnTimer := nil;
+          end;
+          (BrowserInstance as TCustomFormWVBrowser).FCallbackList.Delete(0);
+        end;
+      end;
 
-      // 3 - Remove event handlers
-      if (BrowserInstance as TCustomFormWVBrowser).FBrowserInitialized then
+      // Limpeza específica do Profile
+      if Assigned((BrowserInstance as TCustomFormWVBrowser).FBrowser) then
       begin
         try
-          (BrowserInstance as TCustomFormWVBrowser).FBrowser.OnAfterCreated := nil;
-          (BrowserInstance as TCustomFormWVBrowser).FBrowser.OnDocumentTitleChanged := nil;
-          (BrowserInstance as TCustomFormWVBrowser).FBrowser.OnInitializationError := nil;
-          (BrowserInstance as TCustomFormWVBrowser).FBrowser.OnNewWindowRequested := nil;
-          (BrowserInstance as TCustomFormWVBrowser).FBrowser.OnWindowCloseRequested := nil;
-          (BrowserInstance as TCustomFormWVBrowser).FBrowser.OnNavigationCompleted := nil;
-          (BrowserInstance as TCustomFormWVBrowser).FBrowser.OnWebMessageReceived := nil;
+          // 1º - Limpa Profile explicitamente
+          (BrowserInstance as TCustomFormWVBrowser).CleanupProfile;
 
-          (BrowserInstance as TCustomFormWVBrowser).FBrowserInitialized := False;
+          // 2º - Limpa cookie
+          if Assigned((BrowserInstance as TCustomFormWVBrowser).FCookie) then
+            (BrowserInstance as TCustomFormWVBrowser).FCookie := nil;
+
+          // 3º - Remove event handlers
+          if (BrowserInstance as TCustomFormWVBrowser).FBrowserInitialized then
+          begin
+            (BrowserInstance as TCustomFormWVBrowser).FBrowser.OnAfterCreated := nil;
+            (BrowserInstance as TCustomFormWVBrowser).FBrowser.OnDocumentTitleChanged := nil;
+            (BrowserInstance as TCustomFormWVBrowser).FBrowser.OnInitializationError := nil;
+            (BrowserInstance as TCustomFormWVBrowser).FBrowser.OnNewWindowRequested := nil;
+            (BrowserInstance as TCustomFormWVBrowser).FBrowser.OnWindowCloseRequested := nil;
+            (BrowserInstance as TCustomFormWVBrowser).FBrowser.OnNavigationCompleted := nil;
+            (BrowserInstance as TCustomFormWVBrowser).FBrowser.OnWebMessageReceived := nil;
+
+            (BrowserInstance as TCustomFormWVBrowser).FBrowserInitialized := False;
+            
+            // 4º - Garante que o Profile seja liberado após limpar os handlers
+            (BrowserInstance as TCustomFormWVBrowser).CleanupProfile;
+          end;
+
+          // 5º - Notifica mudança de posição
+          try
+            (BrowserInstance as TCustomFormWVBrowser).FBrowser.NotifyParentWindowPositionChanged;
+          except
+            // Ignora exceções durante notificação
+          end;
         except
-          // Ignora excees durante limpeza de handlers
+          // Ignora exceções durante limpeza
         end;
       end;
 
-      // 4 - Notifica mudana de posio
-      try
-        (BrowserInstance as TCustomFormWVBrowser).FBrowser.NotifyParentWindowPositionChanged;
-      except
-        // Ignora excees durante notificao
-      end;
+      // Chama evento de fechamento
+      if Assigned((BrowserInstance as TCustomFormWVBrowser).FOnWindowClosed) then
+        (BrowserInstance as TCustomFormWVBrowser).FOnWindowClosed(BrowserInstance as TCustomFormWVBrowser);
+    except
+      // Ignora exceções durante fechamento
     end;
-
-    // Chama evento de fechamento
-    if Assigned((BrowserInstance as TCustomFormWVBrowser).FOnWindowClosed) then
-      (BrowserInstance as TCustomFormWVBrowser).FOnWindowClosed(BrowserInstance as TCustomFormWVBrowser);
   end;
 
   Action := caFree;
@@ -469,67 +477,19 @@ end;
 
 procedure TCustomWVForm.FormDestroy(Sender: TObject);
 begin
-  if Assigned(BrowserInstance) then
-  begin
-    // Limpa callbacks
-    if Assigned((BrowserInstance as TCustomFormWVBrowser).FCallbackList) then
-    begin
-      while (BrowserInstance as TCustomFormWVBrowser).FCallbackList.Count > 0 do
-      begin
-        if Assigned((BrowserInstance as TCustomFormWVBrowser).FCallbackList[0].Timer) then
-        begin
-          (BrowserInstance as TCustomFormWVBrowser).FCallbackList[0].Timer.Enabled := False;
-          (BrowserInstance as TCustomFormWVBrowser).FCallbackList[0].Timer.OnTimer := nil;
-        end;
-        (BrowserInstance as TCustomFormWVBrowser).FCallbackList.Delete(0);
-      end;
-    end;
+  try
+    // Limpa referências antes de destruir
+    if Assigned(FArgs) then
+      FreeAndNil(FArgs);
 
-    // Limpeza específica do Profile
-    if Assigned((BrowserInstance as TCustomFormWVBrowser).FBrowser) then
-    begin
-      // 1º - Limpa Profile explicitamente
-      (BrowserInstance as TCustomFormWVBrowser).CleanupProfile;
+    if Assigned(FDeferral) then
+      FreeAndNil(FDeferral);
 
-      // 2º - Limpa cookie
-      if Assigned((BrowserInstance as TCustomFormWVBrowser).FCookie) then
-        (BrowserInstance as TCustomFormWVBrowser).FCookie := nil;
-
-      // 3º - Remove event handlers
-      if (BrowserInstance as TCustomFormWVBrowser).FBrowserInitialized then
-      begin
-        try
-          (BrowserInstance as TCustomFormWVBrowser).FBrowser.OnAfterCreated := nil;
-          (BrowserInstance as TCustomFormWVBrowser).FBrowser.OnDocumentTitleChanged := nil;
-          (BrowserInstance as TCustomFormWVBrowser).FBrowser.OnInitializationError := nil;
-          (BrowserInstance as TCustomFormWVBrowser).FBrowser.OnNewWindowRequested := nil;
-          (BrowserInstance as TCustomFormWVBrowser).FBrowser.OnWindowCloseRequested := nil;
-          (BrowserInstance as TCustomFormWVBrowser).FBrowser.OnNavigationCompleted := nil;
-          (BrowserInstance as TCustomFormWVBrowser).FBrowser.OnWebMessageReceived := nil;
-
-          (BrowserInstance as TCustomFormWVBrowser).FBrowserInitialized := False;
-          
-          // 4º - Garante que o Profile seja liberado após limpar os handlers
-          (BrowserInstance as TCustomFormWVBrowser).CleanupProfile;
-        except
-          // Ignora exceções durante limpeza de handlers
-        end;
-      end;
-
-      // 5º - Notifica mudança de posição
-      try
-        (BrowserInstance as TCustomFormWVBrowser).FBrowser.NotifyParentWindowPositionChanged;
-      except
-        // Ignora exceções durante notificação
-      end;
-    end;
-
-    // Chama evento de fechamento
-    if Assigned((BrowserInstance as TCustomFormWVBrowser).FOnWindowClosed) then
-      (BrowserInstance as TCustomFormWVBrowser).FOnWindowClosed(BrowserInstance as TCustomFormWVBrowser);
+    // Limpa referência do BrowserInstance por último
+    BrowserInstance := nil;
+  except
+    // Ignora exceções durante destruição
   end;
-
-  Action := caFree;
 end;
 
 procedure TCustomWVForm.FormResize(Sender: TObject);
@@ -1848,88 +1808,99 @@ end;
 
 destructor TCustomFormWVBrowser.Destroy;
 begin
-  FIsClosing := True;
+  try
+    FIsClosing := True;
 
-  if (FUniqueIdentifier <> EmptyStr) and not TCustomFormWVBrowser.FFinalizationStarted then
-    UnregisterMDIInstance(FUniqueIdentifier, Self);
+    if (FUniqueIdentifier <> EmptyStr) and not TCustomFormWVBrowser.FFinalizationStarted then
+      UnregisterMDIInstance(FUniqueIdentifier, Self);
 
-  // Para todos os timers
-  if Assigned(FTimer) then
-  begin
-    FTimer.Enabled := False;
-    FTimer.OnTimer := nil;
-    FreeAndNil(FTimer);
-  end;
-
-  if Assigned(FCheckTimer) then
-  begin
-    FCheckTimer.Enabled := False;
-    FCheckTimer.OnTimer := nil;
-    FreeAndNil(FCheckTimer);
-  end;
-
-  // Limpa callbacks
-  if Assigned(FCallbackList) then
-  begin
-    while FCallbackList.Count > 0 do
+    // Para todos os timers
+    if Assigned(FTimer) then
     begin
-      if Assigned(FCallbackList[0].Timer) then
-      begin
-        FCallbackList[0].Timer.Enabled := False;
-        FCallbackList[0].Timer.OnTimer := nil;
-        FCallbackList[0].Timer.Free;
-      end;
-      FCallbackList.Delete(0);
+      FTimer.Enabled := False;
+      FTimer.OnTimer := nil;
+      FreeAndNil(FTimer);
     end;
-    FreeAndNil(FCallbackList);
-  end;
 
-  // Ordem específica de liberação para resolver memory leak do Profile
-
-  // 1º - Libera Profile explicitamente ANTES de tudo
-  CleanupProfile;
-
-  // 2º - Libera Cookie
-  if Assigned(FCookie) then
-  begin
-    FCookie := nil;
-  end;
-
-  // 3º - Remove event handlers e limpa browser
-  if Assigned(FBrowser) then
-  begin
-    try
-      if FBrowserInitialized then
-      begin
-        FBrowser.OnAfterCreated := nil;
-        FBrowser.OnDocumentTitleChanged := nil;
-        FBrowser.OnInitializationError := nil;
-        FBrowser.OnNewWindowRequested := nil;
-        FBrowser.OnWindowCloseRequested := nil;
-        FBrowser.OnNavigationCompleted := nil;
-        FBrowser.OnWebMessageReceived := nil;
-      end;
-      
-      // Garante que o Profile seja liberado após limpar os handlers
-      CleanupProfile;
-      
-      FBrowserInitialized := False;
-    except
-      // Ignora exceções durante limpeza
+    if Assigned(FCheckTimer) then
+    begin
+      FCheckTimer.Enabled := False;
+      FCheckTimer.OnTimer := nil;
+      FreeAndNil(FCheckTimer);
     end;
+
+    // Limpa callbacks
+    if Assigned(FCallbackList) then
+    begin
+      while FCallbackList.Count > 0 do
+      begin
+        if Assigned(FCallbackList[0].Timer) then
+        begin
+          FCallbackList[0].Timer.Enabled := False;
+          FCallbackList[0].Timer.OnTimer := nil;
+          FCallbackList[0].Timer.Free;
+        end;
+        FCallbackList.Delete(0);
+      end;
+      FreeAndNil(FCallbackList);
+    end;
+
+    // Ordem específica de liberação para resolver memory leak do Profile
+
+    // 1º - Libera Profile explicitamente ANTES de tudo
+    CleanupProfile;
+
+    // 2º - Libera Cookie
+    if Assigned(FCookie) then
+    begin
+      FCookie := nil;
+    end;
+
+    // 3º - Remove event handlers e limpa browser
+    if Assigned(FBrowser) then
+    begin
+      try
+        if FBrowserInitialized then
+        begin
+          FBrowser.OnAfterCreated := nil;
+          FBrowser.OnDocumentTitleChanged := nil;
+          FBrowser.OnInitializationError := nil;
+          FBrowser.OnNewWindowRequested := nil;
+          FBrowser.OnWindowCloseRequested := nil;
+          FBrowser.OnNavigationCompleted := nil;
+          FBrowser.OnWebMessageReceived := nil;
+        end;
+        
+        // Garante que o Profile seja liberado após limpar os handlers
+        CleanupProfile;
+        
+        FBrowserInitialized := False;
+        
+        // Libera o browser
+        FreeAndNil(FBrowser);
+      except
+        // Ignora exceções durante limpeza
+      end;
+    end;
+
+    // 4º - Libera WindowParent
+    if Assigned(FWindowParent) then
+    begin
+      try
+        FWindowParent.Browser := nil;
+        FreeAndNil(FWindowParent);
+      except
+        // Ignora exceções durante liberação do WindowParent
+      end;
+    end;
+
+    // 5º - Libera referência do form
+    FForm := nil;
+
+    inherited;
+  except
+    // Ignora exceções durante destruição
   end;
-
-  // 4º - Libera WindowParent
-  if Assigned(FWindowParent) then
-  begin
-    FWindowParent.Free;
-    FWindowParent := nil;
-  end;
-
-  // 5º - Libera referência do form
-  FForm := nil;
-
-  inherited;
 end;
 
 procedure TCustomFormWVBrowser.EnsureComponentsCreated;
