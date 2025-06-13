@@ -1046,16 +1046,13 @@ begin
     FCookie := nil;
   end;
 
-  // CORREO: Libera Profile anterior se existir
-  if Assigned(FProfile) then
-  begin
-    FProfile := nil;
-  end;
+  // Libera Profile anterior se existir
+  CleanupProfile;
 
   if FBrowserInitialized and Assigned(FBrowser) and Assigned(FBrowser.CoreWebView2) then
   begin
     try
-      // CORREO: Armazena o Profile em campo prprio para controle de liberao
+      // Armazena o Profile em campo próprio para controle de liberação
       FProfile := FBrowser.CoreWebView2.Profile;
       if Assigned(FProfile) then
       begin
@@ -1064,9 +1061,8 @@ begin
           FBrowser.AddOrUpdateCookie(FCookie);
       end;
     except
-      // Em caso de exceo, garante que Profile seja liberado
-      if Assigned(FProfile) then
-        FProfile := nil;
+      // Em caso de exceção, garante que Profile seja liberado
+      CleanupProfile;
     end;
   end;
 
@@ -1561,8 +1557,18 @@ begin
       if Assigned(FBrowser) and FBrowserInitialized then
         FBrowser.NotifyParentWindowPositionChanged;
         
-      // Libera o Profile
+      // Força a liberação do Profile
       FProfile := nil;
+      
+      // Garante que o Profile seja liberado
+      if Assigned(FBrowser) and FBrowserInitialized and Assigned(FBrowser.CoreWebView2) then
+      begin
+        try
+          FBrowser.CoreWebView2.Profile := nil;
+        except
+          // Ignora exceções durante liberação do Profile
+        end;
+      end;
     except
       // Ignora exceções durante liberação do Profile
     end;
@@ -1897,6 +1903,9 @@ begin
     // 5º - Libera referência do form
     FForm := nil;
 
+    // 6º - Garante que o Profile seja liberado uma última vez
+    CleanupProfile;
+
     inherited;
   except
     // Ignora exceções durante destruição
@@ -2052,22 +2061,23 @@ begin
       if (FCookieName <> EmptyStr) and (FCookieValue <> EmptyStr) and (FCookieDomain <> EmptyStr) then
       begin
         try
-          // CORREO: Libera Profile anterior se existir
-          if Assigned(FProfile) then
-            FProfile := nil;
+          // Libera Profile anterior se existir
+          CleanupProfile;
 
-          // CORREO: Armazena o Profile em campo prprio
-          FProfile := FBrowser.CoreWebView2.Profile;
-          if Assigned(FProfile) then
+          // Armazena o Profile em campo próprio
+          if Assigned(FBrowser.CoreWebView2) then
           begin
-            FCookie := FBrowser.CreateCookie(FCookieName, FCookieValue, FCookieDomain, FCookiePath);
-            if Assigned(FCookie) then
-              FBrowser.AddOrUpdateCookie(FCookie);
+            FProfile := FBrowser.CoreWebView2.Profile;
+            if Assigned(FProfile) then
+            begin
+              FCookie := FBrowser.CreateCookie(FCookieName, FCookieValue, FCookieDomain, FCookiePath);
+              if Assigned(FCookie) then
+                FBrowser.AddOrUpdateCookie(FCookie);
+            end;
           end;
         except
-          // Em caso de exceo, garante que Profile seja liberado
-          if Assigned(FProfile) then
-            FProfile := nil;
+          // Em caso de exceção, garante que Profile seja liberado
+          CleanupProfile;
         end;
       end;
       FBrowser.Navigate(FURL);
