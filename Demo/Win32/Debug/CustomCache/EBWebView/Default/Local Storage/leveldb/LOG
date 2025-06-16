@@ -1,3 +1,6 @@
-2025/06/13-18:41:37.999 fc50 Reusing MANIFEST F:\Projetos\delphi-browser-form-runtime\Demo\Win32\Debug\CustomCache\EBWebView\Default\Local Storage\leveldb/MANIFEST-000001
-2025/06/13-18:41:38.009 fc50 Recovering log #279
-2025/06/13-18:41:38.011 fc50 Reusing old log F:\Projetos\delphi-browser-form-runtime\Demo\Win32\Debug\CustomCache\EBWebView\Default\Local Storage\leveldb/000279.log 
+2025/06/16-10:31:57.859 ad98 Reusing MANIFEST F:\Projetos\delphi-browser-form-runtime\Demo\Win32\Debug\CustomCache\EBWebView\Default\Local Storage\leveldb/MANIFEST-000001
+2025/06/16-10:31:57.869 ad98 Recovering log #279
+2025/06/16-10:31:57.871 ad98 Reusing old log F:\Projetos\delphi-browser-form-runtime\Demo\Win32\Debug\CustomCache\EBWebView\Default\Local Storage\leveldb/000279.log 
+2025/06/16-10:32:57.886 ca58 Level-0 table #284: started
+2025/06/16-10:32:57.891 ca58 Level-0 table #284: 46505 bytes OK
+2025/06/16-10:32:57.893 ca58 Delete type=0 #279
