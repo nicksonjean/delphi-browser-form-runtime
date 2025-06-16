@@ -1,4 +1,4 @@
-unit WVBrowserFormClass;
+﻿unit WVBrowserFormClass;
 
 interface
 
@@ -54,6 +54,7 @@ type
     FWindowParent: TWVWindowParent;
     FCookie: ICoreWebView2Cookie;
     FProfile: ICoreWebView2Profile;
+    FProfileCreated: Boolean;
     FCookieName: String;
     FCookieValue: String;
     FCookieDomain: String;
@@ -1052,8 +1053,10 @@ begin
   if FBrowserInitialized and Assigned(FBrowser) and Assigned(FBrowser.CoreWebView2) then
   begin
     try
-      // Armazena o Profile em campo próprio para controle de liberação
+      // CORREÇÃO: Marca que obtivemos referência ao Profile (não criamos)
       FProfile := FBrowser.CoreWebView2.Profile;
+      FProfileCreated := False;  // Não criamos, apenas obtivemos referência
+
       if Assigned(FProfile) then
       begin
         FCookie := FBrowser.CreateCookie(FCookieName, FCookieValue, FCookieDomain, FCookiePath);
@@ -1517,6 +1520,9 @@ end;
 
 procedure TCustomFormWVBrowser.CleanupWebViewResources;
 begin
+  // CORREÇÃO: Limpa Profile primeiro
+  CleanupProfile;
+
   if Assigned(FCookie) then
   begin
     FCookie := nil;
@@ -1542,18 +1548,31 @@ end;
 
 procedure TCustomFormWVBrowser.CleanupProfile;
 begin
-  // Libera Profile explicitamente
+  // Libera Profile explicitamente apenas se foi criado por esta instância
   if Assigned(FProfile) then
   begin
     try
       // Notifica mudança de posição antes de liberar
       if Assigned(FBrowser) and FBrowserInitialized then
         FBrowser.NotifyParentWindowPositionChanged;
-        
-      // Força a liberação do Profile
-      FProfile := nil;
+
+      // CORREÇÃO: Só libera se foi criado por esta instância
+      if FProfileCreated then
+      begin
+        // Para WebView2, não precisamos chamar Free diretamente
+        // A interface será liberada automaticamente quando sair de escopo
+        FProfile := nil;
+        FProfileCreated := False;
+      end
+      else
+      begin
+        // Se não criamos o Profile, apenas remove a referência
+        FProfile := nil;
+      end;
     except
       // Ignora exceções durante liberação do Profile
+      FProfile := nil;
+      FProfileCreated := False;
     end;
   end;
 end;
@@ -1642,6 +1661,7 @@ begin
   FParentForm := nil;
   FParentBrowser := nil;
   FComponentsCreated := False;
+  FProfileCreated := False;  // ADICIONAR esta linha
 
   FWidth := DEFAULT_WIDTH;
   FHeight := DEFAULT_HEIGHT;
@@ -1664,6 +1684,7 @@ begin
   FParentForm := nil;
   FParentBrowser := nil;
   FComponentsCreated := False;
+  FProfileCreated := False;
 
   FWidth := DEFAULT_WIDTH;
   FHeight := DEFAULT_HEIGHT;
@@ -1695,6 +1716,7 @@ begin
   FParentForm := nil;
   FParentBrowser := nil;
   FComponentsCreated := False;
+  FProfileCreated := False;
 
   if AParentObject is TForm then
   begin
@@ -1834,11 +1856,14 @@ begin
       FreeAndNil(FCallbackList);
     end;
 
-    // Ordem específica de liberação para resolver memory leak do Profile
+    // CORREÇÃO: Ordem específica de liberação para resolver memory leak do Profile
     if Assigned(FCookie) then
     begin
       FCookie := nil;
     end;
+
+    // CORREÇÃO: Limpa Profile ANTES de limpar o Browser
+    CleanupProfile;
 
     if Assigned(FBrowser) then
     begin
@@ -1853,7 +1878,7 @@ begin
           FBrowser.OnNavigationCompleted := nil;
           FBrowser.OnWebMessageReceived := nil;
         end;
-        
+
         FBrowserInitialized := False;
         FreeAndNil(FBrowser);
       except
@@ -2030,7 +2055,10 @@ begin
         try
           if Assigned(FBrowser.CoreWebView2) then
           begin
+            // CORREÇÃO: Obtém referência sem criar nova instância
             FProfile := FBrowser.CoreWebView2.Profile;
+            FProfileCreated := False;  // Não criamos, apenas referenciamos
+
             if Assigned(FProfile) then
             begin
               FCookie := FBrowser.CreateCookie(FCookieName, FCookieValue, FCookieDomain, FCookiePath);
@@ -2040,6 +2068,7 @@ begin
           end;
         except
           // Ignora exceções durante criação do cookie
+          CleanupProfile;
         end;
       end;
       FBrowser.Navigate(FURL);
