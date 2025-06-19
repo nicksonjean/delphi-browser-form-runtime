@@ -54,9 +54,9 @@ type
     procedure NovoFormulrioDinmico3Click(Sender: TObject);
     procedure NovoFormulrioDinmico4Click(Sender: TObject);
     procedure FormDinmicoMSN1Click(Sender: TObject);
-    procedure FormDinmicoMax3Instncias1Click(Sender: TObject);
     procedure FormDinmicoBing1Click(Sender: TObject);
     procedure FormDinmicoGoogle1Click(Sender: TObject);
+    procedure FormDinmicoMax3Instncias1Click(Sender: TObject);
   private
     FContadorJanelas: Integer;
   public
@@ -88,286 +88,228 @@ end;
 
 procedure TFormPrincipal.FormDinmicoBing1Click(Sender: TObject);
 var
-  BrowserForm1: TCustomFormWVBrowser;
-  Options: TMDIOptions;
+  BrowserForm: TCustomFormWVBrowser;
   UniqueID: String;
 begin
-  UniqueID := 'CustomID7';
-  BrowserForm1 := TCustomFormWVBrowser.CreateAsMDI(FormPrincipal, 'http://bing.com.br/', true);
-  BrowserForm1.Caption := 'Exemplo de Teste';
-  BrowserForm1.Width := 800;
-  BrowserForm1.Height := 600;
-  BrowserForm1.ActionButtons := [];
-  BrowserForm1.Resizable := true;
-  BrowserForm1.Movable := true;
-  BrowserForm1.CookieName := 'CookieName';
-  BrowserForm1.CookieValue := 'CookieValue';
-  BrowserForm1.CookieDomain := 'CookieDomain';
-  BrowserForm1.OnMessageReceiver := procedure(Sender: TObject; const MessageText: string)
+  UniqueID := 'CustomID8';
+  BrowserForm := TCustomFormWVBrowser.CreateAsMDI(FormPrincipal, 'http://bing.com.br/', true);
+  BrowserForm.Caption := 'Exemplo de Teste';
+  BrowserForm.Width := 800;
+  BrowserForm.Height := 600;
+  BrowserForm.ActionButtons := [];
+  BrowserForm.Resizable := true;
+  BrowserForm.Movable := true;
+  BrowserForm.CookieName := 'CookieName';
+  BrowserForm.CookieValue := 'CookieValue';
+  BrowserForm.CookieDomain := 'CookieDomain';
+  BrowserForm.OnMessageReceiver := procedure(Sender: TObject; const MessageText: string)
   begin
     Showmessage(MessageText);
   end;
-  Options := TMDIOptions.Default;
-  Options.SingleInstance := false;
-  Options.UniqueIdentifier := UniqueID;
-  Options.MaximizeOnShow := true;
-  Options.MaxInstances := 0;
-  BrowserForm1.ShowAsMDI(Options);
+  BrowserForm.ShowAsMDI(TMDIOptions.MultiInstanceMode(0, UniqueID));
 end;
 
 procedure TFormPrincipal.FormDinmicoGoogle1Click(Sender: TObject);
 var
-  BrowserForm1: TCustomFormWVBrowser;
-  Options: TMDIOptions;
+  BrowserForm: TCustomFormWVBrowser;
   UniqueID: String;
 begin
-  UniqueID := 'CustomID6';
-  BrowserForm1 := TCustomFormWVBrowser.Create;
-  BrowserForm1.LegacyForm := true;
-  BrowserForm1.ParentForm := FormPrincipal;
-  BrowserForm1.URL := 'http://google.com.br/';
-  BrowserForm1.Caption := 'Exemplo de Teste';
-  BrowserForm1.Width := 800;
-  BrowserForm1.Height := 600;
-  BrowserForm1.ActionButtons := [];
-  BrowserForm1.Resizable := true;
-  BrowserForm1.Movable := true;
-  BrowserForm1.CookieName := 'CookieName';
-  BrowserForm1.CookieValue := 'CookieValue';
-  BrowserForm1.CookieDomain := 'CookieDomain';
-  BrowserForm1.OnMessageReceiver := procedure(Sender: TObject; const MessageText: string)
+  UniqueID := 'CustomID7';
+  BrowserForm := TCustomFormWVBrowser.Create;
+  BrowserForm.LegacyForm := true;
+  BrowserForm.ParentForm := FormPrincipal;
+  BrowserForm.URL := 'http://google.com.br/';
+  BrowserForm.Caption := 'Exemplo de Teste';
+  BrowserForm.Width := 800;
+  BrowserForm.Height := 600;
+  BrowserForm.ActionButtons := [];
+  BrowserForm.Resizable := true;
+  BrowserForm.Movable := true;
+  BrowserForm.CookieName := 'CookieName';
+  BrowserForm.CookieValue := 'CookieValue';
+  BrowserForm.CookieDomain := 'CookieDomain';
+  BrowserForm.OnMessageReceiver := procedure(Sender: TObject; const MessageText: string)
   begin
     Showmessage(MessageText);
   end;
-  Options := TMDIOptions.Default;
-  Options.SingleInstance := false;
-  Options.UniqueIdentifier := UniqueID;
-  Options.MaximizeOnShow := true;
-  Options.MaxInstances := 0;
-  BrowserForm1.ShowAsMDI(Options);
+  BrowserForm.ShowAsMDI(TMDIOptions.MultiInstanceMode(0, UniqueID));
 end;
 
 procedure TFormPrincipal.FormDinmicoMSN1Click(Sender: TObject);
 var
-  BrowserForm1: TCustomFormWVBrowser;
-  Options: TMDIOptions;
+  BrowserForm: TCustomFormWVBrowser;
+  UniqueID: String;
 begin
-  BrowserForm1 := TCustomFormWVBrowser.Create('https://www.msn.com/', FormPrincipal, true);
-  BrowserForm1.Caption := 'Exemplo de Teste';
-  BrowserForm1.Width := 800;
-  BrowserForm1.Height := 600;
-  BrowserForm1.ActionButtons := [];
-  BrowserForm1.Resizable := true;
-  BrowserForm1.Movable := true;
-  BrowserForm1.CookieName := 'CookieName';
-  BrowserForm1.CookieValue := 'CookieValue';
-  BrowserForm1.CookieDomain := 'CookieDomain';
-  BrowserForm1.OnMessageReceiver := procedure(Sender: TObject; const MessageText: string)
+  UniqueID := 'CustomID6';
+  BrowserForm := TCustomFormWVBrowser.Create('https://www.msn.com/', FormPrincipal, true);
+  BrowserForm.Caption := 'Exemplo de Teste';
+  BrowserForm.Width := 800;
+  BrowserForm.Height := 600;
+  BrowserForm.ActionButtons := [];
+  BrowserForm.Resizable := true;
+  BrowserForm.Movable := true;
+  BrowserForm.CookieName := 'CookieName';
+  BrowserForm.CookieValue := 'CookieValue';
+  BrowserForm.CookieDomain := 'CookieDomain';
+  BrowserForm.OnMessageReceiver := procedure(Sender: TObject; const MessageText: string)
   begin
     Showmessage(MessageText);
   end;
-  Options := TMDIOptions.Default;
-  Options.SingleInstance := false;
-  BrowserForm1.ShowAsMDI(Options);
+  BrowserForm.ShowAsMDI(TMDIOptions.MultiInstanceMode(0, UniqueID));
 end;
 
 procedure TFormPrincipal.FormDinmicoMax3Instncias1Click(Sender: TObject);
 var
-  BrowserForm1: TCustomFormWVBrowser;
-  Options: TMDIOptions;
+  BrowserForm: TCustomFormWVBrowser;
   UniqueID: String;
 begin
   UniqueID := 'CustomID5';
   if TCustomFormWVBrowser.CheckMDILimits(UniqueID, 3, False) then
   begin
-    BrowserForm1 := TCustomFormWVBrowser.Create;
-    BrowserForm1.ParentForm := FormPrincipal;
-    BrowserForm1.UniqueIdentifier := UniqueID;
-    BrowserForm1.MaxInstances := 3;
-    BrowserForm1.URL := 'http://bing.com.br/';
-    BrowserForm1.Caption := 'Exemplo de Teste';
-    BrowserForm1.Width := 800;
-    BrowserForm1.Height := 600;
-    BrowserForm1.ActionButtons := [];
-    BrowserForm1.Resizable := true;
-    BrowserForm1.Movable := true;
-    BrowserForm1.CookieName := 'CookieName';
-    BrowserForm1.CookieValue := 'CookieValue';
-    BrowserForm1.CookieDomain := 'CookieDomain';
-    BrowserForm1.OnMessageReceiver := procedure(Sender: TObject; const MessageText: string)
+    BrowserForm := TCustomFormWVBrowser.Create;
+    BrowserForm.ParentForm := FormPrincipal;
+    BrowserForm.UniqueIdentifier := UniqueID;
+    BrowserForm.MaxInstances := 3;
+    BrowserForm.URL := 'http://bing.com.br/';
+    BrowserForm.Caption := 'Exemplo de Teste';
+    BrowserForm.Width := 800;
+    BrowserForm.Height := 600;
+    BrowserForm.ActionButtons := [];
+    BrowserForm.Resizable := true;
+    BrowserForm.Movable := true;
+    BrowserForm.CookieName := 'CookieName';
+    BrowserForm.CookieValue := 'CookieValue';
+    BrowserForm.CookieDomain := 'CookieDomain';
+    BrowserForm.OnMessageReceiver := procedure(Sender: TObject; const MessageText: string)
     begin
       Showmessage(MessageText);
     end;
-    Options := TMDIOptions.Default;
-    Options.SingleInstance := false;
-    Options.UniqueIdentifier := UniqueID;
-    Options.MaximizeOnShow := true;
-    Options.MaxInstances := 3;
-    BrowserForm1.ShowAsMDI(Options);
+    BrowserForm.ShowAsMDI(TMDIOptions.MultiInstanceMode(3, UniqueID));
   end;
 end;
 
 procedure TFormPrincipal.NovoFormulrioDinmico1Click(Sender: TObject);
 var
-  BrowserForm1: TCustomFormWVBrowser;
-  Options: TMDIOptions;
+  BrowserForm: TCustomFormWVBrowser;
   UniqueID: String;
 begin
   UniqueID := 'CustomID1';
-  BrowserForm1 := TCustomFormWVBrowser.FindMDIInstance(UniqueID);
-  if Assigned(BrowserForm1) then
-  begin
-    Options := TMDIOptions.Default;
-    Options.SingleInstance := true;
-    Options.UniqueIdentifier := UniqueID;
-    BrowserForm1.ShowAsMDI(Options);
-  end
+  BrowserForm := TCustomFormWVBrowser.FindMDIInstance(UniqueID);
+  if Assigned(BrowserForm) then
+    BrowserForm.ShowAsMDI(TMDIOptions.SingleInstanceMode(UniqueID))
   else
   begin
-    BrowserForm1 := TCustomFormWVBrowser.Create;
-    BrowserForm1.ParentForm := FormPrincipal;
-    BrowserForm1.UniqueIdentifier := UniqueID;
-    BrowserForm1.URL := 'http://bing.com.br/';
-    BrowserForm1.Caption := 'Exemplo de Teste';
-    BrowserForm1.Width := 800;
-    BrowserForm1.Height := 600;
-    BrowserForm1.ActionButtons := [];
-    BrowserForm1.Resizable := true;
-    BrowserForm1.Movable := true;
-    BrowserForm1.CookieName := 'CookieName';
-    BrowserForm1.CookieValue := 'CookieValue';
-    BrowserForm1.CookieDomain := 'CookieDomain';
-    BrowserForm1.OnMessageReceiver := procedure(Sender: TObject; const MessageText: string)
+    BrowserForm := TCustomFormWVBrowser.Create;
+    BrowserForm.ParentForm := FormPrincipal;
+    BrowserForm.UniqueIdentifier := UniqueID;
+    BrowserForm.URL := 'http://bing.com.br/';
+    BrowserForm.Caption := 'Exemplo de Teste';
+    BrowserForm.Width := 800;
+    BrowserForm.Height := 600;
+    BrowserForm.ActionButtons := [];
+    BrowserForm.Resizable := true;
+    BrowserForm.Movable := true;
+    BrowserForm.CookieName := 'CookieName';
+    BrowserForm.CookieValue := 'CookieValue';
+    BrowserForm.CookieDomain := 'CookieDomain';
+    BrowserForm.OnMessageReceiver := procedure(Sender: TObject; const MessageText: string)
     begin
       Showmessage(MessageText);
     end;
-    Options := TMDIOptions.Default;
-    Options.SingleInstance := true;
-    Options.MaximizeOnShow := true;
-    Options.UniqueIdentifier := UniqueID;
-    BrowserForm1.ShowAsMDI(Options);
+    BrowserForm.ShowAsMDI(TMDIOptions.SingleInstanceMode(UniqueID));
   end;
 end;
 
 procedure TFormPrincipal.NovoFormulrioDinmico2Click(Sender: TObject);
 var
-  BrowserForm1: TCustomFormWVBrowser;
-  Options: TMDIOptions;
+  BrowserForm: TCustomFormWVBrowser;
   UniqueID: String;
 begin
   UniqueID := 'CustomID2';
-  BrowserForm1 := TCustomFormWVBrowser.FindMDIInstance(UniqueID);
-  if Assigned(BrowserForm1) then
-  begin
-    Options := TMDIOptions.Default;
-    Options.SingleInstance := true;
-    Options.UniqueIdentifier := UniqueID;
-    BrowserForm1.ShowAsMDI(Options);
-  end
+  BrowserForm := TCustomFormWVBrowser.FindMDIInstance(UniqueID);
+  if Assigned(BrowserForm) then
+  if Assigned(BrowserForm) then
+    BrowserForm.ShowAsMDI(TMDIOptions.SingleInstanceMode(UniqueID))
   else
   begin
-    BrowserForm1 := TCustomFormWVBrowser.Create;
-    BrowserForm1.ParentForm := FormPrincipal;
-    BrowserForm1.UniqueIdentifier := UniqueID;
-    BrowserForm1.URL := 'http://google.com.br/';
-    BrowserForm1.Caption := 'Exemplo de Teste';
-    BrowserForm1.Width := 800;
-    BrowserForm1.Height := 600;
-    BrowserForm1.ActionButtons := [];
-    BrowserForm1.Resizable := true;
-    BrowserForm1.Movable := true;
-    BrowserForm1.CookieName := 'CookieName';
-    BrowserForm1.CookieValue := 'CookieValue';
-    BrowserForm1.CookieDomain := 'CookieDomain';
-    BrowserForm1.OnMessageReceiver := procedure(Sender: TObject; const MessageText: string)
+    BrowserForm := TCustomFormWVBrowser.Create;
+    BrowserForm.ParentForm := FormPrincipal;
+    BrowserForm.UniqueIdentifier := UniqueID;
+    BrowserForm.URL := 'http://google.com.br/';
+    BrowserForm.Caption := 'Exemplo de Teste';
+    BrowserForm.Width := 800;
+    BrowserForm.Height := 600;
+    BrowserForm.ActionButtons := [];
+    BrowserForm.Resizable := true;
+    BrowserForm.Movable := true;
+    BrowserForm.CookieName := 'CookieName';
+    BrowserForm.CookieValue := 'CookieValue';
+    BrowserForm.CookieDomain := 'CookieDomain';
+    BrowserForm.OnMessageReceiver := procedure(Sender: TObject; const MessageText: string)
     begin
       Showmessage(MessageText);
     end;
-    Options := TMDIOptions.Default;
-    Options.SingleInstance := true;
-    Options.MaximizeOnShow := true;
-    Options.UniqueIdentifier := UniqueID;
-    BrowserForm1.ShowAsMDI(Options);
+    BrowserForm.ShowAsMDI(TMDIOptions.SingleInstanceMode(UniqueID));
   end;
 end;
 
 procedure TFormPrincipal.NovoFormulrioDinmico3Click(Sender: TObject);
 var
-  BrowserForm1: TCustomFormWVBrowser;
-  Options: TMDIOptions;
+  BrowserForm: TCustomFormWVBrowser;
   UniqueID: String;
 begin
   UniqueID := 'CustomID3';
-  BrowserForm1 := TCustomFormWVBrowser.FindMDIInstance(UniqueID);
-  if Assigned(BrowserForm1) then
-  begin
-    Options := TMDIOptions.Default;
-    Options.SingleInstance := true;
-    Options.UniqueIdentifier := UniqueID;
-    BrowserForm1.ShowAsMDI(Options);
-  end
+  BrowserForm := TCustomFormWVBrowser.FindMDIInstance(UniqueID);
+  if Assigned(BrowserForm) then
+    BrowserForm.ShowAsMDI(TMDIOptions.SingleInstanceMode(UniqueID))
   else
   begin
-    BrowserForm1 := TCustomFormWVBrowser.CreateAsMDI(FormPrincipal, 'https://www.msn.com/');
-    BrowserForm1.UniqueIdentifier := UniqueID;
-    BrowserForm1.Caption := 'Exemplo de Teste';
-    BrowserForm1.Width := 800;
-    BrowserForm1.Height := 600;
-    BrowserForm1.ActionButtons := [];
-    BrowserForm1.Resizable := true;
-    BrowserForm1.Movable := true;
-    BrowserForm1.CookieName := 'CookieName';
-    BrowserForm1.CookieValue := 'CookieValue';
-    BrowserForm1.CookieDomain := 'CookieDomain';
-    BrowserForm1.OnMessageReceiver := procedure(Sender: TObject; const MessageText: string)
+    BrowserForm := TCustomFormWVBrowser.CreateAsMDI(FormPrincipal, 'https://www.msn.com/');
+    BrowserForm.UniqueIdentifier := UniqueID;
+    BrowserForm.Caption := 'Exemplo de Teste';
+    BrowserForm.Width := 800;
+    BrowserForm.Height := 600;
+    BrowserForm.ActionButtons := [];
+    BrowserForm.Resizable := true;
+    BrowserForm.Movable := true;
+    BrowserForm.CookieName := 'CookieName';
+    BrowserForm.CookieValue := 'CookieValue';
+    BrowserForm.CookieDomain := 'CookieDomain';
+    BrowserForm.OnMessageReceiver := procedure(Sender: TObject; const MessageText: string)
     begin
       Showmessage(MessageText);
     end;
-    Options := TMDIOptions.Default;
-    Options.SingleInstance := true;
-    Options.MaximizeOnShow := true;
-    Options.UniqueIdentifier := UniqueID;
-    BrowserForm1.ShowAsMDI(Options);
+    BrowserForm.ShowAsMDI(TMDIOptions.SingleInstanceMode(UniqueID));
   end;
 end;
 
 procedure TFormPrincipal.NovoFormulrioDinmico4Click(Sender: TObject);
 var
-  BrowserForm1: TCustomFormWVBrowser;
-  Options: TMDIOptions;
+  BrowserForm: TCustomFormWVBrowser;
   UniqueID: String;
 begin
   UniqueID := 'CustomID4';
-  BrowserForm1 := TCustomFormWVBrowser.FindMDIInstance(UniqueID);
-  if Assigned(BrowserForm1) then
-  begin
-    Options := TMDIOptions.Default;
-    Options.SingleInstance := true;
-    Options.UniqueIdentifier := UniqueID;
-    BrowserForm1.ShowAsMDI(Options);
-  end
+  BrowserForm := TCustomFormWVBrowser.FindMDIInstance(UniqueID);
+  if Assigned(BrowserForm) then
+    BrowserForm.ShowAsMDI(TMDIOptions.SingleInstanceMode(UniqueID))
   else
   begin
-    BrowserForm1 := TCustomFormWVBrowser.Create('https://duckduckgo.com/', FormPrincipal);
-    BrowserForm1.UniqueIdentifier := UniqueID;
-    BrowserForm1.Caption := 'Exemplo de Teste';
-    BrowserForm1.Width := 800;
-    BrowserForm1.Height := 600;
-    BrowserForm1.ActionButtons := [];
-    BrowserForm1.Resizable := true;
-    BrowserForm1.Movable := true;
-    BrowserForm1.CookieName := 'CookieName';
-    BrowserForm1.CookieValue := 'CookieValue';
-    BrowserForm1.CookieDomain := 'CookieDomain';
-    BrowserForm1.OnMessageReceiver := procedure(Sender: TObject; const MessageText: string)
+    BrowserForm := TCustomFormWVBrowser.Create('https://duckduckgo.com/', FormPrincipal);
+    BrowserForm.UniqueIdentifier := UniqueID;
+    BrowserForm.Caption := 'Exemplo de Teste';
+    BrowserForm.Width := 800;
+    BrowserForm.Height := 600;
+    BrowserForm.ActionButtons := [];
+    BrowserForm.Resizable := true;
+    BrowserForm.Movable := true;
+    BrowserForm.CookieName := 'CookieName';
+    BrowserForm.CookieValue := 'CookieValue';
+    BrowserForm.CookieDomain := 'CookieDomain';
+    BrowserForm.OnMessageReceiver := procedure(Sender: TObject; const MessageText: string)
     begin
       Showmessage(MessageText);
     end;
-    Options := TMDIOptions.Default;
-    Options.SingleInstance := true;
-    Options.MaximizeOnShow := true;
-    Options.UniqueIdentifier := UniqueID;
-    BrowserForm1.ShowAsMDI(Options);
+    BrowserForm.ShowAsMDI(TMDIOptions.SingleInstanceMode(UniqueID));
   end;
 end;
 

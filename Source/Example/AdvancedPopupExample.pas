@@ -18,14 +18,17 @@ type
   private
     FMainBrowser: TCustomFormWVBrowser;
     FPopups: TList<TCustomFormWVBrowser>;
+    FOwnerForm: TForm;
     procedure OnMessageReceived(Sender: TObject; const Message: string);
   public
-    constructor Create;
+    constructor Create(AOwnerForm: TForm = nil);
     destructor Destroy; override;
     procedure CreateMainBrowser;
     procedure CreateLoginPopup;
     procedure CreateNotificationPopup;
     procedure CreateDataEntryPopup;
+    procedure CloseAllPopups;
+    procedure CleanupAndDestroy;
   end;
 
 implementation
@@ -35,24 +38,70 @@ begin
   Result := 'data:text/html;charset=utf-8;base64,' + TNetEncoding.Base64.Encode(HTML);
 end;
 
-constructor TAdvancedPopupManager.Create;
+constructor TAdvancedPopupManager.Create(AOwnerForm: TForm = nil);
 begin
-  inherited;
+  inherited Create;
+  FOwnerForm := AOwnerForm;
   FPopups := TList<TCustomFormWVBrowser>.Create;
 end;
 
 destructor TAdvancedPopupManager.Destroy;
+begin
+  CloseAllPopups;
+
+  if Assigned(FPopups) then
+  begin
+    FPopups.Clear;
+    FPopups.Free;
+  end;
+
+  if Assigned(FMainBrowser) then
+  begin
+    try
+      FMainBrowser.Free;
+    except
+      // Ignora erros ao liberar
+    end;
+  end;
+
+  inherited;
+end;
+
+procedure TAdvancedPopupManager.CloseAllPopups;
 var
   i: Integer;
 begin
-  for i := 0 to FPopups.Count - 1 do
-    FPopups[i].Free;
-  FPopups.Free;
+  if Assigned(FPopups) then
+  begin
+    for i := FPopups.Count - 1 downto 0 do
+    begin
+      if Assigned(FPopups[i]) then
+      begin
+        try
+          FPopups[i].Free;
+        except
+          // Ignora erros ao liberar
+        end;
+      end;
+    end;
+    FPopups.Clear;
+  end;
+end;
+
+procedure TAdvancedPopupManager.CleanupAndDestroy;
+begin
+  CloseAllPopups;
 
   if Assigned(FMainBrowser) then
-    FMainBrowser.Free;
-
-  inherited;
+  begin
+    try
+      // Apenas seta como nil, não tenta fechar
+      FMainBrowser.Free;
+      FMainBrowser := nil;
+    except
+      // Ignora erros ao liberar
+    end;
+  end;
 end;
 
 procedure TAdvancedPopupManager.CreateMainBrowser;
@@ -109,7 +158,6 @@ const
     '        console.error("Error in openDataEntryPopup:", e);' +
     '      }' +
     '    }' +
-    '    // Verificar se a API está disponível quando a página carregar' +
     '    window.addEventListener("DOMContentLoaded", function() {' +
     '      console.log("WebView API available:", !!(window.chrome && window.chrome.webview));' +
     '    });' +
@@ -117,8 +165,7 @@ const
     '</body>' +
     '</html>';
 begin
-  FMainBrowser := TCustomFormWVBrowser.Create(EncodeHTML(MAIN_HTML), nil)
-
+  FMainBrowser := TCustomFormWVBrowser.Create(EncodeHTML(MAIN_HTML), FOwnerForm)
     .SetWidth(800)
     .SetHeight(600)
     .SetCaption('Sistema Principal')
@@ -198,6 +245,8 @@ const
 var
   LoginBrowser: TCustomFormWVBrowser;
 begin
+  if not Assigned(FMainBrowser) then Exit;
+
   LoginBrowser := TCustomFormWVBrowser.CreateAsPopup(FMainBrowser.Instance as TWVBrowser, EncodeHTML(LOGIN_HTML))
     .SetWidth(400)
     .SetHeight(300)
@@ -215,6 +264,8 @@ var
   NotificationHTML: string;
   NotificationBrowser: TCustomFormWVBrowser;
 begin
+  if not Assigned(FMainBrowser) then Exit;
+
   NotificationHTML :=
     '<!DOCTYPE html>' +
     '<html>' +
@@ -315,6 +366,8 @@ const
 var
   DataEntryBrowser: TCustomFormWVBrowser;
 begin
+  if not Assigned(FMainBrowser) then Exit;
+
   DataEntryBrowser := TCustomFormWVBrowser.CreateAsPopup(FMainBrowser.Instance as TWVBrowser, EncodeHTML(DATA_ENTRY_HTML))
     .SetWidth(500)
     .SetHeight(450)

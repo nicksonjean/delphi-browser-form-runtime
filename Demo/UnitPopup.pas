@@ -49,8 +49,11 @@ type
     procedure BtnCreatePopupClick(Sender: TObject);
     procedure BtnCreatePopupHtmlClick(Sender: TObject);
     procedure BtnCreateAdvPopupClick(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure FormDestroy(Sender: TObject);
   protected
     { Protected declarations }
+    FPopupManager: TAdvancedPopupManager;
   private
     { Private declarations }
     FMainBrowser: TCustomFormWVBrowser;
@@ -63,108 +66,35 @@ type
   public
     { Public declarations }
     procedure ProcessarJSON(JSONString: String);
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
   end;
 
 var
   FormPopup: TFormPopup;
-  BrowserForm: TCustomFormWVBrowser;
-//  BrowserForm: IBrowserForm;
-  PopupManager: TAdvancedPopupManager;
 
 implementation
 
 {$R *.dfm}
 
-procedure TFormPopup.LogMessage(const AMessage: string);
+constructor TFormPopup.Create(AOwner: TComponent);
 begin
-  memoLog.Lines.Add(FormatDateTime('hh:nn:ss', Now) + ' - ' + AMessage);
+  inherited Create(AOwner);
+  OnClose := FormClose;
+  OnDestroy := FormDestroy;
+  FPopupManager := nil;
 end;
 
-procedure TFormPopup.OnBrowserWindowClosed(Sender: TObject);
+destructor TFormPopup.Destroy;
 begin
-  LogMessage('Janela do browser foi fechada: ' + Sender.ClassName);
-end;
-
-procedure TFormPopup.OnMessageReceived(ASender: TObject; const AMessage: string);
-begin
-  MemoMessageReceiver.Lines.Add('Mensagem recebida do browser: ' + AMessage);
-end;
-
-procedure TFormPopup.BtnWVBrowserClassChainableTestClick(Sender: TObject);
-begin
-  BrowserForm := TCustomFormWVBrowser.Create('file:///' + ExtractFilePath(ParamStr(0)) + 'index.html')
-    .SetCaption('Exemplo de Teste')
-    .SetWidth(2048)
-    .SetHeight(1800)
-    .SetActionButtons([TBorderIcon.biMinimize, TBorderIcon.biMaximize])
-    .SetResizable(true)
-    .SetMovable(true)
-    .SetCookie('CookieName', 'CookieValue', 'CookieDomain')
-    .SetMessageReceiver(procedure(Sender: TObject; const MessageText: string)
-    begin
-      MemoMessageReceiver.Lines.Add(MessageText);
-      ProcessarJSON(MessageText);
-    end);
-  BrowserForm.ShowModal;
-end;
-
-procedure TFormPopup.BtnWVBrowserClassPropertiesTestClick(Sender: TObject);
-begin
-  BrowserForm := TCustomFormWVBrowser.Create;
-  BrowserForm.URL := 'file:///' + ExtractFilePath(ParamStr(0)) + 'index.html';
-  BrowserForm.Caption := 'Exemplo de Teste';
-  BrowserForm.Width := 2048;
-  BrowserForm.Height := 1800;
-  BrowserForm.ActionButtons := [TBorderIcon.biMinimize, TBorderIcon.biMaximize];
-  BrowserForm.Resizable := true;
-  BrowserForm.Movable := true;
-  BrowserForm.CookieName := 'CookieName';
-  BrowserForm.CookieValue := 'CookieValue';
-  BrowserForm.CookieDomain := 'CookieDomain';
-  BrowserForm.OnMessageReceiver := procedure(Sender: TObject; const MessageText: string)
+  if Assigned(FPopupManager) then
   begin
-    MemoMessageReceiver.Lines.Add(MessageText);
-    ProcessarJSON(MessageText);
+    FPopupManager.CleanupAndDestroy;
+    FPopupManager.Free;
+    FPopupManager := nil;
   end;
-  BrowserForm.ShowModal;
-end;
 
-procedure TFormPopup.BtnWVBrowserInterfaceChainableTestClick(Sender: TObject);
-begin
-  BrowserForm := TCustomFormWVBrowser.Create('file:///' + ExtractFilePath(ParamStr(0)) + 'index.html')
-    .SetCaption('Exemplo de Teste')
-    .SetWidth(2048)
-    .SetHeight(1800)
-    .SetActionButtons([TBorderIcon.biMinimize, TBorderIcon.biMaximize])
-    .SetResizable(true)
-    .SetMovable(true)
-    .SetCookie('CookieName', 'CookieValue', 'CookieDomain')
-    .SetMessageReceiver(procedure(Sender: TObject; const MessageText: string)
-    begin
-      MemoMessageReceiver.Lines.Add(MessageText);
-      ProcessarJSON(MessageText);
-    end);
-  BrowserForm.Show;
-end;
-
-procedure TFormPopup.BtnWVBrowserInterfacePropertiesTestClick(Sender: TObject);
-begin
-  BrowserForm := TCustomFormWVBrowser.Create('file:///' + ExtractFilePath(ParamStr(0)) + 'index.html');
-  BrowserForm.Caption := 'Exemplo de Teste';
-  BrowserForm.Width := 2048;
-  BrowserForm.Height := 1800;
-  BrowserForm.ActionButtons := [TBorderIcon.biMinimize, TBorderIcon.biMaximize];
-  BrowserForm.Resizable := true;
-  BrowserForm.Movable := true;
-  BrowserForm.CookieName := 'CookieName';
-  BrowserForm.CookieValue := 'CookieValue';
-  BrowserForm.CookieDomain := 'CookieDomain';
-  BrowserForm.OnMessageReceiver := procedure(Sender: TObject; const MessageText: string)
-  begin
-    MemoMessageReceiver.Lines.Add(MessageText);
-    ProcessarJSON(MessageText);
-  end;
-  BrowserForm.Show;
+  inherited;
 end;
 
 procedure TFormPopup.FormCreate(Sender: TObject);
@@ -182,10 +112,147 @@ begin
   memoLog.Lines.Add('');
 end;
 
+procedure TFormPopup.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  if Assigned(FPopupManager) then
+    FPopupManager.CleanupAndDestroy;
+end;
+
+procedure TFormPopup.FormDestroy(Sender: TObject);
+begin
+  if Assigned(FPopupManager) then
+  begin
+    FPopupManager.CleanupAndDestroy;
+    FPopupManager.Free;
+    FPopupManager := nil;
+  end;
+
+  inherited;
+end;
+
+procedure TFormPopup.LogMessage(const AMessage: string);
+begin
+  memoLog.Lines.Add(FormatDateTime('hh:nn:ss', Now) + ' - ' + AMessage);
+end;
+
+procedure TFormPopup.OnBrowserWindowClosed(Sender: TObject);
+begin
+  LogMessage('Janela do browser foi fechada: ' + Sender.ClassName);
+end;
+
+procedure TFormPopup.OnMessageReceived(ASender: TObject; const AMessage: string);
+begin
+  MemoMessageReceiver.Lines.Add('Mensagem recebida do browser: ' + AMessage);
+end;
+
+procedure TFormPopup.BtnWVBrowserClassChainableTestClick(Sender: TObject);
+var
+  FBrowserForm: TCustomFormWVBrowser;
+  BrowserTag: String;
+begin
+  BrowserTag := 'UniqueID1';
+  FBrowserForm := TCustomFormWVBrowser.Create('file:///' + ExtractFilePath(ParamStr(0)) + 'index.html')
+    .SetCaption('Exemplo de Teste')
+    .SetUniqueIdentifier(BrowserTag)
+    .SetWidth(2048)
+    .SetHeight(1800)
+    .SetActionButtons([TBorderIcon.biMinimize, TBorderIcon.biMaximize])
+    .SetResizable(true)
+    .SetMovable(true)
+    .SetCookie('CookieName', 'CookieValue', 'CookieDomain')
+    .SetMessageReceiver(procedure(Sender: TObject; const MessageText: string)
+    begin
+      MemoMessageReceiver.Lines.Add(MessageText);
+      ProcessarJSON(MessageText);
+    end);
+  FBrowserForm.Show;
+end;
+
+procedure TFormPopup.BtnWVBrowserClassPropertiesTestClick(Sender: TObject);
+var
+  FBrowserForm: TCustomFormWVBrowser;
+  BrowserTag: String;
+begin
+  BrowserTag := 'UniqueID2';
+  FBrowserForm := TCustomFormWVBrowser.Create;
+  FBrowserForm.URL := 'file:///' + ExtractFilePath(ParamStr(0)) + 'index.html';
+  FBrowserForm.UniqueIdentifier := BrowserTag;
+  FBrowserForm.Caption := 'Exemplo de Teste';
+  FBrowserForm.Width := 2048;
+  FBrowserForm.Height := 1800;
+  FBrowserForm.ActionButtons := [TBorderIcon.biMinimize, TBorderIcon.biMaximize];
+  FBrowserForm.Resizable := true;
+  FBrowserForm.Movable := true;
+  FBrowserForm.CookieName := 'CookieName';
+  FBrowserForm.CookieValue := 'CookieValue';
+  FBrowserForm.CookieDomain := 'CookieDomain';
+  FBrowserForm.OnMessageReceiver := procedure(Sender: TObject; const MessageText: string)
+  begin
+    MemoMessageReceiver.Lines.Add(MessageText);
+    ProcessarJSON(MessageText);
+  end;
+  FBrowserForm.Show;
+end;
+
+procedure TFormPopup.BtnWVBrowserInterfaceChainableTestClick(Sender: TObject);
+var
+  FBrowserForm: IBrowserForm;
+  BrowserTag: String;
+begin
+  BrowserTag := 'UniqueID3';
+  FBrowserForm := TCustomFormWVBrowser.Create('file:///' + ExtractFilePath(ParamStr(0)) + 'index.html')
+    .SetCaption('Exemplo de Teste')
+    .SetUniqueIdentifier(BrowserTag)
+    .SetWidth(2048)
+    .SetHeight(1800)
+    .SetActionButtons([TBorderIcon.biMinimize, TBorderIcon.biMaximize])
+    .SetResizable(true)
+    .SetMovable(true)
+    .SetCookie('CookieName', 'CookieValue', 'CookieDomain')
+    .SetMessageReceiver(procedure(Sender: TObject; const MessageText: string)
+    begin
+      MemoMessageReceiver.Lines.Add(MessageText);
+      ProcessarJSON(MessageText);
+    end);
+  FBrowserForm.Show;
+end;
+
+procedure TFormPopup.BtnWVBrowserInterfacePropertiesTestClick(Sender: TObject);
+var
+  FBrowserForm: IBrowserForm;
+  BrowserTag: String;
+begin
+  BrowserTag := 'UniqueID4';
+  FBrowserForm := TCustomFormWVBrowser.Create('file:///' + ExtractFilePath(ParamStr(0)) + 'index.html');
+  FBrowserForm.Caption := 'Exemplo de Teste';
+  FBrowserForm.UniqueIdentifier := BrowserTag;
+  FBrowserForm.Width := 2048;
+  FBrowserForm.Height := 1800;
+  FBrowserForm.ActionButtons := [TBorderIcon.biMinimize, TBorderIcon.biMaximize];
+  FBrowserForm.Resizable := true;
+  FBrowserForm.Movable := true;
+  FBrowserForm.CookieName := 'CookieName';
+  FBrowserForm.CookieValue := 'CookieValue';
+  FBrowserForm.CookieDomain := 'CookieDomain';
+  FBrowserForm.OnMessageReceiver := procedure(Sender: TObject; const MessageText: string)
+  begin
+    MemoMessageReceiver.Lines.Add(MessageText);
+    ProcessarJSON(MessageText);
+  end;
+  FBrowserForm.Show;
+end;
+
 procedure TFormPopup.BtnCreateAdvPopupClick(Sender: TObject);
 begin
-  PopupManager := TAdvancedPopupManager.Create;
-  PopupManager.CreateMainBrowser;
+  if Assigned(FPopupManager) then
+  begin
+    FPopupManager.CleanupAndDestroy;
+    FPopupManager.Free;
+    FPopupManager := nil;
+  end;
+
+  FPopupManager := TAdvancedPopupManager.Create(Self);
+  FPopupManager.CreateMainBrowser;
 end;
 
 procedure TFormPopup.BtnCreateMainBrowserClick(Sender: TObject);
@@ -305,7 +372,6 @@ begin
     .SetActionButtons([TBorderIcon.biMinimize, TBorderIcon.biMaximize])
     .SetWindowClosed(OnBrowserWindowClosed)
     .SetMessageReceiver(OnMessageReceived);
-
   Browser.ShowAsModal;
   LogMessage('Browser com HTML customizado criado');
 end;
@@ -349,9 +415,9 @@ begin
       PayloadName := JSONObject.GetValue<string>('payload.name');
       ClienteId := JSONObject.GetValue<string>('payload.context.clienteId');
 
-      Showmessage('Operation: ' + Operation);
-      Showmessage('Payload Name: ' + PayloadName);
-      Showmessage('Cliente ID: ' + ClienteId);
+      LogMessage('Operation: ' + Operation);
+      LogMessage('PayloadName: ' + PayloadName);
+      LogMessage('ClienteId: ' + ClienteId);
     end;
 
   finally
@@ -361,14 +427,26 @@ end;
 
 procedure TFormPopup.BtnMessageSenderByChainableClick(Sender: TObject);
 begin
-  if Assigned(BrowserForm) then
-    BrowserForm.SetMessageSender(MemoMessageSender.Text);
+  if TCustomFormWVBrowser.FindInstance('UniqueID1') is TCustomFormWVBrowser then
+    TCustomFormWVBrowser.FindInstance('UniqueID1').OnMessageSender := MemoMessageSender.Text
+  else if TCustomFormWVBrowser.FindInstance('UniqueID2') is TCustomFormWVBrowser then
+    TCustomFormWVBrowser.FindInstance('UniqueID2').OnMessageSender := MemoMessageSender.Text
+  else if TCustomFormWVBrowser.FindInstance('UniqueID3') is TCustomFormWVBrowser then
+    TCustomFormWVBrowser.FindInstance('UniqueID3').OnMessageSender := MemoMessageSender.Text
+  else if TCustomFormWVBrowser.FindInstance('UniqueID4') is TCustomFormWVBrowser then
+    TCustomFormWVBrowser.FindInstance('UniqueID4').OnMessageSender := MemoMessageSender.Text;
 end;
 
 procedure TFormPopup.BtnMessageSenderByPropertyClick(Sender: TObject);
 begin
-  if Assigned(BrowserForm) then
-    BrowserForm.OnMessageSender := MemoMessageSender.Text;
+  if TCustomFormWVBrowser.FindInstance('UniqueID1') is TCustomFormWVBrowser then
+    TCustomFormWVBrowser.FindInstance('UniqueID1').OnMessageSender := MemoMessageSender.Text
+  else if TCustomFormWVBrowser.FindInstance('UniqueID2') is TCustomFormWVBrowser then
+    TCustomFormWVBrowser.FindInstance('UniqueID2').OnMessageSender := MemoMessageSender.Text
+  else if TCustomFormWVBrowser.FindInstance('UniqueID3') is TCustomFormWVBrowser then
+    TCustomFormWVBrowser.FindInstance('UniqueID3').OnMessageSender := MemoMessageSender.Text
+  else if TCustomFormWVBrowser.FindInstance('UniqueID4') is TCustomFormWVBrowser then
+    TCustomFormWVBrowser.FindInstance('UniqueID4').OnMessageSender := MemoMessageSender.Text;
 end;
 
 end.

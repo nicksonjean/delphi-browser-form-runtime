@@ -1,12 +1,10 @@
 unit BrowserTypes;
 
 interface
-
 uses
   System.SysUtils, Vcl.ExtCtrls;
 
 type
-  TBrowserConstructorType = (Dummy);
   TBrowserType = (WebBrowser, WebView);
   TOpenType = (Default, Modal);
   TFormType = (Normal, Popup, MDI);
@@ -25,6 +23,19 @@ type
     BringToFrontIfExists: Boolean;
     UniqueIdentifier: String;
     MaxInstances: Integer;
+  end;
+
+  TMDIOptionsHelper = record helper for TMDIOptions
+  private
+    class function InitWith(
+      AAutoShow: Boolean;
+      ASingleInstance: Boolean;
+      AMaximizeOnShow: Boolean;
+      ABringToFrontIfExists: Boolean;
+      const AUniqueIdentifier: String;
+      AMaxInstances: Integer
+    ): TMDIOptions; static;
+  public
     class function Default: TMDIOptions; static;
     class function Simple: TMDIOptions; static;
     class function SingleInstanceMode(const AUniqueID: String = ''): TMDIOptions; static;
@@ -33,39 +44,43 @@ type
 
 implementation
 
-{ TMDIOptions }
+{ TMDIOptionsHelper }
 
-class function TMDIOptions.Default: TMDIOptions;
+class function TMDIOptionsHelper.InitWith(
+  AAutoShow: Boolean;
+  ASingleInstance: Boolean;
+  AMaximizeOnShow: Boolean;
+  ABringToFrontIfExists: Boolean;
+  const AUniqueIdentifier: String;
+  AMaxInstances: Integer
+): TMDIOptions;
 begin
-  Result.AutoShow := True;
-  Result.SingleInstance := True;
-  Result.MaximizeOnShow := True;
-  Result.BringToFrontIfExists := True;
-  Result.UniqueIdentifier := EmptyStr;
-  Result.MaxInstances := 1;
-end;
-
-class function TMDIOptions.Simple: TMDIOptions;
-begin
-  Result := Default;
-  Result.SingleInstance := False;
-  Result.MaxInstances := 0;
-end;
-
-class function TMDIOptions.SingleInstanceMode(const AUniqueID: String): TMDIOptions;
-begin
-  Result := Default;
-  Result.SingleInstance := True;
-  Result.UniqueIdentifier := AUniqueID;
-  Result.MaxInstances := 1;
-end;
-
-class function TMDIOptions.MultiInstanceMode(const AMaxInstances: Integer; const AUniqueID: String): TMDIOptions;
-begin
-  Result := Default;
-  Result.SingleInstance := False;
+  Result.AutoShow := AAutoShow;
+  Result.SingleInstance := ASingleInstance;
+  Result.MaximizeOnShow := AMaximizeOnShow;
+  Result.BringToFrontIfExists := ABringToFrontIfExists;
+  Result.UniqueIdentifier := AUniqueIdentifier;
   Result.MaxInstances := AMaxInstances;
-  Result.UniqueIdentifier := AUniqueID;
+end;
+
+class function TMDIOptionsHelper.Default: TMDIOptions;
+begin
+  Result := InitWith(True, True, True, True, EmptyStr, 1);
+end;
+
+class function TMDIOptionsHelper.Simple: TMDIOptions;
+begin
+  Result := InitWith(True, False, True, True, EmptyStr, 0);
+end;
+
+class function TMDIOptionsHelper.SingleInstanceMode(const AUniqueID: String): TMDIOptions;
+begin
+  Result := InitWith(True, True, True, True, AUniqueID, 1);
+end;
+
+class function TMDIOptionsHelper.MultiInstanceMode(const AMaxInstances: Integer; const AUniqueID: String): TMDIOptions;
+begin
+  Result := InitWith(True, False, True, True, AUniqueID, AMaxInstances);
 end;
 
 end.

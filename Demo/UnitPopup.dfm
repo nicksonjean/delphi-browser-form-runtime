@@ -13,6 +13,7 @@ object FormPopup: TFormPopup
   Font.Style = []
   OldCreateOrder = False
   Position = poScreenCenter
+  OnClose = FormClose
   OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
@@ -34,8 +35,9 @@ object FormPopup: TFormPopup
       Width = 173
       Height = 123
       Align = alLeft
-      Caption = 'Classe Modal'
+      Caption = 'Classe Non Modal'
       TabOrder = 0
+      ExplicitTop = 11
       object BtnWVBrowserClassChainableTest: TButton
         Left = 22
         Top = 39
@@ -180,7 +182,7 @@ object FormPopup: TFormPopup
     end
     object BtnCreateAdvPopup: TButton
       Left = 24
-      Top = 189
+      Top = 197
       Width = 123
       Height = 25
       Caption = 'Create Adv Popup'

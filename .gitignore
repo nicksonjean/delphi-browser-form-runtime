@@ -45,3 +45,5 @@ Thumbs.db
 # Arquivos locais e de cache
 *.local
 *.identcache
+CustomCache/
+**/CustomCache/
