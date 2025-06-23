@@ -3,8 +3,8 @@ object FormPopup: TFormPopup
   Top = 0
   BorderStyle = bsDialog
   Caption = 'FormPopup'
-  ClientHeight = 729
-  ClientWidth = 356
+  ClientHeight = 921
+  ClientWidth = 394
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -13,34 +13,49 @@ object FormPopup: TFormPopup
   Font.Style = []
   OldCreateOrder = False
   Position = poScreenCenter
-  OnClose = FormClose
   OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
-  object GroupBoxWVBrowser: TGroupBox
+  object GroupBoxComponentSelector: TGroupBox
     Left = 0
     Top = 0
-    Width = 356
+    Width = 394
+    Height = 50
+    Align = alTop
+    Caption = 'Seletor de Componente'
+    TabOrder = 0
+    object SwitchComponentType: TToggleSwitch
+      Left = 32
+      Top = 20
+      Width = 72
+      Height = 20
+      TabOrder = 0
+      OnClick = SwitchComponentTypeClick
+    end
+  end
+  object GroupBoxWVBrowser: TGroupBox
+    Left = 0
+    Top = 50
+    Width = 394
     Height = 140
     Margins.Left = 5
     Margins.Top = 5
     Margins.Right = 5
     Margins.Bottom = 5
     Align = alTop
-    Caption = 'WVBrowser'
-    TabOrder = 0
+    Caption = 'Browser Components'
+    TabOrder = 1
     object GroupBoxWVBrowserWithClass: TGroupBox
       Left = 2
       Top = 15
-      Width = 173
+      Width = 200
       Height = 123
       Align = alLeft
       Caption = 'Classe Non Modal'
       TabOrder = 0
-      ExplicitTop = 11
       object BtnWVBrowserClassChainableTest: TButton
-        Left = 22
-        Top = 39
+        Left = 30
+        Top = 40
         Width = 123
         Height = 25
         Caption = 'Chainable'
@@ -48,8 +63,8 @@ object FormPopup: TFormPopup
         OnClick = BtnWVBrowserClassChainableTestClick
       end
       object BtnWVBrowserClassPropertiesTest: TButton
-        Left = 22
-        Top = 70
+        Left = 30
+        Top = 71
         Width = 123
         Height = 25
         Caption = 'Properties'
@@ -58,15 +73,15 @@ object FormPopup: TFormPopup
       end
     end
     object GroupBoxWVBrowserWithInterface: TGroupBox
-      Left = 181
+      Left = 192
       Top = 15
-      Width = 173
+      Width = 200
       Height = 123
       Align = alRight
       Caption = 'Interface Non Modal'
       TabOrder = 1
       object BtnWVBrowserInterfaceChainableTest: TButton
-        Left = 27
+        Left = 43
         Top = 40
         Width = 123
         Height = 25
@@ -75,7 +90,7 @@ object FormPopup: TFormPopup
         OnClick = BtnWVBrowserInterfaceChainableTestClick
       end
       object BtnWVBrowserInterfacePropertiesTest: TButton
-        Left = 27
+        Left = 43
         Top = 71
         Width = 123
         Height = 25
@@ -87,40 +102,40 @@ object FormPopup: TFormPopup
   end
   object GroupBoxMessageReceiver: TGroupBox
     Left = 0
-    Top = 350
-    Width = 356
-    Height = 140
+    Top = 440
+    Width = 394
+    Height = 197
     Align = alTop
     Caption = 'Message Receiver'
-    TabOrder = 1
+    TabOrder = 2
     object MemoMessageReceiver: TMemo
       Left = 2
       Top = 15
-      Width = 352
-      Height = 123
+      Width = 390
+      Height = 180
       Align = alClient
       TabOrder = 0
     end
   end
   object GroupBoxMessageSender: TGroupBox
     Left = 0
-    Top = 140
-    Width = 356
-    Height = 210
+    Top = 190
+    Width = 394
+    Height = 250
     Align = alTop
     Caption = 'Message Sender'
-    TabOrder = 2
+    TabOrder = 3
     object MemoMessageSender: TMemo
       Left = 2
       Top = 15
-      Width = 352
-      Height = 123
+      Width = 390
+      Height = 180
       Align = alTop
       TabOrder = 0
     end
     object BtnMessageSenderByProperty: TButton
-      Left = 202
-      Top = 162
+      Left = 235
+      Top = 210
       Width = 123
       Height = 25
       Caption = 'Send By Property'
@@ -128,8 +143,8 @@ object FormPopup: TFormPopup
       OnClick = BtnMessageSenderByPropertyClick
     end
     object BtnMessageSenderByChainable: TButton
-      Left = 24
-      Top = 160
+      Left = 32
+      Top = 210
       Width = 123
       Height = 25
       Caption = 'Send By Chainable'
@@ -139,23 +154,23 @@ object FormPopup: TFormPopup
   end
   object GroupBoxWindowAndSubWindow: TGroupBox
     Left = 0
-    Top = 490
-    Width = 356
-    Height = 240
+    Top = 637
+    Width = 394
+    Height = 285
     Align = alTop
     Caption = 'Window And SubWindow'
-    TabOrder = 3
+    TabOrder = 4
     object Memolog: TMemo
       Left = 2
       Top = 15
-      Width = 352
-      Height = 123
+      Width = 390
+      Height = 180
       Align = alTop
       TabOrder = 0
     end
     object BtnCreatePopupHtml: TButton
-      Left = 208
-      Top = 197
+      Left = 235
+      Top = 245
       Width = 123
       Height = 25
       Caption = 'Create Popup HTML'
@@ -163,8 +178,8 @@ object FormPopup: TFormPopup
       OnClick = BtnCreatePopupHtmlClick
     end
     object BtnCreateMainBrowser: TButton
-      Left = 24
-      Top = 158
+      Left = 32
+      Top = 206
       Width = 123
       Height = 25
       Caption = 'Create Main Browser'
@@ -172,17 +187,18 @@ object FormPopup: TFormPopup
       OnClick = BtnCreateMainBrowserClick
     end
     object BtnCreatePopup: TButton
-      Left = 208
-      Top = 158
+      Left = 235
+      Top = 206
       Width = 123
       Height = 25
       Caption = 'Create Popup'
+      Enabled = False
       TabOrder = 3
       OnClick = BtnCreatePopupClick
     end
     object BtnCreateAdvPopup: TButton
-      Left = 24
-      Top = 197
+      Left = 32
+      Top = 245
       Width = 123
       Height = 25
       Caption = 'Create Adv Popup'

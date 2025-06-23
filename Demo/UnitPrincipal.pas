@@ -3,19 +3,27 @@ unit UnitPrincipal;
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  System.JSON, System.Generics.Collections,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Menus,
+  Winapi.Windows,
+  Winapi.Messages,
+  System.SysUtils,
+  System.Classes,
+  System.JSON,
+  Vcl.Controls,
+  Vcl.Forms,
+  Vcl.Dialogs,
+  Vcl.StdCtrls,
+  Vcl.Menus,
 
-  uWVBrowser, uWVWinControl, uWVWindowParent, uWVTypes, uWVTypeLibrary,
-  uWVBrowserBase, uWVCoreWebView2Args, uWVCoreWebView2Deferral, uWVLoader,
-  uWVLibFunctions, uWVConstants, uWVCoreWebView2, uWVInterfaces,
-  uWVCoreWebView2WindowFeatures,
+  Vcl.Edge,
+  uWVBrowser,
 
   BrowserTypes,
-  BrowserFormInterface,
+  EdgeBrowserFormInterface,
+  EdgeBrowserFormClass,
+  EdgeAdvancedPopupExample,
+  WVBrowserFormInterface,
   WVBrowserFormClass,
-  AdvancedPopupExample,
+  WVAdvancedPopupExample,
 
   UnitFilho;
 
@@ -88,11 +96,11 @@ end;
 
 procedure TFormPrincipal.FormDinmicoBing1Click(Sender: TObject);
 var
-  BrowserForm: TCustomFormWVBrowser;
+  BrowserForm: TCustomFormEdgeBrowser;
   UniqueID: String;
 begin
   UniqueID := 'CustomID8';
-  BrowserForm := TCustomFormWVBrowser.CreateAsMDI(FormPrincipal, 'http://bing.com.br/', true);
+  BrowserForm := TCustomFormEdgeBrowser.CreateAsMDI(FormPrincipal, 'http://bing.com.br/', true);
   BrowserForm.Caption := 'Exemplo de Teste';
   BrowserForm.Width := 800;
   BrowserForm.Height := 600;
@@ -111,11 +119,11 @@ end;
 
 procedure TFormPrincipal.FormDinmicoGoogle1Click(Sender: TObject);
 var
-  BrowserForm: TCustomFormWVBrowser;
+  BrowserForm: TCustomFormEdgeBrowser;
   UniqueID: String;
 begin
   UniqueID := 'CustomID7';
-  BrowserForm := TCustomFormWVBrowser.Create;
+  BrowserForm := TCustomFormEdgeBrowser.Create;
   BrowserForm.LegacyForm := true;
   BrowserForm.ParentForm := FormPrincipal;
   BrowserForm.URL := 'http://google.com.br/';
@@ -137,11 +145,11 @@ end;
 
 procedure TFormPrincipal.FormDinmicoMSN1Click(Sender: TObject);
 var
-  BrowserForm: TCustomFormWVBrowser;
+  BrowserForm: TCustomFormEdgeBrowser;
   UniqueID: String;
 begin
   UniqueID := 'CustomID6';
-  BrowserForm := TCustomFormWVBrowser.Create('https://www.msn.com/', FormPrincipal, true);
+  BrowserForm := TCustomFormEdgeBrowser.Create('https://www.msn.com/', FormPrincipal, true);
   BrowserForm.Caption := 'Exemplo de Teste';
   BrowserForm.Width := 800;
   BrowserForm.Height := 600;
@@ -160,13 +168,13 @@ end;
 
 procedure TFormPrincipal.FormDinmicoMax3Instncias1Click(Sender: TObject);
 var
-  BrowserForm: TCustomFormWVBrowser;
+  BrowserForm: TCustomFormEdgeBrowser;
   UniqueID: String;
 begin
   UniqueID := 'CustomID5';
-  if TCustomFormWVBrowser.CheckMDILimits(UniqueID, 3, False) then
+  if TCustomFormEdgeBrowser.CheckMDILimits(UniqueID, 3, False) then
   begin
-    BrowserForm := TCustomFormWVBrowser.Create;
+    BrowserForm := TCustomFormEdgeBrowser.Create;
     BrowserForm.ParentForm := FormPrincipal;
     BrowserForm.UniqueIdentifier := UniqueID;
     BrowserForm.MaxInstances := 3;
@@ -190,16 +198,16 @@ end;
 
 procedure TFormPrincipal.NovoFormulrioDinmico1Click(Sender: TObject);
 var
-  BrowserForm: TCustomFormWVBrowser;
+  BrowserForm: TCustomFormEdgeBrowser;
   UniqueID: String;
 begin
   UniqueID := 'CustomID1';
-  BrowserForm := TCustomFormWVBrowser.FindMDIInstance(UniqueID);
+  BrowserForm := TCustomFormEdgeBrowser.FindMDIInstance(UniqueID);
   if Assigned(BrowserForm) then
     BrowserForm.ShowAsMDI(TMDIOptions.SingleInstanceMode(UniqueID))
   else
   begin
-    BrowserForm := TCustomFormWVBrowser.Create;
+    BrowserForm := TCustomFormEdgeBrowser.Create;
     BrowserForm.ParentForm := FormPrincipal;
     BrowserForm.UniqueIdentifier := UniqueID;
     BrowserForm.URL := 'http://bing.com.br/';
@@ -222,17 +230,16 @@ end;
 
 procedure TFormPrincipal.NovoFormulrioDinmico2Click(Sender: TObject);
 var
-  BrowserForm: TCustomFormWVBrowser;
+  BrowserForm: TCustomFormEdgeBrowser;
   UniqueID: String;
 begin
   UniqueID := 'CustomID2';
-  BrowserForm := TCustomFormWVBrowser.FindMDIInstance(UniqueID);
-  if Assigned(BrowserForm) then
+  BrowserForm := TCustomFormEdgeBrowser.FindMDIInstance(UniqueID);
   if Assigned(BrowserForm) then
     BrowserForm.ShowAsMDI(TMDIOptions.SingleInstanceMode(UniqueID))
   else
   begin
-    BrowserForm := TCustomFormWVBrowser.Create;
+    BrowserForm := TCustomFormEdgeBrowser.Create;
     BrowserForm.ParentForm := FormPrincipal;
     BrowserForm.UniqueIdentifier := UniqueID;
     BrowserForm.URL := 'http://google.com.br/';
@@ -255,16 +262,16 @@ end;
 
 procedure TFormPrincipal.NovoFormulrioDinmico3Click(Sender: TObject);
 var
-  BrowserForm: TCustomFormWVBrowser;
+  BrowserForm: TCustomFormEdgeBrowser;
   UniqueID: String;
 begin
   UniqueID := 'CustomID3';
-  BrowserForm := TCustomFormWVBrowser.FindMDIInstance(UniqueID);
+  BrowserForm := TCustomFormEdgeBrowser.FindMDIInstance(UniqueID);
   if Assigned(BrowserForm) then
     BrowserForm.ShowAsMDI(TMDIOptions.SingleInstanceMode(UniqueID))
   else
   begin
-    BrowserForm := TCustomFormWVBrowser.CreateAsMDI(FormPrincipal, 'https://www.msn.com/');
+    BrowserForm := TCustomFormEdgeBrowser.CreateAsMDI(FormPrincipal, 'https://www.msn.com/');
     BrowserForm.UniqueIdentifier := UniqueID;
     BrowserForm.Caption := 'Exemplo de Teste';
     BrowserForm.Width := 800;
@@ -285,16 +292,16 @@ end;
 
 procedure TFormPrincipal.NovoFormulrioDinmico4Click(Sender: TObject);
 var
-  BrowserForm: TCustomFormWVBrowser;
+  BrowserForm: TCustomFormEdgeBrowser;
   UniqueID: String;
 begin
   UniqueID := 'CustomID4';
-  BrowserForm := TCustomFormWVBrowser.FindMDIInstance(UniqueID);
+  BrowserForm := TCustomFormEdgeBrowser.FindMDIInstance(UniqueID);
   if Assigned(BrowserForm) then
     BrowserForm.ShowAsMDI(TMDIOptions.SingleInstanceMode(UniqueID))
   else
   begin
-    BrowserForm := TCustomFormWVBrowser.Create('https://duckduckgo.com/', FormPrincipal);
+    BrowserForm := TCustomFormEdgeBrowser.Create('https://duckduckgo.com/', FormPrincipal);
     BrowserForm.UniqueIdentifier := UniqueID;
     BrowserForm.Caption := 'Exemplo de Teste';
     BrowserForm.Width := 800;

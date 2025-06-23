@@ -67,6 +67,8 @@
         <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
         <VerInfo_Locale>1033</VerInfo_Locale>
         <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
+        <PostBuildEvent><![CDATA[ copy /y "$(BDS)\Redist\win32\WebView2Loader.dll" "$(OUTPUTDIR)"
+$(PostBuildEvent)]]></PostBuildEvent>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win64)'!=''">
         <DCC_UsePackage>DBXSqliteDriver;RESTComponents;fmxase;DBXDb2Driver;DBXInterBaseDriver;vclactnband;vclFireDAC;bindcompvclsmp;emsclientfiredac;tethering;DataSnapFireDAC;FireDACADSDriver;DBXMSSQLDriver;WebView4DelphiFMXRTL;DatasnapConnectorsFreePascal;FireDACMSSQLDriver;vcltouch;vcldb;bindcompfmx;DBXOracleDriver;inetdb;FmxTeeUI;emsedge;fmx;FireDACIBDriver;fmxdae;vcledge;vclib;FireDACDBXDriver;dbexpress;IndyCore;vclx;dsnap;emsclient;DataSnapCommon;FireDACCommon;RESTBackendComponents;DataSnapConnectors;VCLRESTComponents;soapserver;vclie;bindengine;DBXMySQLDriver;CloudService;FireDACOracleDriver;FireDACMySQLDriver;DBXFirebirdDriver;FireDACCommonODBC;FireDACCommonDriver;DataSnapClient;inet;IndyIPCommon;bindcompdbx;vcl;IndyIPServer;DBXSybaseASEDriver;IndySystem;FireDACDb2Driver;bindcompvclwinx;dsnapcon;FireDACMSAccDriver;fmxFireDAC;FireDACInfxDriver;vclimg;TeeDB;FireDAC;emshosting;FireDACSqliteDriver;FireDACPgDriver;ibmonitor;FireDACASADriver;DBXOdbcDriver;FireDACTDataDriver;FMXTee;soaprtl;DbxCommonDriver;ibxpress;Tee;DataSnapServer;xmlrtl;soapmidas;DataSnapNativeClient;fmxobj;vclwinx;FireDACDSDriver;rtl;emsserverresource;DbxClientDriver;ibxbindings;DBXSybaseASADriver;CustomIPTransport;vcldsnap;bindcomp;appanalytics;DBXInformixDriver;IndyIPClient;bindcompvcl;TeeUI;dbxcds;VclSmp;adortl;FireDACODBCDriver;DataSnapIndy10ServerTransport;dsnapxml;DataSnapProviderClient;dbrtl;IndyProtocols;inetdbxpress;FireDACMongoDBDriver;WebView4DelphiVCLRTL;DataSnapServerMidas;$(DCC_UsePackage)</DCC_UsePackage>
@@ -96,6 +98,8 @@
     <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
         <AppEnableRuntimeThemes>true</AppEnableRuntimeThemes>
         <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
+        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
+        <VerInfo_Locale>1033</VerInfo_Locale>
     </PropertyGroup>
     <ItemGroup>
         <DelphiCompile Include="$(MainSource)">
@@ -108,10 +112,21 @@
             <Form>FormFilho</Form>
         </DCCReference>
         <DCCReference Include="..\Source\Generic\BrowserTypes.pas"/>
-        <DCCReference Include="..\Source\Generic\BrowserGenericInterface.pas"/>
-        <DCCReference Include="..\Source\Context\BrowserFormInterface.pas"/>
+        <DCCReference Include="..\Source\Generic\WVBrowserGenericInterface.pas"/>
+        <DCCReference Include="..\Source\Context\WVBrowserFormInterface.pas"/>
         <DCCReference Include="..\Source\Context\WVBrowserFormClass.pas"/>
-        <DCCReference Include="..\Source\Example\AdvancedPopupExample.pas"/>
+        <DCCReference Include="..\Source\Example\WVAdvancedPopupExample.pas"/>
+        <DCCReference Include="..\Source\Context\EdgeBrowserFormClass.pas"/>
+        <DCCReference Include="..\Source\Context\EdgeBrowserFormInterface.pas"/>
+        <DCCReference Include="..\Source\Generic\EdgeBrowserGenericInterface.pas"/>
+        <DCCReference Include="..\Source\Generic\UtilsLib.pas"/>
+        <DCCReference Include="..\Source\Context\Edge\EdgeCookie.pas"/>
+        <DCCReference Include="..\Source\Context\Edge\EdgeDeferral.pas"/>
+        <DCCReference Include="..\Source\Context\Edge\EdgeNewWindowRequestedEventArgs.pas"/>
+        <DCCReference Include="..\Source\Context\Edge\EdgeBrowserHelper.pas"/>
+        <DCCReference Include="..\Source\Context\Edge\EdgeWindowFeatures.pas"/>
+        <DCCReference Include="..\Source\Generic\TimerHelper.pas"/>
+        <DCCReference Include="..\Source\Example\EdgeAdvancedPopupExample.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
@@ -925,4 +940,20 @@
     <Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')"/>
     <Import Project="$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj" Condition="Exists('$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj')"/>
     <Import Project="$(MSBuildProjectName).deployproj" Condition="Exists('$(MSBuildProjectName).deployproj')"/>
+    <PropertyGroup Condition="'$(Config)'=='Debug' And '$(Platform)'=='Win32'">
+        <PreBuildEvent/>
+        <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
+        <PreLinkEvent/>
+        <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
+        <PostBuildEvent> copy /y &quot;$(BDS)\Redist\win32\WebView2Loader.dll&quot; &quot;$(OUTPUTDIR)&quot;</PostBuildEvent>
+        <PostBuildEventIgnoreExitCode>False</PostBuildEventIgnoreExitCode>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Release' And '$(Platform)'=='Win32'">
+        <PreBuildEvent/>
+        <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
+        <PreLinkEvent/>
+        <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
+        <PostBuildEvent> copy /y &quot;$(BDS)\Redist\win32\WebView2Loader.dll&quot; &quot;$(OUTPUTDIR)&quot;</PostBuildEvent>
+        <PostBuildEventIgnoreExitCode>False</PostBuildEventIgnoreExitCode>
+    </PropertyGroup>
 </Project>

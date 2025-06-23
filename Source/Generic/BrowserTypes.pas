@@ -5,7 +5,7 @@ uses
   System.SysUtils, Vcl.ExtCtrls;
 
 type
-  TBrowserType = (WebBrowser, WebView);
+  TBrowserType = (EdgeBrowser, WVBrowser);
   TOpenType = (Default, Modal);
   TFormType = (Normal, Popup, MDI);
   TPositionCaption = (Before, After, Replaced, Between, None);
