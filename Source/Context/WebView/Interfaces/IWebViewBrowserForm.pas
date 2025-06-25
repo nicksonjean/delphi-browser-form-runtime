@@ -1,14 +1,18 @@
-unit WVBrowserFormInterface;
+unit IWebViewBrowserForm;
 
 interface
-
 uses
-  Vcl.Forms, System.Classes, uWVBrowser, BrowserTypes, WVBrowserGenericInterface;
+  Vcl.Forms, System.Classes, uWVBrowser, BrowserTypes, IBrowserFormBase;
 
 type
-  IWVBrowserForm = interface(IWVBrowserGeneric)
+  IWVBrowserForm = interface(IBrowserForm)
   ['{F3F73E9C-B0C0-41D3-9B8A-FAC7F5E1E4B9}']
-    // Fluent methods
+    // WebView Specialized Methods
+    function GetParentWebViewProp: TWVBrowser;
+    procedure SetParentWebViewProp(const Value: TWVBrowser);
+    property ParentWebView: TWVBrowser read GetParentWebViewProp write SetParentWebViewProp;
+
+    // Fluent Methods
     function SetWidth(const AWidth: Integer): IWVBrowserForm;
     function SetHeight(const AHeight: Integer): IWVBrowserForm;
     function SetCaption(const ACaption: String; APosition: TPositionCaption = TPositionCaption.Between): IWVBrowserForm;
@@ -29,14 +33,9 @@ type
     function SetWindowOpened(const AEvent: TNotifyEvent): IWVBrowserForm;
     function SetWindowClosed(const AEvent: TNotifyEvent): IWVBrowserForm;
     function SetHTMLContent(const AHTMLContent: String): IWVBrowserForm;
-    procedure Show(const AType: TOpenType = TOpenType.Default);
-    procedure ShowModal(const AType: TOpenType = TOpenType.Modal);
-    procedure ShowAsModal(AParentForm: TForm = nil);
-    procedure ShowAsMDICustom(AutoShow: Boolean = True);
-    procedure ShowAsMDISimple(AutoShow: Boolean; SingleInstance: Boolean; MaximizeOnShow: Boolean = True);
-    procedure ShowAsMDIAdvanced(AutoShow: Boolean = True; SingleInstance: Boolean = True; MaximizeOnShow: Boolean = True; BringToFrontIfExists: Boolean = True; const UniqueIdentifier: String = ''; MaxInstances: Integer = 1);
   end;
 
 implementation
 
 end.
+

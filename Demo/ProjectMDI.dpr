@@ -6,11 +6,11 @@ uses
   UnitFilho in 'UnitFilho.pas' {FormFilho},
   BrowserTypes in '..\Source\Generic\BrowserTypes.pas',
   WVBrowserGenericInterface in '..\Source\Generic\WVBrowserGenericInterface.pas',
-  WVBrowserFormInterface in '..\Source\Context\WVBrowserFormInterface.pas',
-  WVBrowserFormClass in '..\Source\Context\WVBrowserFormClass.pas',
-  WVAdvancedPopupExample in '..\Source\Example\WVAdvancedPopupExample.pas',
-  EdgeBrowserFormClass in '..\Source\Context\EdgeBrowserFormClass.pas',
-  EdgeBrowserFormInterface in '..\Source\Context\EdgeBrowserFormInterface.pas',
+  IWebViewBrowserForm in '..\Source\Context\IWebViewBrowserForm.pas',
+  WebViewBrowserForm in '..\Source\Context\WebViewBrowserForm.pas',
+  WebViewAdvancedPopupExample in '..\Source\Example\WebViewAdvancedPopupExample.pas',
+  EdgeWebBrowserForm in '..\Source\Context\EdgeWebBrowserForm.pas',
+  IEdgeWebBrowserForm in '..\Source\Context\IEdgeWebBrowserForm.pas',
   EdgeBrowserGenericInterface in '..\Source\Generic\EdgeBrowserGenericInterface.pas',
   UtilsLib in '..\Source\Generic\UtilsLib.pas',
   EdgeCookie in '..\Source\Context\Edge\EdgeCookie.pas',
@@ -19,7 +19,7 @@ uses
   EdgeBrowserHelper in '..\Source\Context\Edge\EdgeBrowserHelper.pas',
   EdgeWindowFeatures in '..\Source\Context\Edge\EdgeWindowFeatures.pas',
   TimerHelper in '..\Source\Generic\TimerHelper.pas',
-  EdgeAdvancedPopupExample in '..\Source\Example\EdgeAdvancedPopupExample.pas';
+  EdgeWebAdvancedPopupExample in '..\Source\Example\EdgeWebAdvancedPopupExample.pas';
 
 {$R *.res}
 

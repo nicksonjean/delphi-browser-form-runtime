@@ -1,4 +1,4 @@
-﻿unit EdgeAdvancedPopupExample;
+﻿unit EdgeWebAdvancedPopupExample;
 
 interface
 
@@ -11,15 +11,14 @@ uses
   System.NetEncoding,
 
   Vcl.Edge,
-  EdgeBrowserFormClass,
-  BrowserTypes,
-  EdgeBrowserFormInterface;
+  EdgeWebBrowserForm,
+  BrowserTypes;
 
 type
   TEdgeAdvancedPopupManager = class
   private
-    FMainBrowser: TCustomFormEdgeBrowser;
-    FPopups: TList<TCustomFormEdgeBrowser>;
+    FMainBrowser: TEdgeWebBrowser;
+    FPopups: TList<TEdgeWebBrowser>;
     FOwnerForm: TForm;
     procedure OnMessageReceived(Sender: TObject; const Message: string);
   public
@@ -44,7 +43,7 @@ constructor TEdgeAdvancedPopupManager.Create(AOwnerForm: TForm = nil);
 begin
   inherited Create;
   FOwnerForm := AOwnerForm;
-  FPopups := TList<TCustomFormEdgeBrowser>.Create;
+  FPopups := TList<TEdgeWebBrowser>.Create;
 end;
 
 destructor TEdgeAdvancedPopupManager.Destroy;
@@ -167,7 +166,7 @@ const
     '</body>' +
     '</html>';
 begin
-  FMainBrowser := TCustomFormEdgeBrowser.Create(EncodeHTML(MAIN_HTML), FOwnerForm)
+  FMainBrowser := TEdgeWebBrowser.Create(EncodeHTML(MAIN_HTML), FOwnerForm)
     .SetWidth(800)
     .SetHeight(600)
     .SetCaption('Sistema Principal')
@@ -245,11 +244,11 @@ const
     '</body>' +
     '</html>';
 var
-  LoginBrowser: TCustomFormEdgeBrowser;
+  LoginBrowser: TEdgeWebBrowser;
 begin
   if not Assigned(FMainBrowser) then Exit;
 
-  LoginBrowser := TCustomFormEdgeBrowser.CreateAsPopup(FMainBrowser.Instance as TEdgeBrowser, EncodeHTML(LOGIN_HTML))
+  LoginBrowser := TEdgeWebBrowser.CreateAsPopup(FMainBrowser.Instance as TEdgeBrowser, EncodeHTML(LOGIN_HTML))
     .SetWidth(400)
     .SetHeight(300)
     .SetCaption('Login')
@@ -264,7 +263,7 @@ end;
 procedure TEdgeAdvancedPopupManager.CreateNotificationPopup;
 var
   NotificationHTML: string;
-  NotificationBrowser: TCustomFormEdgeBrowser;
+  NotificationBrowser: TEdgeWebBrowser;
 begin
   if not Assigned(FMainBrowser) then Exit;
 
@@ -289,7 +288,7 @@ begin
     '</body>' +
     '</html>';
 
-  NotificationBrowser := TCustomFormEdgeBrowser.CreateAsPopup(FMainBrowser.Instance as TEdgeBrowser, EncodeHTML(NotificationHTML))
+  NotificationBrowser := TEdgeWebBrowser.CreateAsPopup(FMainBrowser.Instance as TEdgeBrowser, EncodeHTML(NotificationHTML))
     .SetWidth(350)
     .SetHeight(200)
     .SetCaption('Notificação')
@@ -366,11 +365,11 @@ const
     '</body>' +
     '</html>';
 var
-  DataEntryBrowser: TCustomFormEdgeBrowser;
+  DataEntryBrowser: TEdgeWebBrowser;
 begin
   if not Assigned(FMainBrowser) then Exit;
 
-  DataEntryBrowser := TCustomFormEdgeBrowser.CreateAsPopup(FMainBrowser.Instance as TEdgeBrowser, EncodeHTML(DATA_ENTRY_HTML))
+  DataEntryBrowser := TEdgeWebBrowser.CreateAsPopup(FMainBrowser.Instance as TEdgeBrowser, EncodeHTML(DATA_ENTRY_HTML))
     .SetWidth(500)
     .SetHeight(450)
     .SetCaption('Entrada de Dados')

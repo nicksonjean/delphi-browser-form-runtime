@@ -3,22 +3,22 @@ program ProjectTest;
 uses
   Vcl.Forms,
   UnitPopup in 'UnitPopup.pas' {FormPopup},
-  BrowserTypes in '..\Source\Generic\BrowserTypes.pas',
-  WVBrowserGenericInterface in '..\Source\Generic\WVBrowserGenericInterface.pas',
-  WVBrowserFormInterface in '..\Source\Context\WVBrowserFormInterface.pas',
-  WVBrowserFormClass in '..\Source\Context\WVBrowserFormClass.pas',
-  WVAdvancedPopupExample in '..\Source\Example\WVAdvancedPopupExample.pas',
-  EdgeBrowserFormClass in '..\Source\Context\EdgeBrowserFormClass.pas',
-  EdgeBrowserFormInterface in '..\Source\Context\EdgeBrowserFormInterface.pas',
-  EdgeBrowserGenericInterface in '..\Source\Generic\EdgeBrowserGenericInterface.pas',
-  EdgeAdvancedPopupExample in '..\Source\Example\EdgeAdvancedPopupExample.pas',
+  WebViewBrowserForm in '..\Source\Context\WebViewBrowserForm.pas',
+  WebViewAdvancedPopupExample in '..\Source\Example\WebViewAdvancedPopupExample.pas',
+  EdgeWebBrowserForm in '..\Source\Context\EdgeWebBrowserForm.pas',
+  EdgeWebAdvancedPopupExample in '..\Source\Example\EdgeWebAdvancedPopupExample.pas',
   UtilsLib in '..\Source\Generic\UtilsLib.pas',
-  EdgeCookie in '..\Source\Context\Edge\EdgeCookie.pas',
-  EdgeDeferral in '..\Source\Context\Edge\EdgeDeferral.pas',
-  EdgeNewWindowRequestedEventArgs in '..\Source\Context\Edge\EdgeNewWindowRequestedEventArgs.pas',
-  EdgeBrowserHelper in '..\Source\Context\Edge\EdgeBrowserHelper.pas',
-  EdgeWindowFeatures in '..\Source\Context\Edge\EdgeWindowFeatures.pas',
-  TimerHelper in '..\Source\Generic\TimerHelper.pas';
+  TimerHelper in '..\Source\Generic\TimerHelper.pas',
+  BrowserTypes in '..\Source\Context\BrowserTypes.pas',
+  IEdgeWebBrowserForm in '..\Source\Context\Edge\Interfaces\IEdgeWebBrowserForm.pas',
+  IWebViewBrowserForm in '..\Source\Context\WebView\Interfaces\IWebViewBrowserForm.pas',
+  EdgeBrowserHelper in '..\Source\Context\Edge\Component\EdgeBrowserHelper.pas',
+  EdgeCookie in '..\Source\Context\Edge\Component\EdgeCookie.pas',
+  EdgeDeferral in '..\Source\Context\Edge\Component\EdgeDeferral.pas',
+  EdgeNewWindowRequestedEventArgs in '..\Source\Context\Edge\Component\EdgeNewWindowRequestedEventArgs.pas',
+  EdgeWindowFeatures in '..\Source\Context\Edge\Component\EdgeWindowFeatures.pas',
+  IBrowserFormBase in '..\Source\Context\IBrowserFormBase.pas',
+  BrowserFactory in '..\Source\Strategy\BrowserFactory.pas';
 
 {$R ProjectPopup.res}
 

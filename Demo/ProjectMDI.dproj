@@ -113,11 +113,11 @@ $(PostBuildEvent)]]></PostBuildEvent>
         </DCCReference>
         <DCCReference Include="..\Source\Generic\BrowserTypes.pas"/>
         <DCCReference Include="..\Source\Generic\WVBrowserGenericInterface.pas"/>
-        <DCCReference Include="..\Source\Context\WVBrowserFormInterface.pas"/>
-        <DCCReference Include="..\Source\Context\WVBrowserFormClass.pas"/>
-        <DCCReference Include="..\Source\Example\WVAdvancedPopupExample.pas"/>
-        <DCCReference Include="..\Source\Context\EdgeBrowserFormClass.pas"/>
-        <DCCReference Include="..\Source\Context\EdgeBrowserFormInterface.pas"/>
+        <DCCReference Include="..\Source\Context\IWebViewBrowserForm.pas"/>
+        <DCCReference Include="..\Source\Context\WebViewBrowserForm.pas"/>
+        <DCCReference Include="..\Source\Example\WebViewAdvancedPopupExample.pas"/>
+        <DCCReference Include="..\Source\Context\EdgeWebBrowserForm.pas"/>
+        <DCCReference Include="..\Source\Context\IEdgeWebBrowserForm.pas"/>
         <DCCReference Include="..\Source\Generic\EdgeBrowserGenericInterface.pas"/>
         <DCCReference Include="..\Source\Generic\UtilsLib.pas"/>
         <DCCReference Include="..\Source\Context\Edge\EdgeCookie.pas"/>
@@ -126,7 +126,7 @@ $(PostBuildEvent)]]></PostBuildEvent>
         <DCCReference Include="..\Source\Context\Edge\EdgeBrowserHelper.pas"/>
         <DCCReference Include="..\Source\Context\Edge\EdgeWindowFeatures.pas"/>
         <DCCReference Include="..\Source\Generic\TimerHelper.pas"/>
-        <DCCReference Include="..\Source\Example\EdgeAdvancedPopupExample.pas"/>
+        <DCCReference Include="..\Source\Example\EdgeWebAdvancedPopupExample.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
@@ -945,7 +945,7 @@ $(PostBuildEvent)]]></PostBuildEvent>
         <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
         <PreLinkEvent/>
         <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
-        <PostBuildEvent> copy /y &quot;$(BDS)\Redist\win32\WebView2Loader.dll&quot; &quot;$(OUTPUTDIR)&quot;</PostBuildEvent>
+        <PostBuildEvent> copy /y &quot;$(BDS)\Redist\win32\WebView2Loader.dll&quot; &quot;$(OUTPUTDIR)&quot;</PostBuildEvent>
         <PostBuildEventIgnoreExitCode>False</PostBuildEventIgnoreExitCode>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Release' And '$(Platform)'=='Win32'">
@@ -953,7 +953,7 @@ $(PostBuildEvent)]]></PostBuildEvent>
         <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
         <PreLinkEvent/>
         <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
-        <PostBuildEvent> copy /y &quot;$(BDS)\Redist\win32\WebView2Loader.dll&quot; &quot;$(OUTPUTDIR)&quot;</PostBuildEvent>
+        <PostBuildEvent> copy /y &quot;$(BDS)\Redist\win32\WebView2Loader.dll&quot; &quot;$(OUTPUTDIR)&quot;</PostBuildEvent>
         <PostBuildEventIgnoreExitCode>False</PostBuildEventIgnoreExitCode>
     </PropertyGroup>
 </Project>

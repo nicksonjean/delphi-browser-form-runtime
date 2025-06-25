@@ -18,15 +18,17 @@ uses
 
   Vcl.Edge,
   uWVBrowser,
+  IBrowserFormBase,
 
   UtilsLib,
   BrowserTypes,
-  EdgeBrowserFormInterface,
-  EdgeBrowserFormClass,
-  EdgeAdvancedPopupExample,
-  WVBrowserFormInterface,
-  WVBrowserFormClass,
-  WVAdvancedPopupExample
+  IEdgeWebBrowserForm,
+  IWebViewBrowserForm,
+
+  EdgeWebBrowserForm,
+  EdgeWebAdvancedPopupExample,
+  WebViewBrowserForm,
+  WebViewAdvancedPopupExample
   ;
 
 type
@@ -96,9 +98,9 @@ type
     function GetUniqueID: string;
     function IsUsingEdgeBrowser: Boolean;
     function IsUsingWVBrowser: Boolean;
-    function GetMainEdgeBrowser: TCustomFormEdgeBrowser;
+    function GetMainEdgeBrowser: TEdgeWebBrowser;
     function GetMainWVBrowser: IWVBrowserForm;
-    function GetPopupEdgeBrowser: TCustomFormEdgeBrowser;
+    function GetPopupEdgeBrowser: TEdgeWebBrowser;
     function GetPopupWVBrowser: IWVBrowserForm;
     procedure RegisterMainBrowser(EdgePtr: Pointer; WVInterfacePtr: Pointer; WVInstancePtr: Pointer; const Caption: string);
     procedure RegisterPopupBrowser(EdgePtr: Pointer; WVInterfacePtr: Pointer; WVInstancePtr: Pointer; const Caption: string);
@@ -150,9 +152,9 @@ begin
   inherited;
 end;
 
-function TFormPopup.GetMainEdgeBrowser: TCustomFormEdgeBrowser;
+function TFormPopup.GetMainEdgeBrowser: TEdgeWebBrowser;
 begin
-  Result := TCustomFormEdgeBrowser(FMainEdgeBrowserRef);
+  Result := TEdgeWebBrowser(FMainEdgeBrowserRef);
 end;
 
 function TFormPopup.GetMainWVBrowser: IWVBrowserForm;
@@ -160,9 +162,9 @@ begin
   Result := IWVBrowserForm(FMainWVBrowserRef);
 end;
 
-function TFormPopup.GetPopupEdgeBrowser: TCustomFormEdgeBrowser;
+function TFormPopup.GetPopupEdgeBrowser: TEdgeWebBrowser;
 begin
-  Result := TCustomFormEdgeBrowser(FPopupEdgeBrowserRef);
+  Result := TEdgeWebBrowser(FPopupEdgeBrowserRef);
 end;
 
 function TFormPopup.GetPopupWVBrowser: IWVBrowserForm;
@@ -455,7 +457,7 @@ begin
 
   if IsUsingEdgeBrowser then
   begin
-    (TCustomFormEdgeBrowser.Create('file:///' + ExtractFilePath(ParamStr(0)) + 'index.html')
+    (TEdgeWebBrowser.Create('file:///' + ExtractFilePath(ParamStr(0)) + 'index.html')
       .SetCaption('EdgeBrowser - Chainable Test')
       .SetUniqueIdentifier(BrowserTag)
       .SetWidth(2048)
@@ -468,11 +470,11 @@ begin
       begin
         MemoMessageReceiver.Lines.Add(TUtils.FormatJSONString(MessageText));
         ProcessarJSON(MessageText);
-      end) as TCustomFormEdgeBrowser).Show;
+      end) as TEdgeWebBrowser).Show;
   end
   else
   begin
-    (TCustomFormWVBrowser.Create('file:///' + ExtractFilePath(ParamStr(0)) + 'index.html')
+    (TWebViewBrowser.Create('file:///' + ExtractFilePath(ParamStr(0)) + 'index.html')
       .SetCaption('WVBrowser - Chainable Test')
       .SetUniqueIdentifier(BrowserTag)
       .SetWidth(2048)
@@ -494,14 +496,14 @@ end;
 procedure TFormPopup.BtnWVBrowserClassPropertiesTestClick(Sender: TObject);
 var
   BrowserTag: String;
-  EdgeBrowser: TCustomFormEdgeBrowser;
-  WVBrowser: TCustomFormWVBrowser;
+  EdgeBrowser: TEdgeWebBrowser;
+  WVBrowser: TWebViewBrowser;
 begin
   BrowserTag := GetUniqueID;
 
   if IsUsingEdgeBrowser then
   begin
-    EdgeBrowser := TCustomFormEdgeBrowser.Create;
+    EdgeBrowser := TEdgeWebBrowser.Create;
     EdgeBrowser.URL := 'file:///' + ExtractFilePath(ParamStr(0)) + 'index.html';
     EdgeBrowser.UniqueIdentifier := BrowserTag;
     EdgeBrowser.Caption := 'EdgeBrowser - Properties Test';
@@ -522,7 +524,7 @@ begin
   end
   else
   begin
-    WVBrowser := TCustomFormWVBrowser.Create;
+    WVBrowser := TWebViewBrowser.Create;
     WVBrowser.URL := 'file:///' + ExtractFilePath(ParamStr(0)) + 'index.html';
     WVBrowser.Caption := 'WVBrowser - Properties Test';
     WVBrowser.UniqueIdentifier := BrowserTag;
@@ -548,14 +550,14 @@ end;
 procedure TFormPopup.BtnWVBrowserInterfaceChainableTestClick(Sender: TObject);
 var
   BrowserTag: String;
-  EdgeBrowser: IEdgeBrowserForm;
+  EdgeBrowser: IEWBrowserForm;
   WVBrowser: IWVBrowserForm;
 begin
   BrowserTag := GetUniqueID;
 
   if IsUsingEdgeBrowser then
   begin
-      EdgeBrowser := TCustomFormEdgeBrowser.Create('file:///' + ExtractFilePath(ParamStr(0)) + 'index.html')
+      EdgeBrowser := TEdgeWebBrowser.Create('file:///' + ExtractFilePath(ParamStr(0)) + 'index.html')
       .SetCaption('EdgeBrowser - Interface Chainable')
       .SetUniqueIdentifier(BrowserTag)
       .SetWidth(2048)
@@ -573,7 +575,7 @@ begin
   end
   else
   begin
-      WVBrowser := TCustomFormWVBrowser.Create('file:///' + ExtractFilePath(ParamStr(0)) + 'index.html')
+      WVBrowser := TWebViewBrowser.Create('file:///' + ExtractFilePath(ParamStr(0)) + 'index.html')
       .SetCaption('WVBrowser - Interface Chainable')
       .SetUniqueIdentifier(BrowserTag)
       .SetWidth(2048)
@@ -596,14 +598,14 @@ end;
 procedure TFormPopup.BtnWVBrowserInterfacePropertiesTestClick(Sender: TObject);
 var
   BrowserTag: String;
-  EdgeBrowser: IEdgeBrowserForm;
+  EdgeBrowser: IEWBrowserForm;
   WVBrowser: IWVBrowserForm;
 begin
   BrowserTag := GetUniqueID;
 
   if IsUsingEdgeBrowser then
   begin
-    EdgeBrowser := TCustomFormEdgeBrowser.Create('file:///' + ExtractFilePath(ParamStr(0)) + 'index.html');
+    EdgeBrowser := TEdgeWebBrowser.Create('file:///' + ExtractFilePath(ParamStr(0)) + 'index.html');
     EdgeBrowser.Caption := 'EdgeBrowser - Interface Properties';
     EdgeBrowser.UniqueIdentifier := BrowserTag;
     EdgeBrowser.Width := 2048;
@@ -623,7 +625,7 @@ begin
   end
   else
   begin
-    WVBrowser := TCustomFormWVBrowser.Create('file:///' + ExtractFilePath(ParamStr(0)) + 'index.html');
+    WVBrowser := TWebViewBrowser.Create('file:///' + ExtractFilePath(ParamStr(0)) + 'index.html');
     WVBrowser.Caption := 'WVBrowser - Interface Properties';
     WVBrowser.UniqueIdentifier := BrowserTag;
     WVBrowser.Width := 2048;
@@ -663,7 +665,7 @@ end;
 
 procedure TFormPopup.BtnCreateMainBrowserClick(Sender: TObject);
 var
-  EdgeBrowser: TCustomFormEdgeBrowser;
+  EdgeBrowser: TEdgeWebBrowser;
   WVBrowser: IWVBrowserForm;
 begin
   try
@@ -675,7 +677,7 @@ begin
 
     if IsUsingEdgeBrowser then
     begin
-      EdgeBrowser := TCustomFormEdgeBrowser.Create('https://www.google.com')
+      EdgeBrowser := TEdgeWebBrowser.Create('https://www.google.com')
         .SetWidth(1000)
         .SetHeight(700)
         .SetCaption('EdgeBrowser Principal', TPositionCaption.Before)
@@ -693,7 +695,7 @@ begin
     end
     else
     begin
-      WVBrowser := TCustomFormWVBrowser.Create('https://www.google.com')
+      WVBrowser := TWebViewBrowser.Create('https://www.google.com')
         .SetWidth(1000)
         .SetHeight(700)
         .SetCaption('WVBrowser Principal', TPositionCaption.Before)
@@ -724,9 +726,9 @@ end;
 
 procedure TFormPopup.BtnCreatePopupClick(Sender: TObject);
 var
-  EdgePopup: TCustomFormEdgeBrowser;
+  EdgePopup: TEdgeWebBrowser;
   WVPopup: IWVBrowserForm;
-  MainEdge: TCustomFormEdgeBrowser;
+  MainEdge: TEdgeWebBrowser;
   MainWV: IWVBrowserForm;
 begin
   try
@@ -757,7 +759,7 @@ begin
     if IsUsingEdgeBrowser then
     begin
       MainEdge := GetMainEdgeBrowser;
-      EdgePopup := TCustomFormEdgeBrowser.CreateAsPopup(
+      EdgePopup := TEdgeWebBrowser.CreateAsPopup(
         MainEdge.Instance as TEdgeBrowser,
         'https://www.github.com'
       )
@@ -778,7 +780,7 @@ begin
     end
     else
     begin
-      WVPopup := TCustomFormWVBrowser.CreateAsPopup(
+      WVPopup := TWebViewBrowser.CreateAsPopup(
         MainWV.Instance as TWVBrowser,
         'https://www.github.com'
       )
@@ -811,7 +813,7 @@ end;
 procedure TFormPopup.BtnCreatePopupHtmlClick(Sender: TObject);
 var
   HTMLContent: string;
-  EdgeBrowser: IEdgeBrowserForm;
+  EdgeBrowser: IEWBrowserForm;
   WVBrowser: IWVBrowserForm;
 begin
   LogMessage('Criando browser com HTML customizado...');
@@ -853,7 +855,7 @@ begin
 
   if IsUsingEdgeBrowser then
   begin
-    EdgeBrowser := TCustomFormEdgeBrowser.Create
+    EdgeBrowser := TEdgeWebBrowser.Create
       .SetHTMLContent(HTMLContent)
       .SetWidth(800)
       .SetHeight(800)
@@ -867,7 +869,7 @@ begin
   end
   else
   begin
-    WVBrowser := TCustomFormWVBrowser.Create
+    WVBrowser := TWebViewBrowser.Create
       .SetHTMLContent(HTMLContent)
       .SetWidth(800)
       .SetHeight(800)
@@ -885,7 +887,7 @@ end;
 
 procedure TFormPopup.OnMainBrowserMessage(Sender: TObject; const Message: string);
 var
-  MainEdge: TCustomFormEdgeBrowser;
+  MainEdge: TEdgeWebBrowser;
   MainWV: IWVBrowserForm;
 begin
   LogMessage('Mensagem do Browser Principal: ' + Message);
@@ -906,7 +908,7 @@ end;
 
 procedure TFormPopup.OnPopupBrowserMessage(Sender: TObject; const Message: string);
 var
-  PopupEdge: TCustomFormEdgeBrowser;
+  PopupEdge: TEdgeWebBrowser;
   PopupWV: IWVBrowserForm;
 begin
   LogMessage('Mensagem do Popup: ' + Message);
@@ -956,20 +958,20 @@ end;
 procedure TFormPopup.BtnMessageSenderByChainableClick(Sender: TObject);
 var
   MessageSent: Boolean;
-  EdgeInstance: TCustomFormEdgeBrowser;
+  EdgeInstance: TEdgeWebBrowser;
   WVInstance: IWVBrowserForm;
 begin
   MessageSent := False;
 
   if IsUsingEdgeBrowser then
   begin
-    EdgeInstance := TCustomFormEdgeBrowser.FindInstance('EdgeID1');
+    EdgeInstance := TEdgeWebBrowser.FindInstance('EdgeID1');
     if not Assigned(EdgeInstance) then
-      EdgeInstance := TCustomFormEdgeBrowser.FindInstance('EdgeID2');
+      EdgeInstance := TEdgeWebBrowser.FindInstance('EdgeID2');
     if not Assigned(EdgeInstance) then
-      EdgeInstance := TCustomFormEdgeBrowser.FindInstance('EdgeID3');
+      EdgeInstance := TEdgeWebBrowser.FindInstance('EdgeID3');
     if not Assigned(EdgeInstance) then
-      EdgeInstance := TCustomFormEdgeBrowser.FindInstance('EdgeID4');
+      EdgeInstance := TEdgeWebBrowser.FindInstance('EdgeID4');
 
     if Assigned(EdgeInstance) then
     begin
@@ -980,13 +982,13 @@ begin
   end
   else
   begin
-    WVInstance := TCustomFormWVBrowser.FindInstance('WVID1');
+    WVInstance := TWebViewBrowser.FindInstance('WVID1');
     if not Assigned(WVInstance) then
-      WVInstance := TCustomFormWVBrowser.FindInstance('WVID2');
+      WVInstance := TWebViewBrowser.FindInstance('WVID2');
     if not Assigned(WVInstance) then
-      WVInstance := TCustomFormWVBrowser.FindInstance('WVID3');
+      WVInstance := TWebViewBrowser.FindInstance('WVID3');
     if not Assigned(WVInstance) then
-      WVInstance := TCustomFormWVBrowser.FindInstance('WVID4');
+      WVInstance := TWebViewBrowser.FindInstance('WVID4');
 
     if Assigned(WVInstance) then
     begin
@@ -1003,20 +1005,20 @@ end;
 procedure TFormPopup.BtnMessageSenderByPropertyClick(Sender: TObject);
 var
   MessageSent: Boolean;
-  EdgeInstance: TCustomFormEdgeBrowser;
+  EdgeInstance: TEdgeWebBrowser;
   WVInstance: IWVBrowserForm;
 begin
   MessageSent := False;
 
   if IsUsingEdgeBrowser then
   begin
-    EdgeInstance := TCustomFormEdgeBrowser.FindInstance('EdgeID1');
+    EdgeInstance := TEdgeWebBrowser.FindInstance('EdgeID1');
     if not Assigned(EdgeInstance) then
-      EdgeInstance := TCustomFormEdgeBrowser.FindInstance('EdgeID2');
+      EdgeInstance := TEdgeWebBrowser.FindInstance('EdgeID2');
     if not Assigned(EdgeInstance) then
-      EdgeInstance := TCustomFormEdgeBrowser.FindInstance('EdgeID3');
+      EdgeInstance := TEdgeWebBrowser.FindInstance('EdgeID3');
     if not Assigned(EdgeInstance) then
-      EdgeInstance := TCustomFormEdgeBrowser.FindInstance('EdgeID4');
+      EdgeInstance := TEdgeWebBrowser.FindInstance('EdgeID4');
 
     if Assigned(EdgeInstance) then
     begin
@@ -1027,13 +1029,13 @@ begin
   end
   else
   begin
-    WVInstance := TCustomFormWVBrowser.FindInstance('WVID1');
+    WVInstance := TWebViewBrowser.FindInstance('WVID1');
     if not Assigned(WVInstance) then
-      WVInstance := TCustomFormWVBrowser.FindInstance('WVID2');
+      WVInstance := TWebViewBrowser.FindInstance('WVID2');
     if not Assigned(WVInstance) then
-      WVInstance := TCustomFormWVBrowser.FindInstance('WVID3');
+      WVInstance := TWebViewBrowser.FindInstance('WVID3');
     if not Assigned(WVInstance) then
-      WVInstance := TCustomFormWVBrowser.FindInstance('WVID4');
+      WVInstance := TWebViewBrowser.FindInstance('WVID4');
 
     if Assigned(WVInstance) then
     begin

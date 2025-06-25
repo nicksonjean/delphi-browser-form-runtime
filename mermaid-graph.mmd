@@ -2,25 +2,77 @@ graph TD
 
   subgraph Source
     subgraph Context
-      A1[BrowserFormInterface.pas]
-      A2[WebBrowserFormClass.pas]
-      A3[WVBrowserFormClass.pas]
-    end
-
-    subgraph Generic
-      B1[BrowserGenericInterface.pas]
-      B2[BrowserTypes.pas]
+      A1[IBrowserFormBase.pas]
+      A2[BrowserTypes.pas]
+      A3[EdgeWebBrowserForm.pas]
+      A4[WebViewBrowserForm.pas]
+      
+      subgraph Edge
+        A5[Edge/Interfaces/IEdgeWebBrowserForm.pas]
+        A6[Edge/Interfaces/IEdgeWebBrowserFormBase.pas]
+        A7[Edge/Component/EdgeBrowserHelper.pas]
+        A8[Edge/Component/EdgeCookie.pas]
+        A9[Edge/Component/EdgeDeferral.pas]
+        A10[Edge/Component/EdgeNewWindowRequestedEventArgs.pas]
+        A11[Edge/Component/EdgeWindowFeatures.pas]
+      end
+      
+      subgraph WebView
+        A12[WebView/Interfaces/IWebViewBrowserForm.pas]
+        A13[WebView/Interfaces/IWebViewBrowserFormBase.pas]
+      end
     end
 
     subgraph Strategy
-      C1[BrowserClass.pas]
-      C2[BrowserInterface.pas]
+      B1[BrowserFactory.pas]
+    end
+
+    subgraph Generic
+      C1[TimerHelper.pas]
+      C2[UtilsLib.pas]
+    end
+    
+    subgraph Example
+      D1[EdgeWebAdvancedPopupExample.pas]
+      D2[WebViewAdvancedPopupExample.pas]
     end
   end
 
-  %% Relações entre as unidades (exemplo genérico)
-  C2 --> B1
-  C1 --> C2
-  A1 --> B1
-  A2 --> A1
+  %% Relações entre as unidades
   A3 --> A1
+  A4 --> A1
+  A3 --> A2
+  A4 --> A2
+  
+  %% Edge relationships
+  A3 --> A5
+  A3 --> A6
+  A3 --> A7
+  A3 --> A8
+  A3 --> A9
+  A3 --> A10
+  A3 --> A11
+  A5 --> A6
+  
+  %% WebView relationships
+  A4 --> A12
+  A4 --> A13
+  A12 --> A13
+  
+  %% Strategy relationships
+  B1 --> A1
+  B1 --> A2
+  B1 --> A3
+  B1 --> A4
+  
+  %% Generic relationships
+  A3 --> C1
+  A4 --> C1
+  A3 --> C2
+  A4 --> C2
+  
+  %% Example relationships
+  D1 --> A3
+  D2 --> A4
+  D1 --> B1
+  D2 --> B1

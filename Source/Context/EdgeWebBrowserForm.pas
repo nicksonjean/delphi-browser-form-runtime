@@ -1,4 +1,4 @@
-﻿unit EdgeBrowserFormClass;
+﻿unit EdgeWebBrowserForm;
 
 interface
 
@@ -17,7 +17,6 @@ uses
 
   WebView2,
   Vcl.Edge,
-
   EdgeDeferral,
   EdgeCookie,
   EdgeWindowFeatures,
@@ -27,7 +26,8 @@ uses
   TimerHelper,
   UtilsLib,
   BrowserTypes,
-  EdgeBrowserFormInterface;
+  IBrowserFormBase,
+  IEdgeWebBrowserForm;
 
 const
   DEBUG_MODE = false;
@@ -39,9 +39,9 @@ const
   DEFAULT_MAX_INSTANCES = 0;
 
 type
-  TCustomFormEdgeBrowser = class;
+  TEdgeWebBrowser = class;
 
-  TCustomEdgeForm = class(TForm)
+  TEdgeWebForm = class(TForm)
   strict private
     FInitialized: Boolean;
     FArgs: TEdgeNewWindowRequestedEventArgs;
@@ -51,7 +51,7 @@ type
     procedure WMMove(var aMessage: TWMMove); message WM_MOVE;
     procedure WMMoving(var aMessage: TMessage); message WM_MOVING;
   public
-    BrowserInstance: IEdgeBrowserForm;
+    BrowserInstance: IEWBrowserForm;
     procedure FormShow(Sender: TObject);
     procedure FormResize(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -62,9 +62,9 @@ type
     constructor CreateWithArgs(AOwner: TComponent; const aArgs: ICoreWebView2NewWindowRequestedEventArgs);
   end;
 
-  TCustomFormEdgeBrowser = class(TInterfacedObject, IEdgeBrowserForm)
+  TEdgeWebBrowser = class(TInterfacedObject, IEWBrowserForm, IBrowserForm)
   private
-    FForm: TCustomEdgeForm;
+    FForm: TEdgeWebForm;
     FBrowser: TEdgeBrowser;
     FMemoryLeakTimer: TTimer;
     FPendingCleanupArgs: TEdgeNewWindowRequestedEventArgs;
@@ -108,19 +108,19 @@ type
     class var FFinalizationStarted: Boolean;
 
     // Registry for MDI Instances
-    class var FMDIInstanceRegistry: TDictionary<string, TList<TCustomFormEdgeBrowser>>;
-    class function GetMDIInstanceRegistry: TDictionary<string, TList<TCustomFormEdgeBrowser>>;
-    class procedure RegisterMDIInstance(const AIdentifier: string; AInstance: TCustomFormEdgeBrowser);
-    class procedure UnregisterMDIInstance(const AIdentifier: string; AInstance: TCustomFormEdgeBrowser);
+    class var FMDIInstanceRegistry: TDictionary<string, TList<TEdgeWebBrowser>>;
+    class function GetMDIInstanceRegistry: TDictionary<string, TList<TEdgeWebBrowser>>;
+    class procedure RegisterMDIInstance(const AIdentifier: string; AInstance: TEdgeWebBrowser);
+    class procedure UnregisterMDIInstance(const AIdentifier: string; AInstance: TEdgeWebBrowser);
     class function GetMDIInstanceCount(const AIdentifier: string): Integer;
-    class function GetOldestMDIInstance(const AIdentifier: string): TCustomFormEdgeBrowser;
+    class function GetOldestMDIInstance(const AIdentifier: string): TEdgeWebBrowser;
     class function CanCreateMDIInstance(const AIdentifier: string; AMaxInstances: Integer; ASingleInstance: Boolean): Boolean;
     class procedure CleanupMDIRegistry;
 
     // Registry for Popup Instances
-    class var FPopupInstanceRegistry: TDictionary<string, TCustomFormEdgeBrowser>;
-    class function GetPopupInstanceRegistry: TDictionary<string, TCustomFormEdgeBrowser>;
-    class procedure RegisterPopupInstance(const AIdentifier: string; AInstance: TCustomFormEdgeBrowser);
+    class var FPopupInstanceRegistry: TDictionary<string, TEdgeWebBrowser>;
+    class function GetPopupInstanceRegistry: TDictionary<string, TEdgeWebBrowser>;
+    class procedure RegisterPopupInstance(const AIdentifier: string; AInstance: TEdgeWebBrowser);
     class procedure UnregisterPopupInstance(const AIdentifier: string);
     class procedure CleanupPopupRegistry;
 
@@ -176,7 +176,8 @@ type
     function GetAlphaProp: Boolean;
     function GetURLProp: String;
     function GetParentFormProp: TForm;
-    function GetParentBrowserProp: TEdgeBrowser;
+    function GetParentEdgeWebProp: TEdgeBrowser;
+    function GetParentBrowserProp: TComponent;
     function GetUniqueIdentifierProp: String;
     function GetMaxInstancesProp: Integer;
     function GetLegacyFormProp: Boolean;
@@ -202,7 +203,8 @@ type
     procedure SetAlphaProp(const Value: Boolean);
     procedure SetURLProp(const Value: String);
     procedure SetParentFormProp(const Value: TForm);
-    procedure SetParentBrowserProp(const Value: TEdgeBrowser);
+    procedure SetParentEdgeWebProp(const Value: TEdgeBrowser);
+    procedure SetParentBrowserProp(const Value: TComponent);
     procedure SetUniqueIdentifierProp(const Value: String);
     procedure SetMaxInstancesProp(const Value: Integer);
     procedure SetLegacyFormProp(const Value: Boolean);
@@ -221,94 +223,104 @@ type
     destructor Destroy; override;
 
     // Alias Static Constructors
-    class function NewBrowser(const AURL: string): TCustomFormEdgeBrowser;
-    class function NewPopup(const AURL: string; AParentBrowser: TEdgeBrowser = nil): TCustomFormEdgeBrowser;
-    class function NewMDI(const AURL: String; AParentForm: TForm = nil): TCustomFormEdgeBrowser;
+    class function NewBrowser(const AURL: string): TEdgeWebBrowser;
+    class function NewPopup(const AURL: string; AParentBrowser: TEdgeBrowser = nil): TEdgeWebBrowser;
+    class function NewMDI(const AURL: String; AParentForm: TForm = nil): TEdgeWebBrowser;
 
     // Static Method for Popup Forms
-    class function FindInstance(const AIdentifier: string): TCustomFormEdgeBrowser;
+    class function FindInstance(const AIdentifier: string): TEdgeWebBrowser;
 
     // Static Method for MDI Forms
-    class function FindMDIInstance(const AIdentifier: string): TCustomFormEdgeBrowser;
+    class function FindMDIInstance(const AIdentifier: string): TEdgeWebBrowser;
     class function CheckMDILimits(const AUniqueIdentifier: string; AMaxInstances: Integer = 1; ASingleInstance: Boolean = True): Boolean;
 
-    // Fluent Chainable Methods
-    function SetWidth(const AWidth: Integer): TCustomFormEdgeBrowser;
-    function SetHeight(const AHeight: Integer): TCustomFormEdgeBrowser;
-    function SetCaption(const ACaption: String; APosition: TPositionCaption = TPositionCaption.Between): TCustomFormEdgeBrowser;
-    function SetActionButtons(const AButton: TBorderIcons): TCustomFormEdgeBrowser;
-    function SetResizable(const AResize: Boolean): TCustomFormEdgeBrowser;
-    function SetMovable(const AMove: Boolean): TCustomFormEdgeBrowser;
-    function SetTitleBar(const ATitleBar: Boolean): TCustomFormEdgeBrowser;
-    function SetCookie(const ACookieName, ACookieValue, ACookieDomain: String; const ACookiePath: String = '/'): TCustomFormEdgeBrowser;
-    function SetAlpha(const AAlpha: Boolean): TCustomFormEdgeBrowser;
-    function SetURL(const AURL: String): TCustomFormEdgeBrowser;
-    function SetParentForm(const AParentForm: TForm): TCustomFormEdgeBrowser;
-    function SetParentBrowser(const AParentBrowser: TEdgeBrowser): TCustomFormEdgeBrowser;
-    function SetUniqueIdentifier(const AUniqueIdentifier: String): TCustomFormEdgeBrowser;
-    function SetMaxInstances(const AMaxInstances: Integer): TCustomFormEdgeBrowser;
-    function SetLegacyForm(const ALegacyForm: Boolean): TCustomFormEdgeBrowser;
-    function SetWindowOpened(const AEvent: TNotifyEvent): TCustomFormEdgeBrowser;
-    function SetWindowClosed(const AEvent: TNotifyEvent): TCustomFormEdgeBrowser;
-    function SetHTMLContent(const AHTMLContent: String): TCustomFormEdgeBrowser;
-    function SetMessageReceiver(const AMessage: TMessageReceiverCallback): TCustomFormEdgeBrowser;
-    function SetMessageSender(const AMessage: String): TCustomFormEdgeBrowser;
+    // Fluent Concrete Chainable Methods
+    function SetWidth(const AWidth: Integer): TEdgeWebBrowser;
+    function SetHeight(const AHeight: Integer): TEdgeWebBrowser;
+    function SetCaption(const ACaption: String; APosition: TPositionCaption = TPositionCaption.Between): TEdgeWebBrowser;
+    function SetActionButtons(const AButton: TBorderIcons): TEdgeWebBrowser;
+    function SetResizable(const AResize: Boolean): TEdgeWebBrowser;
+    function SetMovable(const AMove: Boolean): TEdgeWebBrowser;
+    function SetTitleBar(const ATitleBar: Boolean): TEdgeWebBrowser;
+    function SetCookie(const ACookieName, ACookieValue, ACookieDomain: String; const ACookiePath: String = '/'): TEdgeWebBrowser;
+    function SetAlpha(const AAlpha: Boolean): TEdgeWebBrowser;
+    function SetURL(const AURL: String): TEdgeWebBrowser;
+    function SetParentForm(const AParentForm: TForm): TEdgeWebBrowser;
+    function SetParentBrowser(const AParentBrowser: TEdgeBrowser): TEdgeWebBrowser;
+    function SetUniqueIdentifier(const AUniqueIdentifier: String): TEdgeWebBrowser;
+    function SetMaxInstances(const AMaxInstances: Integer): TEdgeWebBrowser;
+    function SetLegacyForm(const ALegacyForm: Boolean): TEdgeWebBrowser;
+    function SetWindowOpened(const AEvent: TNotifyEvent): TEdgeWebBrowser;
+    function SetWindowClosed(const AEvent: TNotifyEvent): TEdgeWebBrowser;
+    function SetHTMLContent(const AHTMLContent: String): TEdgeWebBrowser;
+    function SetMessageReceiver(const AMessage: TMessageReceiverCallback): TEdgeWebBrowser;
+    function SetMessageSender(const AMessage: String): TEdgeWebBrowser;
 
-    // Interface Methods
-    function IEdgeBrowserForm.SetWidth = ISetWidth;
-    function IEdgeBrowserForm.SetHeight = ISetHeight;
-    function IEdgeBrowserForm.SetCaption = ISetCaption;
-    function IEdgeBrowserForm.SetActionButtons = ISetActionButtons;
-    function IEdgeBrowserForm.SetResizable = ISetResizable;
-    function IEdgeBrowserForm.SetMovable = ISetMovable;
-    function IEdgeBrowserForm.SetTitleBar = ISetTitleBar;
-    function IEdgeBrowserForm.SetCookie = ISetCookie;
-    function IEdgeBrowserForm.SetAlpha = ISetAlpha;
-    function IEdgeBrowserForm.SetURL = ISetURL;
-    function IEdgeBrowserForm.SetParentForm = ISetParentForm;
-    function IEdgeBrowserForm.SetParentBrowser = ISetParentBrowser;
-    function IEdgeBrowserForm.SetUniqueIdentifier = ISetUniqueIdentifier;
-    function IEdgeBrowserForm.SetMaxInstances = ISetMaxInstances;
-    function IEdgeBrowserForm.SetLegacyForm = ISetLegacyForm;
-    function IEdgeBrowserForm.SetWindowOpened = ISetWindowOpened;
-    function IEdgeBrowserForm.SetWindowClosed = ISetWindowClosed;
-    function IEdgeBrowserForm.SetHTMLContent = ISetHTMLContent;
-    function IEdgeBrowserForm.SetMessageReceiver = ISetMessageReceiver;
-    function IEdgeBrowserForm.SetMessageSender = ISetMessageSender;
-    procedure IEdgeBrowserForm.Show = IShow;
-    procedure IEdgeBrowserForm.ShowModal = IShowModal;
-    procedure IEdgeBrowserForm.ShowAsModal = IShowAsModal;
-    procedure IEdgeBrowserForm.ShowAsMDICustom = IShowAsMDICustom;
-    procedure IEdgeBrowserForm.ShowAsMDISimple = IShowAsMDISimple;
-    procedure IEdgeBrowserForm.ShowAsMDIAdvanced = IShowAsMDIAdvanced;
+    // Generic Interface Methods
+    function ISetWidth(const AWidth: Integer): IBrowserForm;
+    function ISetHeight(const AHeight: Integer): IBrowserForm;
+    function ISetCaption(const ACaption: String; APosition: TPositionCaption = TPositionCaption.Between): IBrowserForm;
+    function ISetActionButtons(const AButtons: TBorderIcons): IBrowserForm;
+    function ISetResizable(const AResize: Boolean): IBrowserForm;
+    function ISetMovable(const AMove: Boolean): IBrowserForm;
+    function ISetTitleBar(const ATitleBar: Boolean): IBrowserForm;
+    function ISetCookie(const ACookieName, ACookieValue, ACookieDomain: String; const ACookiePath: String = '/'): IBrowserForm;
+    function ISetAlpha(const AAlpha: Boolean): IBrowserForm;
+    function ISetURL(const AURL: String): IBrowserForm;
+    function ISetParentForm(const AParentForm: TForm): IBrowserForm;
+    function ISetParentBrowser(const AParentBrowser: TComponent): IBrowserForm;
+    function ISetUniqueIdentifier(const AUniqueIdentifier: String): IBrowserForm;
+    function ISetMaxInstances(const AMaxInstances: Integer): IBrowserForm;
+    function ISetLegacyForm(const ALegacyForm: Boolean): IBrowserForm;
+    function ISetWindowOpened(const AEvent: TNotifyEvent): IBrowserForm;
+    function ISetWindowClosed(const AEvent: TNotifyEvent): IBrowserForm;
+    function ISetHTMLContent(const AHTMLContent: String): IBrowserForm;
+    function ISetMessageReceiver(const AMessage: TMessageReceiverCallback): IBrowserForm;
+    function ISetMessageSender(const AMessage: String): IBrowserForm;
 
-    // Interface Methods
-    function ISetWidth(const AWidth: Integer): IEdgeBrowserForm;
-    function ISetHeight(const AHeight: Integer): IEdgeBrowserForm;
-    function ISetCaption(const ACaption: String; APosition: TPositionCaption): IEdgeBrowserForm;
-    function ISetActionButtons(const AButtons: TBorderIcons): IEdgeBrowserForm;
-    function ISetResizable(const AResize: Boolean): IEdgeBrowserForm;
-    function ISetMovable(const AMove: Boolean): IEdgeBrowserForm;
-    function ISetTitleBar(const ATitleBar: Boolean): IEdgeBrowserForm;
-    function ISetCookie(const ACookieName, ACookieValue, ACookieDomain: String; const ACookiePath: String = '/'): IEdgeBrowserForm;
-    function ISetAlpha(const AAlpha: Boolean): IEdgeBrowserForm;
-    function ISetURL(const AURL: String): IEdgeBrowserForm;
-    function ISetParentForm(const AParentForm: TForm): IEdgeBrowserForm;
-    function ISetParentBrowser(const AParentBrowser: TEdgeBrowser): IEdgeBrowserForm;
-    function ISetUniqueIdentifier(const AUniqueIdentifier: String): IEdgeBrowserForm;
-    function ISetMaxInstances(const AMaxInstances: Integer): IEdgeBrowserForm;
-    function ISetLegacyForm(const ALegacyForm: Boolean): IEdgeBrowserForm;
-    function ISetWindowOpened(const AEvent: TNotifyEvent): IEdgeBrowserForm;
-    function ISetWindowClosed(const AEvent: TNotifyEvent): IEdgeBrowserForm;
-    function ISetHTMLContent(const AHTMLContent: String): IEdgeBrowserForm;
-    function ISetMessageReceiver(const AMessage: TMessageReceiverCallback): IEdgeBrowserForm;
-    function ISetMessageSender(const AMessage: String): IEdgeBrowserForm;
-    procedure IShow(const AType: TOpenType = TOpenType.Default);
-    procedure IShowModal(const AType: TOpenType = TOpenType.Modal);
-    procedure IShowAsModal(AParentForm: TForm = nil);
-    procedure IShowAsMDICustom(AutoShow: Boolean = True);
-    procedure IShowAsMDISimple(AutoShow: Boolean; SingleInstance: Boolean; MaximizeOnShow: Boolean = True); overload;
-    procedure IShowAsMDIAdvanced(AutoShow: Boolean = True; SingleInstance: Boolean = True; MaximizeOnShow: Boolean = True; BringToFrontIfExists: Boolean = True; const UniqueIdentifier: String = ''; MaxInstances: Integer = 1);
+    // EdgeWeb Interface Methods
+    function IEWSetWidth(const AWidth: Integer): IEWBrowserForm;
+    function IEWSetHeight(const AHeight: Integer): IEWBrowserForm;
+    function IEWSetCaption(const ACaption: String; APosition: TPositionCaption = TPositionCaption.Between): IEWBrowserForm;
+    function IEWSetActionButtons(const AButtons: TBorderIcons): IEWBrowserForm;
+    function IEWSetResizable(const AResize: Boolean): IEWBrowserForm;
+    function IEWSetMovable(const AMove: Boolean): IEWBrowserForm;
+    function IEWSetTitleBar(const ATitleBar: Boolean): IEWBrowserForm;
+    function IEWSetCookie(const ACookieName, ACookieValue, ACookieDomain: String; const ACookiePath: String = '/'): IEWBrowserForm;
+    function IEWSetAlpha(const AAlpha: Boolean): IEWBrowserForm;
+    function IEWSetURL(const AURL: String): IEWBrowserForm;
+    function IEWSetParentForm(const AParentForm: TForm): IEWBrowserForm;
+    function IEWSetParentBrowser(const AParentBrowser: TEdgeBrowser): IEWBrowserForm;
+    function IEWSetUniqueIdentifier(const AUniqueIdentifier: String): IEWBrowserForm;
+    function IEWSetMaxInstances(const AMaxInstances: Integer): IEWBrowserForm;
+    function IEWSetLegacyForm(const ALegacyForm: Boolean): IEWBrowserForm;
+    function IEWSetWindowOpened(const AEvent: TNotifyEvent): IEWBrowserForm;
+    function IEWSetWindowClosed(const AEvent: TNotifyEvent): IEWBrowserForm;
+    function IEWSetHTMLContent(const AHTMLContent: String): IEWBrowserForm;
+    function IEWSetMessageReceiver(const AMessage: TMessageReceiverCallback): IEWBrowserForm;
+    function IEWSetMessageSender(const AMessage: String): IEWBrowserForm;
+
+    // Method Resolution Interfaces
+    function IEWBrowserForm.SetWidth = IEWSetWidth;
+    function IEWBrowserForm.SetHeight = IEWSetHeight;
+    function IEWBrowserForm.SetCaption = IEWSetCaption;
+    function IEWBrowserForm.SetActionButtons = IEWSetActionButtons;
+    function IEWBrowserForm.SetResizable = IEWSetResizable;
+    function IEWBrowserForm.SetMovable = IEWSetMovable;
+    function IEWBrowserForm.SetTitleBar = IEWSetTitleBar;
+    function IEWBrowserForm.SetCookie = IEWSetCookie;
+    function IEWBrowserForm.SetAlpha = IEWSetAlpha;
+    function IEWBrowserForm.SetURL = IEWSetURL;
+    function IEWBrowserForm.SetParentForm = IEWSetParentForm;
+    function IEWBrowserForm.SetParentBrowser = IEWSetParentBrowser;
+    function IEWBrowserForm.SetUniqueIdentifier = IEWSetUniqueIdentifier;
+    function IEWBrowserForm.SetMaxInstances = IEWSetMaxInstances;
+    function IEWBrowserForm.SetLegacyForm = IEWSetLegacyForm;
+    function IEWBrowserForm.SetWindowOpened = IEWSetWindowOpened;
+    function IEWBrowserForm.SetWindowClosed = IEWSetWindowClosed;
+    function IEWBrowserForm.SetHTMLContent = IEWSetHTMLContent;
+    function IEWBrowserForm.SetMessageReceiver = IEWSetMessageReceiver;
+    function IEWBrowserForm.SetMessageSender = IEWSetMessageSender;
 
     // Final Methods
     procedure Show(const AType: TOpenType = TOpenType.Default);
@@ -339,7 +351,7 @@ type
     property Alpha: Boolean read GetAlphaProp write SetAlphaProp;
     property URL: String read GetURLProp write SetURLProp;
     property ParentForm: TForm read GetParentFormProp write SetParentFormProp;
-    property ParentBrowser: TEdgeBrowser read GetParentBrowserProp write SetParentBrowserProp;
+    property ParentEdgeWeb: TEdgeBrowser read GetParentEdgeWebProp write SetParentEdgeWebProp;
     property UniqueIdentifier: String read GetUniqueIdentifierProp write SetUniqueIdentifierProp;
     property MaxInstances: Integer read GetMaxInstancesProp write SetMaxInstancesProp;
     property OnMessageReceiver: TMessageReceiverCallback read ReadMessageReceiverProp write SetMessageReceiverProp;
@@ -352,9 +364,9 @@ type
 
 implementation
 
-{ TCustomEdgeForm }
+{ TEdgeWebForm }
 
-procedure TCustomFormEdgeBrowser.LoadEdgeSpecificDLL;
+procedure TEdgeWebBrowser.LoadEdgeSpecificDLL;
 var
   DLLPath: string;
   ErrorMsg: string;
@@ -374,10 +386,6 @@ begin
       ErrorMsg := SysErrorMessage(GetLastError);
       raise Exception.CreateFmt('Erro ao carregar DLL %s: %s', [DLLPath, ErrorMsg]);
     end;
-
-    if DEBUG_MODE then
-      ShowMessage(Format('EdgeBrowser DLL carregada: %s (Handle: %d)', [DLLPath, FEdgeDLLHandle]));
-
   except
     on E: Exception do
     begin
@@ -391,24 +399,24 @@ begin
   end;
 end;
 
-procedure TCustomFormEdgeBrowser.UnloadEdgeDLL;
+procedure TEdgeWebBrowser.UnloadEdgeDLL;
 begin
   if FEdgeDLLHandle <> 0 then
   begin
     try
-      if DEBUG_MODE then
-        ShowMessage(Format('Descarregando EdgeBrowser DLL (Handle: %d)', [FEdgeDLLHandle]));
-
       FreeLibrary(FEdgeDLLHandle);
     except
-
+      on E: Exception do
+      begin
+        raise Exception.CreateFmt('Falha ao carregar DLL específica para EdgeBrowser: %s', [E.Message]);
+      end;
     end;
     FEdgeDLLHandle := 0;
   end;
   FEdgeDLLPath := '';
 end;
 
-function TCustomFormEdgeBrowser.GetEdgeDLLPath: string;
+function TEdgeWebBrowser.GetEdgeDLLPath: string;
 var
   AppPath: string;
 begin
@@ -423,7 +431,7 @@ begin
     Result := AppPath + 'WebView2Loader.dll';
 end;
 
-procedure TCustomEdgeForm.CenterToScreenWithMonitor;
+procedure TEdgeWebForm.CenterToScreenWithMonitor;
 var
   Monitor: TMonitor;
 begin
@@ -436,12 +444,12 @@ begin
   );
 end;
 
-constructor TCustomEdgeForm.Create(AOwner: TComponent);
+constructor TEdgeWebForm.Create(AOwner: TComponent);
 begin
   inherited CreateNew(AOwner);
 end;
 
-constructor TCustomEdgeForm.CreateWithArgs(AOwner: TComponent; const aArgs: ICoreWebView2NewWindowRequestedEventArgs);
+constructor TEdgeWebForm.CreateWithArgs(AOwner: TComponent; const aArgs: ICoreWebView2NewWindowRequestedEventArgs);
 begin
   inherited CreateNew(AOwner);
 
@@ -452,86 +460,86 @@ begin
   end;
 end;
 
-procedure TCustomEdgeForm.FormClose(Sender: TObject; var Action: TCloseAction);
+procedure TEdgeWebForm.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   if Assigned(BrowserInstance) then
   begin
-    (BrowserInstance as TCustomFormEdgeBrowser).FIsClosing := True;
+    (BrowserInstance as TEdgeWebBrowser).FIsClosing := True;
 
-    if Assigned((BrowserInstance as TCustomFormEdgeBrowser).FTimer) then
+    if Assigned((BrowserInstance as TEdgeWebBrowser).FTimer) then
     begin
-      (BrowserInstance as TCustomFormEdgeBrowser).FTimer.Enabled := False;
-      (BrowserInstance as TCustomFormEdgeBrowser).FTimer.OnTimer := nil;
+      (BrowserInstance as TEdgeWebBrowser).FTimer.Enabled := False;
+      (BrowserInstance as TEdgeWebBrowser).FTimer.OnTimer := nil;
     end;
 
-    if Assigned((BrowserInstance as TCustomFormEdgeBrowser).FCheckTimer) then
+    if Assigned((BrowserInstance as TEdgeWebBrowser).FCheckTimer) then
     begin
-      (BrowserInstance as TCustomFormEdgeBrowser).FCheckTimer.Enabled := False;
-      (BrowserInstance as TCustomFormEdgeBrowser).FCheckTimer.OnTimer := nil;
+      (BrowserInstance as TEdgeWebBrowser).FCheckTimer.Enabled := False;
+      (BrowserInstance as TEdgeWebBrowser).FCheckTimer.OnTimer := nil;
     end;
 
-    if Assigned((BrowserInstance as TCustomFormEdgeBrowser).FCallbackList) then
+    if Assigned((BrowserInstance as TEdgeWebBrowser).FCallbackList) then
     begin
-      while (BrowserInstance as TCustomFormEdgeBrowser).FCallbackList.Count > 0 do
+      while (BrowserInstance as TEdgeWebBrowser).FCallbackList.Count > 0 do
       begin
-        if Assigned((BrowserInstance as TCustomFormEdgeBrowser).FCallbackList[0].Timer) then
+        if Assigned((BrowserInstance as TEdgeWebBrowser).FCallbackList[0].Timer) then
         begin
-          (BrowserInstance as TCustomFormEdgeBrowser).FCallbackList[0].Timer.Enabled := False;
-          (BrowserInstance as TCustomFormEdgeBrowser).FCallbackList[0].Timer.OnTimer := nil;
+          (BrowserInstance as TEdgeWebBrowser).FCallbackList[0].Timer.Enabled := False;
+          (BrowserInstance as TEdgeWebBrowser).FCallbackList[0].Timer.OnTimer := nil;
         end;
-        (BrowserInstance as TCustomFormEdgeBrowser).FCallbackList.Delete(0);
+        (BrowserInstance as TEdgeWebBrowser).FCallbackList.Delete(0);
       end;
     end;
 
-    if Assigned((BrowserInstance as TCustomFormEdgeBrowser).FBrowser) then
+    if Assigned((BrowserInstance as TEdgeWebBrowser).FBrowser) then
     begin
-      if Assigned((BrowserInstance as TCustomFormEdgeBrowser).FCookie) then
-        (BrowserInstance as TCustomFormEdgeBrowser).FCookie := nil;
+      if Assigned((BrowserInstance as TEdgeWebBrowser).FCookie) then
+        (BrowserInstance as TEdgeWebBrowser).FCookie := nil;
 
-      if (BrowserInstance as TCustomFormEdgeBrowser).FBrowserInitialized then
+      if (BrowserInstance as TEdgeWebBrowser).FBrowserInitialized then
       begin
-        (BrowserInstance as TCustomFormEdgeBrowser).FBrowser.OnAfterCreated := nil;
-        (BrowserInstance as TCustomFormEdgeBrowser).FBrowser.OnDocumentTitleChanged := nil;
-        (BrowserInstance as TCustomFormEdgeBrowser).FBrowser.OnInitializationError := nil;
-        (BrowserInstance as TCustomFormEdgeBrowser).FBrowser.OnNewWindowRequested := nil;
-        (BrowserInstance as TCustomFormEdgeBrowser).FBrowser.OnWindowCloseRequested := nil;
-        (BrowserInstance as TCustomFormEdgeBrowser).FBrowser.OnNavigationCompleted := nil;
-        (BrowserInstance as TCustomFormEdgeBrowser).FBrowser.OnWebMessageReceived := nil;
-        (BrowserInstance as TCustomFormEdgeBrowser).FBrowserInitialized := False;
+        (BrowserInstance as TEdgeWebBrowser).FBrowser.OnAfterCreated := nil;
+        (BrowserInstance as TEdgeWebBrowser).FBrowser.OnDocumentTitleChanged := nil;
+        (BrowserInstance as TEdgeWebBrowser).FBrowser.OnInitializationError := nil;
+        (BrowserInstance as TEdgeWebBrowser).FBrowser.OnNewWindowRequested := nil;
+        (BrowserInstance as TEdgeWebBrowser).FBrowser.OnWindowCloseRequested := nil;
+        (BrowserInstance as TEdgeWebBrowser).FBrowser.OnNavigationCompleted := nil;
+        (BrowserInstance as TEdgeWebBrowser).FBrowser.OnWebMessageReceived := nil;
+        (BrowserInstance as TEdgeWebBrowser).FBrowserInitialized := False;
       end;
     end;
 
-    if Assigned((BrowserInstance as TCustomFormEdgeBrowser).FOnWindowClosed) then
-      (BrowserInstance as TCustomFormEdgeBrowser).FOnWindowClosed(BrowserInstance as TCustomFormEdgeBrowser);
+    if Assigned((BrowserInstance as TEdgeWebBrowser).FOnWindowClosed) then
+      (BrowserInstance as TEdgeWebBrowser).FOnWindowClosed(BrowserInstance as TEdgeWebBrowser);
   end;
   Action := caFree;
 end;
 
-procedure TCustomEdgeForm.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+procedure TEdgeWebForm.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 begin
   CanClose := True;
   if Assigned(BrowserInstance) then
   begin
-    (BrowserInstance as TCustomFormEdgeBrowser).FIsClosing := True;
+    (BrowserInstance as TEdgeWebBrowser).FIsClosing := True;
 
-    if Assigned((BrowserInstance as TCustomFormEdgeBrowser).FTimer) then
-      (BrowserInstance as TCustomFormEdgeBrowser).FTimer.Enabled := False;
+    if Assigned((BrowserInstance as TEdgeWebBrowser).FTimer) then
+      (BrowserInstance as TEdgeWebBrowser).FTimer.Enabled := False;
 
-    if Assigned((BrowserInstance as TCustomFormEdgeBrowser).FCheckTimer) then
-      (BrowserInstance as TCustomFormEdgeBrowser).FCheckTimer.Enabled := False;
+    if Assigned((BrowserInstance as TEdgeWebBrowser).FCheckTimer) then
+      (BrowserInstance as TEdgeWebBrowser).FCheckTimer.Enabled := False;
 
-    if Assigned((BrowserInstance as TCustomFormEdgeBrowser).FBrowser) then
+    if Assigned((BrowserInstance as TEdgeWebBrowser).FBrowser) then
     begin
-      if (BrowserInstance as TCustomFormEdgeBrowser).FBrowserInitialized then
-        (BrowserInstance as TCustomFormEdgeBrowser).FBrowser.ExecuteScript('window.dispatchEvent(new Event("beforeunload"))');
+      if (BrowserInstance as TEdgeWebBrowser).FBrowserInitialized then
+        (BrowserInstance as TEdgeWebBrowser).FBrowser.ExecuteScript('window.dispatchEvent(new Event("beforeunload"))');
 
-      if Assigned((BrowserInstance as TCustomFormEdgeBrowser).FCookie) then
-        (BrowserInstance as TCustomFormEdgeBrowser).FCookie := nil;
+      if Assigned((BrowserInstance as TEdgeWebBrowser).FCookie) then
+        (BrowserInstance as TEdgeWebBrowser).FCookie := nil;
     end;
   end;
 end;
 
-procedure TCustomEdgeForm.FormDestroy(Sender: TObject);
+procedure TEdgeWebForm.FormDestroy(Sender: TObject);
 begin
   if Assigned(FArgs) then
   begin
@@ -556,13 +564,13 @@ begin
   BrowserInstance := nil;
 end;
 
-procedure TCustomEdgeForm.FormResize(Sender: TObject);
+procedure TEdgeWebForm.FormResize(Sender: TObject);
 begin
   if Assigned(BrowserInstance) then
-    (BrowserInstance as TCustomFormEdgeBrowser).ResizeBrowser;
+    (BrowserInstance as TEdgeWebBrowser).ResizeBrowser;
 end;
 
-procedure TCustomEdgeForm.FormShow(Sender: TObject);
+procedure TEdgeWebForm.FormShow(Sender: TObject);
 begin
   if not FInitialized then
   begin
@@ -570,17 +578,17 @@ begin
     FInitialized := True;
   end;
   if Assigned(BrowserInstance) then
-    (BrowserInstance as TCustomFormEdgeBrowser).TryCreateBrowser;
+    (BrowserInstance as TEdgeWebBrowser).TryCreateBrowser;
 end;
 
-procedure TCustomEdgeForm.WMMove(var aMessage: TWMMove);
+procedure TEdgeWebForm.WMMove(var aMessage: TWMMove);
 begin
   inherited;
 end;
 
-procedure TCustomEdgeForm.WMMoving(var aMessage: TMessage);
+procedure TEdgeWebForm.WMMoving(var aMessage: TMessage);
 begin
-  if Assigned(BrowserInstance) and not (BrowserInstance as TCustomFormEdgeBrowser).FMovable then
+  if Assigned(BrowserInstance) and not (BrowserInstance as TEdgeWebBrowser).FMovable then
   begin
     CenterToScreenWithMonitor;
     aMessage.Result := 1;
@@ -589,16 +597,16 @@ begin
   inherited;
 end;
 
-procedure TCustomEdgeForm.WMSize(var aMessage: TMessage);
+procedure TEdgeWebForm.WMSize(var aMessage: TMessage);
 begin
   inherited;
   if Assigned(BrowserInstance) then
-    (BrowserInstance as TCustomFormEdgeBrowser).ResizeBrowser;
+    (BrowserInstance as TEdgeWebBrowser).ResizeBrowser;
 end;
 
-procedure TCustomEdgeForm.WMWindowPosChanging(var aMessage: TWMWindowPosChanging);
+procedure TEdgeWebForm.WMWindowPosChanging(var aMessage: TWMWindowPosChanging);
 begin
-  if Assigned(BrowserInstance) and not (BrowserInstance as TCustomFormEdgeBrowser).FMovable then
+  if Assigned(BrowserInstance) and not (BrowserInstance as TEdgeWebBrowser).FMovable then
   begin
     Self.CenterToScreenWithMonitor;
     aMessage.WindowPos^.flags := aMessage.WindowPos^.flags or SWP_NOMOVE;
@@ -606,411 +614,274 @@ begin
   inherited;
 end;
 
-{ TCustomFormEdgeBrowser }
-
-// Interface Methods
-
-function TCustomFormEdgeBrowser.ISetWidth(const AWidth: Integer): IEdgeBrowserForm;
-begin
-  SetWidth(AWidth);
-  Result := Self;
-end;
-
-function TCustomFormEdgeBrowser.ISetHeight(const AHeight: Integer): IEdgeBrowserForm;
-begin
-  SetHeight(AHeight);
-  Result := Self;
-end;
-
-function TCustomFormEdgeBrowser.ISetCaption(const ACaption: string; APosition: TPositionCaption): IEdgeBrowserForm;
-begin
-  SetCaption(ACaption, APosition);
-  Result := Self;
-end;
-
-function TCustomFormEdgeBrowser.ISetActionButtons(const AButtons: TBorderIcons): IEdgeBrowserForm;
-begin
-  SetActionButtons(AButtons);
-  Result := Self;
-end;
-
-function TCustomFormEdgeBrowser.ISetResizable(const AResize: Boolean): IEdgeBrowserForm;
-begin
-  SetResizable(AResize);
-  Result := Self;
-end;
-
-function TCustomFormEdgeBrowser.ISetMovable(const AMove: Boolean): IEdgeBrowserForm;
-begin
-  SetMovable(AMove);
-  Result := Self;
-end;
-
-function TCustomFormEdgeBrowser.ISetTitleBar(const ATitleBar: Boolean): IEdgeBrowserForm;
-begin
-  SetTitleBar(ATitleBar);
-  Result := Self;
-end;
-
-function TCustomFormEdgeBrowser.ISetAlpha(const AAlpha: Boolean): IEdgeBrowserForm;
-begin
-  SetAlpha(AAlpha);
-  Result := Self;
-end;
-
-function TCustomFormEdgeBrowser.ISetURL(const AURL: String): IEdgeBrowserForm;
-begin
-  SetURL(AURL);
-  Result := Self;
-end;
-
-function TCustomFormEdgeBrowser.ISetParentForm(const AParentForm: TForm): IEdgeBrowserForm;
-begin
-  SetParentForm(AParentForm);
-  Result := Self;
-end;
-
-function TCustomFormEdgeBrowser.ISetParentBrowser(const AParentBrowser: TEdgeBrowser): IEdgeBrowserForm;
-begin
-  SetParentBrowser(AParentBrowser);
-  Result := Self;
-end;
-
-function TCustomFormEdgeBrowser.ISetUniqueIdentifier(const AUniqueIdentifier: String): IEdgeBrowserForm;
-begin
-  SetUniqueIdentifier(AUniqueIdentifier);
-  Result := Self;
-end;
-
-function TCustomFormEdgeBrowser.ISetMaxInstances(const AMaxInstances: Integer): IEdgeBrowserForm;
-begin
-  SetMaxInstances(AMaxInstances);
-  Result := Self;
-end;
-
-function TCustomFormEdgeBrowser.ISetLegacyForm(const ALegacyForm: Boolean): IEdgeBrowserForm;
-begin
-  SetLegacyForm(ALegacyForm);
-  Result := Self;
-end;
-
-function TCustomFormEdgeBrowser.ISetWindowOpened(const AEvent: TNotifyEvent): IEdgeBrowserForm;
-begin
-  SetWindowOpened(AEvent);
-  Result := Self;
-end;
-
-function TCustomFormEdgeBrowser.ISetWindowClosed(const AEvent: TNotifyEvent): IEdgeBrowserForm;
-begin
-  SetWindowClosed(AEvent);
-  Result := Self;
-end;
-
-function TCustomFormEdgeBrowser.ISetHTMLContent(const AHTMLContent: String): IEdgeBrowserForm;
-begin
-  SetHTMLContent(AHTMLContent);
-  Result := Self;
-end;
-
-function TCustomFormEdgeBrowser.ISetCookie(const ACookieName: string; const ACookieValue: string; const ACookieDomain: string; const ACookiePath: string = '/'): IEdgeBrowserForm;
-begin
-  SetCookie(ACookieName, ACookieValue, ACookieDomain, ACookiePath);
-  Result := Self;
-end;
-
-function TCustomFormEdgeBrowser.ISetMessageReceiver(const AMessage: TMessageReceiverCallback): IEdgeBrowserForm;
-begin
-  SetMessageReceiver(AMessage);
-  Result := Self;
-end;
-
-function TCustomFormEdgeBrowser.ISetMessageSender(const AMessage: String): IEdgeBrowserForm;
-begin
-  SetMessageSender(AMessage);
-  Result := Self;
-end;
-
-procedure TCustomFormEdgeBrowser.IShowAsMDICustom(AutoShow: Boolean = True);
-begin
-  ShowAsMDICustom(AutoShow);
-end;
-
-procedure TCustomFormEdgeBrowser.IShowAsMDISimple(AutoShow: Boolean; SingleInstance: Boolean; MaximizeOnShow: Boolean = True);
-begin
-  ShowAsMDISimple(AutoShow, SingleInstance, MaximizeOnShow);
-end;
-
-procedure TCustomFormEdgeBrowser.IShowAsMDIAdvanced(AutoShow: Boolean = True; SingleInstance: Boolean = True; MaximizeOnShow: Boolean = True; BringToFrontIfExists: Boolean = True; const UniqueIdentifier: String = ''; MaxInstances: Integer = 1);
-begin
-  ShowAsMDIAdvanced(AutoShow, SingleInstance, MaximizeOnShow, BringToFrontIfExists, UniqueIdentifier, MaxInstances);
-end;
-
-procedure TCustomFormEdgeBrowser.IShow(const AType: TOpenType);
-begin
-  Show(AType);
-end;
-
-procedure TCustomFormEdgeBrowser.IShowAsModal(AParentForm: TForm);
-begin
-  ShowAsModal(AParentForm);
-end;
-
-procedure TCustomFormEdgeBrowser.IShowModal(const AType: TOpenType);
-begin
-  ShowModal(AType);
-end;
+{ TEdgeWebBrowser }
 
 // Getters
 
-function TCustomFormEdgeBrowser.GetWidthProp: Integer;
+function TEdgeWebBrowser.GetWidthProp: Integer;
 begin
   Result := FWidth;
 end;
 
-function TCustomFormEdgeBrowser.GetHeightProp: Integer;
+function TEdgeWebBrowser.GetHeightProp: Integer;
 begin
   Result := FHeight;
 end;
 
-function TCustomFormEdgeBrowser.GetCaptionProp: string;
+function TEdgeWebBrowser.GetCaptionProp: string;
 begin
   Result := FCaption;
 end;
 
-function TCustomFormEdgeBrowser.GetCaptionPositionProp: TPositionCaption;
+function TEdgeWebBrowser.GetCaptionPositionProp: TPositionCaption;
 begin
   Result := FCaptionPosition;
 end;
 
-function TCustomFormEdgeBrowser.GetActionButtonsProp: TBorderIcons;
+function TEdgeWebBrowser.GetActionButtonsProp: TBorderIcons;
 begin
   Result := FForm.BorderIcons;
 end;
 
-function TCustomFormEdgeBrowser.GetResizableProp: Boolean;
+function TEdgeWebBrowser.GetResizableProp: Boolean;
 begin
   Result := FForm.BorderStyle = TFormBorderStyle.bsSizeable;
 end;
 
-function TCustomFormEdgeBrowser.GetMovableProp: Boolean;
+function TEdgeWebBrowser.GetMovableProp: Boolean;
 begin
   Result := FMovable;
 end;
 
-function TCustomFormEdgeBrowser.GetPopupProp: Boolean;
+function TEdgeWebBrowser.GetPopupProp: Boolean;
 begin
   Result:= FIsPopup;
 end;
 
-function TCustomFormEdgeBrowser.GetTitleBarProp: Boolean;
+function TEdgeWebBrowser.GetTitleBarProp: Boolean;
 begin
   Result := FForm.BorderStyle <> TFormBorderStyle.bsNone;
 end;
 
-function TCustomFormEdgeBrowser.GetInstanceProp: TComponent;
+function TEdgeWebBrowser.GetInstanceProp: TComponent;
 begin
   Result := FBrowser;
 end;
 
-function TCustomFormEdgeBrowser.GetCookieNameProp: String;
+function TEdgeWebBrowser.GetCookieNameProp: String;
 begin
   Result := FCookieName;
 end;
 
-function TCustomFormEdgeBrowser.GetCookieValueProp: String;
+function TEdgeWebBrowser.GetCookieValueProp: String;
 begin
   Result := FCookieValue;
 end;
 
-function TCustomFormEdgeBrowser.GetCookieDomainProp: String;
+function TEdgeWebBrowser.GetCookieDomainProp: String;
 begin
   Result := FCookieDomain;
 end;
 
-function TCustomFormEdgeBrowser.GetCookiePathProp: String;
+function TEdgeWebBrowser.GetCookiePathProp: String;
 begin
   Result := FCookiePath;
 end;
 
-function TCustomFormEdgeBrowser.GetAlphaProp: Boolean;
+function TEdgeWebBrowser.GetAlphaProp: Boolean;
 begin
   Result := FAlpha;
 end;
 
-function TCustomFormEdgeBrowser.GetURLProp: String;
+function TEdgeWebBrowser.GetURLProp: String;
 begin
   Result := FURL;
 end;
 
-function TCustomFormEdgeBrowser.GetParentFormProp: TForm;
+function TEdgeWebBrowser.GetParentFormProp: TForm;
 begin
   Result := FParentForm;
 end;
 
-function TCustomFormEdgeBrowser.GetParentBrowserProp: TEdgeBrowser;
+function TEdgeWebBrowser.GetParentEdgeWebProp: TEdgeBrowser;
 begin
   Result := FParentBrowser;
 end;
 
-function TCustomFormEdgeBrowser.GetUniqueIdentifierProp: String;
+function TEdgeWebBrowser.GetParentBrowserProp: TComponent;
+begin
+  Result := FParentBrowser as TComponent;
+end;
+
+function TEdgeWebBrowser.GetUniqueIdentifierProp: String;
 begin
   Result := FUniqueIdentifier;
 end;
 
-function TCustomFormEdgeBrowser.GetMaxInstancesProp: Integer;
+function TEdgeWebBrowser.GetMaxInstancesProp: Integer;
 begin
   Result := FMaxInstances;
 end;
 
-function TCustomFormEdgeBrowser.GetLegacyFormProp: Boolean;
+function TEdgeWebBrowser.GetLegacyFormProp: Boolean;
 begin
   Result := FLegacyForm;
 end;
 
-function TCustomFormEdgeBrowser.GetWindowOpenedProp: TNotifyEvent;
+function TEdgeWebBrowser.GetWindowOpenedProp: TNotifyEvent;
 begin
   Result := FOnWindowOpened;
 end;
 
-function TCustomFormEdgeBrowser.GetWindowClosedProp: TNotifyEvent;
+function TEdgeWebBrowser.GetWindowClosedProp: TNotifyEvent;
 begin
   Result := FOnWindowClosed;
 end;
 
-function TCustomFormEdgeBrowser.ReadMessageReceiverProp: TMessageReceiverCallback;
+function TEdgeWebBrowser.ReadMessageReceiverProp: TMessageReceiverCallback;
 begin
   Result := FMessageReceiver;
 end;
 
-function TCustomFormEdgeBrowser.ReadMessageSenderProp: string;
+function TEdgeWebBrowser.ReadMessageSenderProp: string;
 begin
   Result := FMessageSender;
 end;
 
 // Setters
 
-procedure TCustomFormEdgeBrowser.SetWidthProp(const Value: Integer);
+procedure TEdgeWebBrowser.SetWidthProp(const Value: Integer);
 begin
   SetWidth(Value);
 end;
 
-procedure TCustomFormEdgeBrowser.SetHeightProp(const Value: Integer);
+procedure TEdgeWebBrowser.SetHeightProp(const Value: Integer);
 begin
   SetHeight(Value);
 end;
 
-procedure TCustomFormEdgeBrowser.SetCaptionProp(const Value: string);
+procedure TEdgeWebBrowser.SetCaptionProp(const Value: string);
 begin
   SetCaption(Value, FCaptionPosition);
 end;
 
-procedure TCustomFormEdgeBrowser.SetCaptionPositionProp(const Value: TPositionCaption);
+procedure TEdgeWebBrowser.SetCaptionPositionProp(const Value: TPositionCaption);
 begin
   FCaptionPosition := Value;
   SetCaption(FCaption, Value);
 end;
 
-procedure TCustomFormEdgeBrowser.SetActionButtonsProp(const Value: TBorderIcons);
+procedure TEdgeWebBrowser.SetActionButtonsProp(const Value: TBorderIcons);
 begin
   SetActionButtons(Value);
 end;
 
-procedure TCustomFormEdgeBrowser.SetResizableProp(const Value: Boolean);
+procedure TEdgeWebBrowser.SetResizableProp(const Value: Boolean);
 begin
   SetResizable(Value);
 end;
 
-procedure TCustomFormEdgeBrowser.SetMovableProp(const Value: Boolean);
+procedure TEdgeWebBrowser.SetMovableProp(const Value: Boolean);
 begin
   SetMovable(Value);
 end;
 
-procedure TCustomFormEdgeBrowser.SetTitleBarProp(const Value: Boolean);
+procedure TEdgeWebBrowser.SetTitleBarProp(const Value: Boolean);
 begin
   SetTitleBar(Value);
 end;
 
-procedure TCustomFormEdgeBrowser.SetCookieNameProp(const Value: String);
+procedure TEdgeWebBrowser.SetCookieNameProp(const Value: String);
 begin
   SetCookie(Value, FCookieValue, FCookieDomain, FCookiePath);
 end;
 
-procedure TCustomFormEdgeBrowser.SetCookieValueProp(const Value: String);
+procedure TEdgeWebBrowser.SetCookieValueProp(const Value: String);
 begin
   FCookieValue := Value;
   SetCookie(FCookieName, Value, FCookieDomain, FCookiePath);
 end;
 
-procedure TCustomFormEdgeBrowser.SetCookieDomainProp(const Value: String);
+procedure TEdgeWebBrowser.SetCookieDomainProp(const Value: String);
 begin
   FCookieDomain := Value;
   SetCookie(FCookieName, FCookieValue, Value, FCookiePath);
 end;
 
-procedure TCustomFormEdgeBrowser.SetCookiePathProp(const Value: String);
+procedure TEdgeWebBrowser.SetCookiePathProp(const Value: String);
 begin
   FCookiePath := Value;
   SetCookie(FCookieName, FCookieValue, FCookieDomain, Value);
 end;
 
-procedure TCustomFormEdgeBrowser.SetAlphaProp(const Value: Boolean);
+procedure TEdgeWebBrowser.SetAlphaProp(const Value: Boolean);
 begin
   SetAlpha(Value);
 end;
 
-procedure TCustomFormEdgeBrowser.SetURLProp(const Value: String);
+procedure TEdgeWebBrowser.SetURLProp(const Value: String);
 begin
   SetURL(Value);
 end;
 
-procedure TCustomFormEdgeBrowser.SetParentFormProp(const Value: TForm);
+procedure TEdgeWebBrowser.SetParentFormProp(const Value: TForm);
 begin
   SetParentForm(Value);
 end;
 
-procedure TCustomFormEdgeBrowser.SetParentBrowserProp(const Value: TEdgeBrowser);
+procedure TEdgeWebBrowser.SetParentEdgeWebProp(const Value: TEdgeBrowser);
 begin
   SetParentBrowser(Value);
 end;
 
-procedure TCustomFormEdgeBrowser.SetUniqueIdentifierProp(const Value: String);
+procedure TEdgeWebBrowser.SetParentBrowserProp(const Value: TComponent);
+begin
+  if Value is TEdgeBrowser then
+    SetParentEdgeWebProp(TEdgeBrowser(Value))
+  else if Assigned(Value) then
+    raise Exception.Create('ParentBrowser must be TEdgeBrowser for WebView2')
+  else
+    SetParentBrowserProp(nil);
+end;
+
+procedure TEdgeWebBrowser.SetUniqueIdentifierProp(const Value: String);
 begin
   SetUniqueIdentifier(Value);
 end;
 
-procedure TCustomFormEdgeBrowser.SetMaxInstancesProp(const Value: Integer);
+procedure TEdgeWebBrowser.SetMaxInstancesProp(const Value: Integer);
 begin
   SetMaxInstances(Value);
 end;
 
-procedure TCustomFormEdgeBrowser.SetLegacyFormProp(const Value: Boolean);
+procedure TEdgeWebBrowser.SetLegacyFormProp(const Value: Boolean);
 begin
   SetLegacyForm(Value);
 end;
 
-procedure TCustomFormEdgeBrowser.SetWindowOpenedProp(const Value: TNotifyEvent);
+procedure TEdgeWebBrowser.SetWindowOpenedProp(const Value: TNotifyEvent);
 begin
   SetWindowOpened(Value);
 end;
 
-procedure TCustomFormEdgeBrowser.SetWindowClosedProp(const Value: TNotifyEvent);
+procedure TEdgeWebBrowser.SetWindowClosedProp(const Value: TNotifyEvent);
 begin
   SetWindowClosed(Value);
 end;
 
-procedure TCustomFormEdgeBrowser.SetMessageReceiverProp(const Value: TMessageReceiverCallback);
+procedure TEdgeWebBrowser.SetMessageReceiverProp(const Value: TMessageReceiverCallback);
 begin
   SetMessageReceiver(Value);
 end;
 
-procedure TCustomFormEdgeBrowser.SetMessageSenderProp(const Value: string);
+procedure TEdgeWebBrowser.SetMessageSenderProp(const Value: string);
 begin
   SetMessageSender(Value);
 end;
 
-// Chainable Methods
+// Chainable Methods - TEdgeWebBrowser
 
-function TCustomFormEdgeBrowser.SetWidth(const AWidth: Integer): TCustomFormEdgeBrowser;
+function TEdgeWebBrowser.SetWidth(const AWidth: Integer): TEdgeWebBrowser;
 begin
   FWidth := AWidth;
   if Assigned(FForm) then
@@ -1021,7 +892,7 @@ begin
   Result := Self;
 end;
 
-function TCustomFormEdgeBrowser.SetHeight(const AHeight: Integer): TCustomFormEdgeBrowser;
+function TEdgeWebBrowser.SetHeight(const AHeight: Integer): TEdgeWebBrowser;
 begin
   FHeight := AHeight;
   if Assigned(FForm) then
@@ -1032,7 +903,7 @@ begin
   Result := Self;
 end;
 
-function TCustomFormEdgeBrowser.SetCaption(const ACaption: String; APosition: TPositionCaption): TCustomFormEdgeBrowser;
+function TEdgeWebBrowser.SetCaption(const ACaption: String; APosition: TPositionCaption): TEdgeWebBrowser;
 begin
   FCaption := ACaption;
   FCaptionPosition := APosition;
@@ -1041,13 +912,13 @@ begin
   Result := Self;
 end;
 
-function TCustomFormEdgeBrowser.SetActionButtons(const AButton: TBorderIcons): TCustomFormEdgeBrowser;
+function TEdgeWebBrowser.SetActionButtons(const AButton: TBorderIcons): TEdgeWebBrowser;
 begin
   FForm.BorderIcons := FForm.BorderIcons - AButton;
   Result := Self;
 end;
 
-function TCustomFormEdgeBrowser.SetResizable(const AResize: Boolean): TCustomFormEdgeBrowser;
+function TEdgeWebBrowser.SetResizable(const AResize: Boolean): TEdgeWebBrowser;
 begin
   if AResize then
   begin
@@ -1066,7 +937,7 @@ begin
   Result := Self;
 end;
 
-function TCustomFormEdgeBrowser.SetMovable(const AMove: Boolean): TCustomFormEdgeBrowser;
+function TEdgeWebBrowser.SetMovable(const AMove: Boolean): TEdgeWebBrowser;
 begin
   FMovable := AMove;
   if Assigned(FForm) and not AMove then
@@ -1074,7 +945,7 @@ begin
   Result := Self;
 end;
 
-function TCustomFormEdgeBrowser.SetTitleBar(const ATitleBar: Boolean): TCustomFormEdgeBrowser;
+function TEdgeWebBrowser.SetTitleBar(const ATitleBar: Boolean): TEdgeWebBrowser;
 begin
   if not ATitleBar then
   begin
@@ -1087,7 +958,7 @@ begin
   Result := Self;
 end;
 
-function TCustomFormEdgeBrowser.SetCookie(const ACookieName, ACookieValue, ACookieDomain: String; const ACookiePath: String = '/'): TCustomFormEdgeBrowser;
+function TEdgeWebBrowser.SetCookie(const ACookieName, ACookieValue, ACookieDomain: String; const ACookiePath: String = '/'): TEdgeWebBrowser;
 begin
   FCookieName := ACookieName;
   FCookieValue := ACookieValue;
@@ -1107,7 +978,7 @@ begin
   Result := Self;
 end;
 
-function TCustomFormEdgeBrowser.SetAlpha(const AAlpha: Boolean): TCustomFormEdgeBrowser;
+function TEdgeWebBrowser.SetAlpha(const AAlpha: Boolean): TEdgeWebBrowser;
 begin
   FAlpha := AAlpha;
   if Assigned(FForm) and not AAlpha then
@@ -1123,7 +994,7 @@ begin
   Result := Self;
 end;
 
-function TCustomFormEdgeBrowser.SetURL(const AURL: String): TCustomFormEdgeBrowser;
+function TEdgeWebBrowser.SetURL(const AURL: String): TEdgeWebBrowser;
 begin
   FURL := AURL;
   if not FComponentsCreated and (AURL <> EmptyStr) then
@@ -1160,7 +1031,7 @@ begin
   Result := Self;
 end;
 
-function TCustomFormEdgeBrowser.SetParentForm(const AParentForm: TForm): TCustomFormEdgeBrowser;
+function TEdgeWebBrowser.SetParentForm(const AParentForm: TForm): TEdgeWebBrowser;
 begin
   FParentForm := AParentForm;
 
@@ -1178,7 +1049,7 @@ begin
   Result := Self;
 end;
 
-function TCustomFormEdgeBrowser.SetParentBrowser(const AParentBrowser: TEdgeBrowser): TCustomFormEdgeBrowser;
+function TEdgeWebBrowser.SetParentBrowser(const AParentBrowser: TEdgeBrowser): TEdgeWebBrowser;
 begin
   FParentBrowser := AParentBrowser;
 
@@ -1192,7 +1063,7 @@ begin
   Result := Self;
 end;
 
-function TCustomFormEdgeBrowser.SetUniqueIdentifier(const AUniqueIdentifier: String): TCustomFormEdgeBrowser;
+function TEdgeWebBrowser.SetUniqueIdentifier(const AUniqueIdentifier: String): TEdgeWebBrowser;
 begin
   if FUniqueIdentifier <> EmptyStr then
     UnregisterPopupInstance(FUniqueIdentifier);
@@ -1205,31 +1076,31 @@ begin
   Result := Self;
 end;
 
-function TCustomFormEdgeBrowser.SetMaxInstances(const AMaxInstances: Integer): TCustomFormEdgeBrowser;
+function TEdgeWebBrowser.SetMaxInstances(const AMaxInstances: Integer): TEdgeWebBrowser;
 begin
   FMaxInstances := AMaxInstances;
   Result := Self;
 end;
 
-function TCustomFormEdgeBrowser.SetLegacyForm(const ALegacyForm: Boolean): TCustomFormEdgeBrowser;
+function TEdgeWebBrowser.SetLegacyForm(const ALegacyForm: Boolean): TEdgeWebBrowser;
 begin
   FLegacyForm := ALegacyForm;
   Result := Self;
 end;
 
-function TCustomFormEdgeBrowser.SetWindowOpened(const AEvent: TNotifyEvent): TCustomFormEdgeBrowser;
+function TEdgeWebBrowser.SetWindowOpened(const AEvent: TNotifyEvent): TEdgeWebBrowser;
 begin
   FOnWindowOpened := AEvent;
   Result := Self;
 end;
 
-function TCustomFormEdgeBrowser.SetWindowClosed(const AEvent: TNotifyEvent): TCustomFormEdgeBrowser;
+function TEdgeWebBrowser.SetWindowClosed(const AEvent: TNotifyEvent): TEdgeWebBrowser;
 begin
   FOnWindowClosed := AEvent;
   Result := Self;
 end;
 
-function TCustomFormEdgeBrowser.SetHTMLContent(const AHTMLContent: String): TCustomFormEdgeBrowser;
+function TEdgeWebBrowser.SetHTMLContent(const AHTMLContent: String): TEdgeWebBrowser;
 begin
   if not FComponentsCreated then
   begin
@@ -1268,13 +1139,13 @@ begin
   Result := Self;
 end;
 
-function TCustomFormEdgeBrowser.SetMessageReceiver(const AMessage: TMessageReceiverCallback): TCustomFormEdgeBrowser;
+function TEdgeWebBrowser.SetMessageReceiver(const AMessage: TMessageReceiverCallback): TEdgeWebBrowser;
 begin
   FMessageReceiver := AMessage;
   Result := Self;
 end;
 
-function TCustomFormEdgeBrowser.SetMessageSender(const AMessage: String): TCustomFormEdgeBrowser;
+function TEdgeWebBrowser.SetMessageSender(const AMessage: String): TEdgeWebBrowser;
 var
   CoreWebView: ICoreWebView2;
   WideMessage: PWideChar;
@@ -1293,9 +1164,258 @@ begin
   Result := Self;
 end;
 
+// Interface Methods - IEWBrowserForm
+
+function TEdgeWebBrowser.IEWSetWidth(const AWidth: Integer): IEWBrowserForm;
+begin
+  Self.SetWidth(AWidth);
+  Result := Self;
+end;
+
+function TEdgeWebBrowser.IEWSetHeight(const AHeight: Integer): IEWBrowserForm;
+begin
+  Self.SetHeight(AHeight);
+  Result := Self;
+end;
+
+function TEdgeWebBrowser.IEWSetCaption(const ACaption: String; APosition: TPositionCaption): IEWBrowserForm;
+begin
+  Self.SetCaption(ACaption, APosition);
+  Result := Self;
+end;
+
+function TEdgeWebBrowser.IEWSetActionButtons(const AButtons: TBorderIcons): IEWBrowserForm;
+begin
+  Self.SetActionButtons(AButtons);
+  Result := Self;
+end;
+
+function TEdgeWebBrowser.IEWSetResizable(const AResize: Boolean): IEWBrowserForm;
+begin
+  Self.SetResizable(AResize);
+  Result := Self;
+end;
+
+function TEdgeWebBrowser.IEWSetMovable(const AMove: Boolean): IEWBrowserForm;
+begin
+  Self.SetMovable(AMove);
+  Result := Self;
+end;
+
+function TEdgeWebBrowser.IEWSetTitleBar(const ATitleBar: Boolean): IEWBrowserForm;
+begin
+  Self.SetTitleBar(ATitleBar);
+  Result := Self;
+end;
+
+function TEdgeWebBrowser.IEWSetCookie(const ACookieName, ACookieValue, ACookieDomain: String; const ACookiePath: String): IEWBrowserForm;
+begin
+  Self.SetCookie(ACookieName, ACookieValue, ACookieDomain, ACookiePath);
+  Result := Self;
+end;
+
+function TEdgeWebBrowser.IEWSetAlpha(const AAlpha: Boolean): IEWBrowserForm;
+begin
+  Self.SetAlpha(AAlpha);
+  Result := Self;
+end;
+
+function TEdgeWebBrowser.IEWSetURL(const AURL: String): IEWBrowserForm;
+begin
+  Self.SetURL(AURL);
+  Result := Self;
+end;
+
+function TEdgeWebBrowser.IEWSetParentForm(const AParentForm: TForm): IEWBrowserForm;
+begin
+  Self.SetParentForm(AParentForm);
+  Result := Self;
+end;
+
+function TEdgeWebBrowser.IEWSetParentBrowser(const AParentBrowser: TEdgeBrowser): IEWBrowserForm;
+begin
+  Self.SetParentBrowser(AParentBrowser);
+  Result := Self;
+end;
+
+function TEdgeWebBrowser.IEWSetUniqueIdentifier(const AUniqueIdentifier: String): IEWBrowserForm;
+begin
+  Self.SetUniqueIdentifier(AUniqueIdentifier);
+  Result := Self;
+end;
+
+function TEdgeWebBrowser.IEWSetMaxInstances(const AMaxInstances: Integer): IEWBrowserForm;
+begin
+  Self.SetMaxInstances(AMaxInstances);
+  Result := Self;
+end;
+
+function TEdgeWebBrowser.IEWSetLegacyForm(const ALegacyForm: Boolean): IEWBrowserForm;
+begin
+  Self.SetLegacyForm(ALegacyForm);
+  Result := Self;
+end;
+
+function TEdgeWebBrowser.IEWSetWindowOpened(const AEvent: TNotifyEvent): IEWBrowserForm;
+begin
+  Self.SetWindowOpened(AEvent);
+  Result := Self;
+end;
+
+function TEdgeWebBrowser.IEWSetWindowClosed(const AEvent: TNotifyEvent): IEWBrowserForm;
+begin
+  Self.SetWindowClosed(AEvent);
+  Result := Self;
+end;
+
+function TEdgeWebBrowser.IEWSetHTMLContent(const AHTMLContent: String): IEWBrowserForm;
+begin
+  Self.SetHTMLContent(AHTMLContent);
+  Result := Self;
+end;
+
+function TEdgeWebBrowser.IEWSetMessageReceiver(const AMessage: TMessageReceiverCallback): IEWBrowserForm;
+begin
+  Self.SetMessageReceiver(AMessage);
+  Result := Self;
+end;
+
+function TEdgeWebBrowser.IEWSetMessageSender(const AMessage: String): IEWBrowserForm;
+begin
+  Self.SetMessageSender(AMessage);
+  Result := Self;
+end;
+
+// Interface Methods - IBrowserForm
+
+function TEdgeWebBrowser.ISetWidth(const AWidth: Integer): IBrowserForm;
+begin
+  Self.SetWidth(AWidth);
+  Result := Self;
+end;
+
+function TEdgeWebBrowser.ISetHeight(const AHeight: Integer): IBrowserForm;
+begin
+  Self.SetHeight(AHeight);
+  Result := Self;
+end;
+
+function TEdgeWebBrowser.ISetCaption(const ACaption: String; APosition: TPositionCaption): IBrowserForm;
+begin
+  Self.SetCaption(ACaption, APosition);
+  Result := Self;
+end;
+
+function TEdgeWebBrowser.ISetActionButtons(const AButtons: TBorderIcons): IBrowserForm;
+begin
+  Self.SetActionButtons(AButtons);
+  Result := Self;
+end;
+
+function TEdgeWebBrowser.ISetResizable(const AResize: Boolean): IBrowserForm;
+begin
+  Self.SetResizable(AResize);
+  Result := Self;
+end;
+
+function TEdgeWebBrowser.ISetMovable(const AMove: Boolean): IBrowserForm;
+begin
+  Self.SetMovable(AMove);
+  Result := Self;
+end;
+
+function TEdgeWebBrowser.ISetTitleBar(const ATitleBar: Boolean): IBrowserForm;
+begin
+  Self.SetTitleBar(ATitleBar);
+  Result := Self;
+end;
+
+function TEdgeWebBrowser.ISetCookie(const ACookieName, ACookieValue, ACookieDomain: String; const ACookiePath: String): IBrowserForm;
+begin
+  Self.SetCookie(ACookieName, ACookieValue, ACookieDomain, ACookiePath);
+  Result := Self;
+end;
+
+function TEdgeWebBrowser.ISetAlpha(const AAlpha: Boolean): IBrowserForm;
+begin
+  Self.SetAlpha(AAlpha);
+  Result := Self;
+end;
+
+function TEdgeWebBrowser.ISetURL(const AURL: String): IBrowserForm;
+begin
+  Self.SetURL(AURL);
+  Result := Self;
+end;
+
+function TEdgeWebBrowser.ISetParentForm(const AParentForm: TForm): IBrowserForm;
+begin
+  Self.SetParentForm(AParentForm);
+  Result := Self;
+end;
+
+function TEdgeWebBrowser.ISetParentBrowser(const AParentBrowser: TComponent): IBrowserForm;
+begin
+  if AParentBrowser is TEdgeBrowser then
+    Self.SetParentBrowser(TEdgeBrowser(AParentBrowser))
+  else if Assigned(AParentBrowser) then
+    raise Exception.Create('ParentBrowser must be TWVBrowser for WebView2')
+  else
+    Self.SetParentBrowser(nil);
+  Result := Self;
+end;
+
+function TEdgeWebBrowser.ISetUniqueIdentifier(const AUniqueIdentifier: String): IBrowserForm;
+begin
+  Self.SetUniqueIdentifier(AUniqueIdentifier);
+  Result := Self;
+end;
+
+function TEdgeWebBrowser.ISetMaxInstances(const AMaxInstances: Integer): IBrowserForm;
+begin
+  Self.SetMaxInstances(AMaxInstances);
+  Result := Self;
+end;
+
+function TEdgeWebBrowser.ISetLegacyForm(const ALegacyForm: Boolean): IBrowserForm;
+begin
+  Self.SetLegacyForm(ALegacyForm);
+  Result := Self;
+end;
+
+function TEdgeWebBrowser.ISetWindowOpened(const AEvent: TNotifyEvent): IBrowserForm;
+begin
+  Self.SetWindowOpened(AEvent);
+  Result := Self;
+end;
+
+function TEdgeWebBrowser.ISetWindowClosed(const AEvent: TNotifyEvent): IBrowserForm;
+begin
+  Self.SetWindowClosed(AEvent);
+  Result := Self;
+end;
+
+function TEdgeWebBrowser.ISetHTMLContent(const AHTMLContent: String): IBrowserForm;
+begin
+  Self.SetHTMLContent(AHTMLContent);
+  Result := Self;
+end;
+
+function TEdgeWebBrowser.ISetMessageReceiver(const AMessage: TMessageReceiverCallback): IBrowserForm;
+begin
+  Self.SetMessageReceiver(AMessage);
+  Result := Self;
+end;
+
+function TEdgeWebBrowser.ISetMessageSender(const AMessage: String): IBrowserForm;
+begin
+  Self.SetMessageSender(AMessage);
+  Result := Self;
+end;
+
 // Registry MDI
 
-class function TCustomFormEdgeBrowser.GetMDIInstanceRegistry: TDictionary<string, TList<TCustomFormEdgeBrowser>>;
+class function TEdgeWebBrowser.GetMDIInstanceRegistry: TDictionary<string, TList<TEdgeWebBrowser>>;
 begin
   if FFinalizationStarted then
   begin
@@ -1304,14 +1424,14 @@ begin
   end;
 
   if not Assigned(FMDIInstanceRegistry) then
-    FMDIInstanceRegistry := TDictionary<string, TList<TCustomFormEdgeBrowser>>.Create;
+    FMDIInstanceRegistry := TDictionary<string, TList<TEdgeWebBrowser>>.Create;
   Result := FMDIInstanceRegistry;
 end;
 
-class procedure TCustomFormEdgeBrowser.RegisterMDIInstance(const AIdentifier: string; AInstance: TCustomFormEdgeBrowser);
+class procedure TEdgeWebBrowser.RegisterMDIInstance(const AIdentifier: string; AInstance: TEdgeWebBrowser);
 var
-  InstanceList: TList<TCustomFormEdgeBrowser>;
-  Registry: TDictionary<string, TList<TCustomFormEdgeBrowser>>;
+  InstanceList: TList<TEdgeWebBrowser>;
+  Registry: TDictionary<string, TList<TEdgeWebBrowser>>;
 begin
   if FFinalizationStarted or (AIdentifier = EmptyStr) then
     Exit;
@@ -1322,7 +1442,7 @@ begin
 
   if not Registry.TryGetValue(AIdentifier, InstanceList) then
   begin
-    InstanceList := TList<TCustomFormEdgeBrowser>.Create;
+    InstanceList := TList<TEdgeWebBrowser>.Create;
     Registry.Add(AIdentifier, InstanceList);
   end;
 
@@ -1330,9 +1450,9 @@ begin
     InstanceList.Add(AInstance);
 end;
 
-class procedure TCustomFormEdgeBrowser.UnregisterMDIInstance(const AIdentifier: string; AInstance: TCustomFormEdgeBrowser);
+class procedure TEdgeWebBrowser.UnregisterMDIInstance(const AIdentifier: string; AInstance: TEdgeWebBrowser);
 var
-  InstanceList: TList<TCustomFormEdgeBrowser>;
+  InstanceList: TList<TEdgeWebBrowser>;
 begin
   if FFinalizationStarted or (AIdentifier = EmptyStr) or not Assigned(FMDIInstanceRegistry) then
     Exit;
@@ -1355,10 +1475,10 @@ begin
   end;
 end;
 
-class function TCustomFormEdgeBrowser.GetMDIInstanceCount(const AIdentifier: string): Integer;
+class function TEdgeWebBrowser.GetMDIInstanceCount(const AIdentifier: string): Integer;
 var
-  InstanceList: TList<TCustomFormEdgeBrowser>;
-  Registry: TDictionary<string, TList<TCustomFormEdgeBrowser>>;
+  InstanceList: TList<TEdgeWebBrowser>;
+  Registry: TDictionary<string, TList<TEdgeWebBrowser>>;
   i: Integer;
 begin
   Result := 0;
@@ -1394,10 +1514,10 @@ begin
   end;
 end;
 
-class function TCustomFormEdgeBrowser.GetOldestMDIInstance(const AIdentifier: string): TCustomFormEdgeBrowser;
+class function TEdgeWebBrowser.GetOldestMDIInstance(const AIdentifier: string): TEdgeWebBrowser;
 var
-  InstanceList: TList<TCustomFormEdgeBrowser>;
-  Registry: TDictionary<string, TList<TCustomFormEdgeBrowser>>;
+  InstanceList: TList<TEdgeWebBrowser>;
+  Registry: TDictionary<string, TList<TEdgeWebBrowser>>;
   i: Integer;
 begin
   Result := nil;
@@ -1424,12 +1544,12 @@ begin
   end;
 end;
 
-class function TCustomFormEdgeBrowser.FindMDIInstance(const AIdentifier: string): TCustomFormEdgeBrowser;
+class function TEdgeWebBrowser.FindMDIInstance(const AIdentifier: string): TEdgeWebBrowser;
 begin
   Result := GetOldestMDIInstance(AIdentifier);
 end;
 
-class function TCustomFormEdgeBrowser.CanCreateMDIInstance(const AIdentifier: string; AMaxInstances: Integer; ASingleInstance: Boolean): Boolean;
+class function TEdgeWebBrowser.CanCreateMDIInstance(const AIdentifier: string; AMaxInstances: Integer; ASingleInstance: Boolean): Boolean;
 var
   CurrentCount: Integer;
 begin
@@ -1450,17 +1570,17 @@ begin
   end;
 end;
 
-class function TCustomFormEdgeBrowser.CheckMDILimits(const AUniqueIdentifier: string; AMaxInstances: Integer = 1; ASingleInstance: Boolean = True): Boolean;
+class function TEdgeWebBrowser.CheckMDILimits(const AUniqueIdentifier: string; AMaxInstances: Integer = 1; ASingleInstance: Boolean = True): Boolean;
 begin
   Result := CanCreateMDIInstance(AUniqueIdentifier, AMaxInstances, ASingleInstance);
 end;
 
-class procedure TCustomFormEdgeBrowser.CleanupMDIRegistry;
+class procedure TEdgeWebBrowser.CleanupMDIRegistry;
 var
-  Pair: TPair<string, TList<TCustomFormEdgeBrowser>>;
-  InstanceList: TList<TCustomFormEdgeBrowser>;
+  Pair: TPair<string, TList<TEdgeWebBrowser>>;
+  InstanceList: TList<TEdgeWebBrowser>;
   i: Integer;
-  Instance: TCustomFormEdgeBrowser;
+  Instance: TEdgeWebBrowser;
 begin
   FFinalizationStarted := True;
 
@@ -1493,7 +1613,7 @@ end;
 
 // Registry Popup
 
-class function TCustomFormEdgeBrowser.GetPopupInstanceRegistry: TDictionary<string, TCustomFormEdgeBrowser>;
+class function TEdgeWebBrowser.GetPopupInstanceRegistry: TDictionary<string, TEdgeWebBrowser>;
 begin
   if FFinalizationStarted then
   begin
@@ -1502,13 +1622,13 @@ begin
   end;
 
   if not Assigned(FPopupInstanceRegistry) then
-    FPopupInstanceRegistry := TDictionary<string, TCustomFormEdgeBrowser>.Create;
+    FPopupInstanceRegistry := TDictionary<string, TEdgeWebBrowser>.Create;
   Result := FPopupInstanceRegistry;
 end;
 
-class procedure TCustomFormEdgeBrowser.RegisterPopupInstance(const AIdentifier: string; AInstance: TCustomFormEdgeBrowser);
+class procedure TEdgeWebBrowser.RegisterPopupInstance(const AIdentifier: string; AInstance: TEdgeWebBrowser);
 var
-  Registry: TDictionary<string, TCustomFormEdgeBrowser>;
+  Registry: TDictionary<string, TEdgeWebBrowser>;
 begin
   if FFinalizationStarted or (AIdentifier = EmptyStr) then
     Exit;
@@ -1523,7 +1643,7 @@ begin
   Registry.Add(AIdentifier, AInstance);
 end;
 
-class procedure TCustomFormEdgeBrowser.UnregisterPopupInstance(const AIdentifier: string);
+class procedure TEdgeWebBrowser.UnregisterPopupInstance(const AIdentifier: string);
 begin
   if FFinalizationStarted or (AIdentifier = EmptyStr) or not Assigned(FPopupInstanceRegistry) then
     Exit;
@@ -1532,9 +1652,9 @@ begin
     FPopupInstanceRegistry.Remove(AIdentifier);
 end;
 
-class function TCustomFormEdgeBrowser.FindInstance(const AIdentifier: string): TCustomFormEdgeBrowser;
+class function TEdgeWebBrowser.FindInstance(const AIdentifier: string): TEdgeWebBrowser;
 var
-  Registry: TDictionary<string, TCustomFormEdgeBrowser>;
+  Registry: TDictionary<string, TEdgeWebBrowser>;
 begin
   Result := nil;
   if FFinalizationStarted or (AIdentifier = EmptyStr) then
@@ -1555,7 +1675,7 @@ begin
   end;
 end;
 
-class procedure TCustomFormEdgeBrowser.CleanupPopupRegistry;
+class procedure TEdgeWebBrowser.CleanupPopupRegistry;
 begin
   if Assigned(FPopupInstanceRegistry) then
   begin
@@ -1566,7 +1686,7 @@ end;
 
 // Context
 
-procedure TCustomFormEdgeBrowser.CreateComponents(AParentBrowser: TEdgeBrowser = nil; AIsPopup: Boolean = false; const AURL: String = '');
+procedure TEdgeWebBrowser.CreateComponents(AParentBrowser: TEdgeBrowser = nil; AIsPopup: Boolean = false; const AURL: String = '');
 begin
   FParentFormToRestore := nil;
   FParentFormEnabledState := True;
@@ -1593,7 +1713,7 @@ begin
 
   FBrowser.UserDataFolder := TUtils.EnsureCacheDirectory(CACHE_PATH);
 
-  FForm := TCustomEdgeForm.CreateWithArgs(nil, nil);
+  FForm := TEdgeWebForm.CreateWithArgs(nil, nil);
   FForm.BrowserInstance := Self;
   FForm.Caption := FCaption;
   FForm.Position := poScreenCenter;
@@ -1619,7 +1739,7 @@ begin
   InitComponents;
 end;
 
-procedure TCustomFormEdgeBrowser.CleanupWebViewResources;
+procedure TEdgeWebBrowser.CleanupWebViewResources;
 begin
   if Assigned(FCookie) then
     FCookie := nil;
@@ -1638,9 +1758,9 @@ begin
   end;
 end;
 
-procedure TCustomFormEdgeBrowser.CreateMDIComponents(AParentForm: TForm; const AURL: String; ALegacyForm: Boolean = DEFAULT_LEGACY_FORM);
+procedure TEdgeWebBrowser.CreateMDIComponents(AParentForm: TForm; const AURL: String; ALegacyForm: Boolean = DEFAULT_LEGACY_FORM);
 var
-  OldForm: TCustomEdgeForm;
+  OldForm: TEdgeWebForm;
 begin
   OldForm := FForm;
 
@@ -1663,7 +1783,7 @@ begin
 
     if ALegacyForm then
     begin
-      Application.CreateForm(TCustomEdgeForm, FForm);
+      Application.CreateForm(TEdgeWebForm, FForm);
 
       if Assigned(AParentForm) then
       begin
@@ -1673,7 +1793,7 @@ begin
     end
     else
     begin
-      FForm := TCustomEdgeForm.CreateWithArgs(AParentForm, nil);
+      FForm := TEdgeWebForm.CreateWithArgs(AParentForm, nil);
       FForm.FormStyle := fsMDIChild;
     end;
 
@@ -1710,7 +1830,7 @@ end;
 
 // Constructors and Destructor
 
-constructor TCustomFormEdgeBrowser.Create;
+constructor TEdgeWebBrowser.Create;
 begin
   inherited Create;
 
@@ -1734,7 +1854,7 @@ begin
   FIsPopup := False;
 end;
 
-constructor TCustomFormEdgeBrowser.Create(const AURL: String);
+constructor TEdgeWebBrowser.Create(const AURL: String);
 begin
   inherited Create;
 
@@ -1767,7 +1887,7 @@ begin
   end;
 end;
 
-constructor TCustomFormEdgeBrowser.Create(const AURL: String; AParentObject: TObject; ALegacyForm: Boolean = DEFAULT_LEGACY_FORM);
+constructor TEdgeWebBrowser.Create(const AURL: String; AParentObject: TObject; ALegacyForm: Boolean = DEFAULT_LEGACY_FORM);
 begin
   inherited Create;
 
@@ -1806,12 +1926,12 @@ begin
   end;
 end;
 
-constructor TCustomFormEdgeBrowser.CreateAsBrowser(const AURL: String = '');
+constructor TEdgeWebBrowser.CreateAsBrowser(const AURL: String = '');
 begin
   Self.Create(AURL);
 end;
 
-constructor TCustomFormEdgeBrowser.CreateAsPopup(AParentBrowser: TEdgeBrowser; const AURL: String = '');
+constructor TEdgeWebBrowser.CreateAsPopup(AParentBrowser: TEdgeBrowser; const AURL: String = '');
 begin
   if not Assigned(AParentBrowser) then
     raise Exception.Create('ParentBrowser cannot be nil for Popup');
@@ -1819,7 +1939,7 @@ begin
   Self.Create(AURL, AParentBrowser);
 end;
 
-constructor TCustomFormEdgeBrowser.CreateAsMDI(AParentForm: TForm; const AURL: String = ''; ALegacyForm: Boolean = DEFAULT_LEGACY_FORM);
+constructor TEdgeWebBrowser.CreateAsMDI(AParentForm: TForm; const AURL: String = ''; ALegacyForm: Boolean = DEFAULT_LEGACY_FORM);
 begin
   if not Assigned(AParentForm) then
     raise Exception.Create('ParentForm cannot be nil for MDI');
@@ -1831,32 +1951,32 @@ end;
 
 // Static Constructors
 
-class function TCustomFormEdgeBrowser.NewBrowser(const AURL: string): TCustomFormEdgeBrowser;
+class function TEdgeWebBrowser.NewBrowser(const AURL: string): TEdgeWebBrowser;
 begin
-  Result := TCustomFormEdgeBrowser.Create(AURL);
+  Result := TEdgeWebBrowser.Create(AURL);
   Result.ActionButtons := [TBorderIcon.biMinimize, TBorderIcon.biMaximize];
   Result.FForm.FormStyle := TFormStyle.fsStayOnTop;
 end;
 
-class function TCustomFormEdgeBrowser.NewPopup(const AURL: string; AParentBrowser: TEdgeBrowser = nil): TCustomFormEdgeBrowser;
+class function TEdgeWebBrowser.NewPopup(const AURL: string; AParentBrowser: TEdgeBrowser = nil): TEdgeWebBrowser;
 begin
-  Result := TCustomFormEdgeBrowser.Create(AURL, AParentBrowser);
+  Result := TEdgeWebBrowser.Create(AURL, AParentBrowser);
   Result.ActionButtons := [TBorderIcon.biMinimize, TBorderIcon.biMaximize];
   Result.FForm.FormStyle := TFormStyle.fsStayOnTop;
 end;
 
-class function TCustomFormEdgeBrowser.NewMDI(const AURL: String; AParentForm: TForm = nil): TCustomFormEdgeBrowser;
+class function TEdgeWebBrowser.NewMDI(const AURL: String; AParentForm: TForm = nil): TEdgeWebBrowser;
 begin
-  Result := TCustomFormEdgeBrowser.Create(AURL, AParentForm);
+  Result := TEdgeWebBrowser.Create(AURL, AParentForm);
   Result.ActionButtons := [TBorderIcon.biMinimize, TBorderIcon.biMaximize];
   Result.FForm.FormStyle := TFormStyle.fsStayOnTop;
 end;
 
-destructor TCustomFormEdgeBrowser.Destroy;
+destructor TEdgeWebBrowser.Destroy;
 begin
   FIsClosing := True;
 
-  if (FUniqueIdentifier <> EmptyStr) and not TCustomFormEdgeBrowser.FFinalizationStarted then
+  if (FUniqueIdentifier <> EmptyStr) and not TEdgeWebBrowser.FFinalizationStarted then
   begin
     UnregisterPopupInstance(FUniqueIdentifier);
     UnregisterMDIInstance(FUniqueIdentifier, Self);
@@ -1930,7 +2050,7 @@ begin
   inherited;
 end;
 
-procedure TCustomFormEdgeBrowser.EnsureComponentsCreated;
+procedure TEdgeWebBrowser.EnsureComponentsCreated;
 begin
   if not FComponentsCreated then
   begin
@@ -1947,7 +2067,7 @@ begin
   end;
 end;
 
-procedure TCustomFormEdgeBrowser.InitComponents;
+procedure TEdgeWebBrowser.InitComponents;
 begin
   if FEdgeDLLHandle = 0 then
     raise Exception.Create('DLL específica do EdgeBrowser não foi carregada corretamente');
@@ -1979,7 +2099,7 @@ begin
   FTimer.OnTimer := OnTimer;
 end;
 
-procedure TCustomFormEdgeBrowser.InitializePopupBrowser;
+procedure TEdgeWebBrowser.InitializePopupBrowser;
 begin
   if FIsPopup and Assigned(FParentBrowser) then
   begin
@@ -1997,7 +2117,7 @@ begin
   end;
 end;
 
-procedure TCustomFormEdgeBrowser.CheckInitializationTimer(Sender: TObject);
+procedure TEdgeWebBrowser.CheckInitializationTimer(Sender: TObject);
 var
   Timer: TTimer;
   i: Integer;
@@ -2028,7 +2148,7 @@ begin
   end;
 end;
 
-procedure TCustomFormEdgeBrowser.RestoreParentFormState(Sender: TObject);
+procedure TEdgeWebBrowser.RestoreParentFormState(Sender: TObject);
 begin
   if Assigned(FParentFormToRestore) and FIsModalMode then
   begin
@@ -2041,7 +2161,7 @@ begin
     FOriginalOnWindowClosed(Sender);
 end;
 
-procedure TCustomFormEdgeBrowser.WaitForBrowserInitialization(const ACallback: TProc);
+procedure TEdgeWebBrowser.WaitForBrowserInitialization(const ACallback: TProc);
 var
   CheckTimer: TTimer;
   CallbackInfo: TCallbackInfo;
@@ -2068,7 +2188,7 @@ begin
   end;
 end;
 
-procedure TCustomFormEdgeBrowser.OnAfterCreated(Sender: TObject);
+procedure TEdgeWebBrowser.OnAfterCreated(Sender: TObject);
 begin
   FBrowserInitialized := True;
   ResizeBrowser;
@@ -2091,7 +2211,7 @@ begin
   end;
 end;
 
-procedure TCustomFormEdgeBrowser.OnDocumentTitleChanged(Sender: TCustomEdgeBrowser; const ADocumentTitle: string);
+procedure TEdgeWebBrowser.OnDocumentTitleChanged(Sender: TCustomEdgeBrowser; const ADocumentTitle: string);
 var
   Title: string;
 begin
@@ -2110,12 +2230,12 @@ begin
   end;
 end;
 
-procedure TCustomFormEdgeBrowser.OnInitializationError(Sender: TObject; aErrorCode: HRESULT; const aErrorMessage: wvstring);
+procedure TEdgeWebBrowser.OnInitializationError(Sender: TObject; aErrorCode: HRESULT; const aErrorMessage: wvstring);
 begin
   raise Exception.Create('EdgeBrowser Initialization Error: ' + aErrorMessage);
 end;
 
-procedure TCustomFormEdgeBrowser.OnNavigationCompleted(Sender: TCustomEdgeBrowser; IsSuccess: Boolean; WebErrorStatus: TOleEnum);
+procedure TEdgeWebBrowser.OnNavigationCompleted(Sender: TCustomEdgeBrowser; IsSuccess: Boolean; WebErrorStatus: TOleEnum);
 begin
   if not FBrowserInitialized and IsSuccess then
   begin
@@ -2125,13 +2245,13 @@ begin
   ResizeBrowser;
 end;
 
-procedure TCustomFormEdgeBrowser.OnTimer(Sender: TObject);
+procedure TEdgeWebBrowser.OnTimer(Sender: TObject);
 begin
   FTimer.Enabled := False;
   Self.TryCreateBrowser;
 end;
 
-procedure TCustomFormEdgeBrowser.OnWebMessageReceived(Sender: TCustomEdgeBrowser; aArgs: TWebMessageReceivedEventArgs);
+procedure TEdgeWebBrowser.OnWebMessageReceived(Sender: TCustomEdgeBrowser; aArgs: TWebMessageReceivedEventArgs);
 var
   MessageString: String;
   MessageObject: TJsonValue;
@@ -2168,9 +2288,9 @@ begin
   end;
 end;
 
-procedure TCustomFormEdgeBrowser.OnNewWindowRequested(Sender: TCustomEdgeBrowser; aArgs: TNewWindowRequestedEventArgs);
+procedure TEdgeWebBrowser.OnNewWindowRequested(Sender: TCustomEdgeBrowser; aArgs: TNewWindowRequestedEventArgs);
 var
-  TempBrowser: TCustomFormEdgeBrowser;
+  TempBrowser: TEdgeWebBrowser;
   Deferral: TEdgeDeferral;
   Uri: PWideChar;
   WindowFeatures: TEdgeWindowFeatures;
@@ -2210,7 +2330,7 @@ begin
     end;
 
     WindowFeatures := TEdgeWindowFeaturesHelper.TryGetWindowFeatures(CoreArgs);
-    TempBrowser := TCustomFormEdgeBrowser.NewPopup(DEFAULT_URL);
+    TempBrowser := TEdgeWebBrowser.NewPopup(DEFAULT_URL);
 
     if Assigned(TempBrowser) then
     begin
@@ -2380,24 +2500,24 @@ begin
   end;
 end;
 
-procedure TCustomFormEdgeBrowser.OnWindowCloseRequested(Sender: TObject);
+procedure TEdgeWebBrowser.OnWindowCloseRequested(Sender: TObject);
 begin
   PostMessage(FForm.Handle, WM_CLOSE, 0, 0);
 end;
 
-procedure TCustomFormEdgeBrowser.OnPopupOpened(Sender: TObject);
+procedure TEdgeWebBrowser.OnPopupOpened(Sender: TObject);
 begin
   if DEBUG_MODE then
-    ShowMessage('Popup has completed opening! Instance: ' + TCustomFormEdgeBrowser(Sender).ClassName);
+    ShowMessage('Popup has completed opening! Instance: ' + TEdgeWebBrowser(Sender).ClassName);
 end;
 
-procedure TCustomFormEdgeBrowser.OnPopupClosed(Sender: TObject);
+procedure TEdgeWebBrowser.OnPopupClosed(Sender: TObject);
 begin
   if DEBUG_MODE then
-    ShowMessage('Popup has been closed! Instance: ' + TCustomFormEdgeBrowser(Sender).ClassName);
+    ShowMessage('Popup has been closed! Instance: ' + TEdgeWebBrowser(Sender).ClassName);
 end;
 
-procedure TCustomFormEdgeBrowser.TryCreateBrowser;
+procedure TEdgeWebBrowser.TryCreateBrowser;
 begin
   if not FBrowserInitialized then
   begin
@@ -2428,7 +2548,7 @@ begin
   ResizeBrowser;
 end;
 
-procedure TCustomFormEdgeBrowser.ResizeBrowser;
+procedure TEdgeWebBrowser.ResizeBrowser;
 begin
   if Assigned(FBrowser) then
   begin
@@ -2438,7 +2558,7 @@ begin
   end;
 end;
 
-procedure TCustomFormEdgeBrowser.Show(const AType: TOpenType = TOpenType.Default);
+procedure TEdgeWebBrowser.Show(const AType: TOpenType = TOpenType.Default);
 begin
   Self.EnsureComponentsCreated;
 
@@ -2451,7 +2571,7 @@ begin
   end;
 end;
 
-procedure TCustomFormEdgeBrowser.ShowModal(const AType: TOpenType = TOpenType.Modal);
+procedure TEdgeWebBrowser.ShowModal(const AType: TOpenType = TOpenType.Modal);
 begin
   Self.EnsureComponentsCreated;
 
@@ -2464,7 +2584,7 @@ begin
   end;
 end;
 
-procedure TCustomFormEdgeBrowser.ShowAsModal(AParentForm: TForm = nil);
+procedure TEdgeWebBrowser.ShowAsModal(AParentForm: TForm = nil);
 var
   ParentForm: TForm;
 begin
@@ -2497,7 +2617,7 @@ begin
     Show;
 end;
 
-procedure TCustomFormEdgeBrowser.ConvertToMDI(AParentForm: TForm; AutoShow: Boolean);
+procedure TEdgeWebBrowser.ConvertToMDI(AParentForm: TForm; AutoShow: Boolean);
 begin
   FIsClosing := False;
   FParentForm := AParentForm;
@@ -2547,7 +2667,7 @@ begin
   end;
 end;
 
-procedure TCustomFormEdgeBrowser.ShowAsMDI;
+procedure TEdgeWebBrowser.ShowAsMDI;
 var
   Options: TMDIOptions;
 begin
@@ -2560,9 +2680,9 @@ begin
   Self.ShowAsMDI(Options);
 end;
 
-procedure TCustomFormEdgeBrowser.ShowAsMDI(const AOptions: TMDIOptions);
+procedure TEdgeWebBrowser.ShowAsMDI(const AOptions: TMDIOptions);
 var
-  ExistingInstance: TCustomFormEdgeBrowser;
+  ExistingInstance: TEdgeWebBrowser;
 begin
   if AOptions.SingleInstance and (AOptions.UniqueIdentifier <> EmptyStr) then
   begin
@@ -2596,7 +2716,7 @@ begin
   );
 end;
 
-procedure TCustomFormEdgeBrowser.ShowAsMDICustom(AutoShow: Boolean = True);
+procedure TEdgeWebBrowser.ShowAsMDICustom(AutoShow: Boolean = True);
 begin
   Self.EnsureComponentsCreated;
 
@@ -2619,7 +2739,7 @@ begin
     Self.ConvertToMDI(FParentForm, AutoShow);
 end;
 
-procedure TCustomFormEdgeBrowser.ShowAsMDISimple(AutoShow: Boolean; SingleInstance: Boolean; MaximizeOnShow: Boolean = True);
+procedure TEdgeWebBrowser.ShowAsMDISimple(AutoShow: Boolean; SingleInstance: Boolean; MaximizeOnShow: Boolean = True);
 begin
   if not Assigned(FParentForm) then
     Exit;
@@ -2633,9 +2753,9 @@ begin
     FForm.WindowState := wsMaximized;
 end;
 
-procedure TCustomFormEdgeBrowser.ShowAsMDIAdvanced(AutoShow: Boolean = True; SingleInstance: Boolean = True; MaximizeOnShow: Boolean = True; BringToFrontIfExists: Boolean = True; const UniqueIdentifier: String = ''; MaxInstances: Integer = 1);
+procedure TEdgeWebBrowser.ShowAsMDIAdvanced(AutoShow: Boolean = True; SingleInstance: Boolean = True; MaximizeOnShow: Boolean = True; BringToFrontIfExists: Boolean = True; const UniqueIdentifier: String = ''; MaxInstances: Integer = 1);
 var
-  ExistingBrowser: TCustomFormEdgeBrowser;
+  ExistingBrowser: TEdgeWebBrowser;
   FormIdentifier: String;
 begin
   if not Assigned(FParentForm) then
@@ -2694,11 +2814,11 @@ begin
 end;
 
 initialization
-  TCustomFormEdgeBrowser.FFinalizationStarted := False;
+  TEdgeWebBrowser.FFinalizationStarted := False;
 
 finalization
-  TCustomFormEdgeBrowser.CleanupMDIRegistry;
-  TCustomFormEdgeBrowser.CleanupPopupRegistry;
+  TEdgeWebBrowser.CleanupMDIRegistry;
+  TEdgeWebBrowser.CleanupPopupRegistry;
 
 end.
 

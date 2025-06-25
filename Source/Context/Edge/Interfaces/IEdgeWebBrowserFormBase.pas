@@ -1,13 +1,13 @@
-unit WVBrowserGenericInterface;
+unit IEdgeWebBrowserFormBase;
 
 interface
 
 uses
-  Vcl.Forms, System.Classes, uWVBrowser, BrowserTypes;
+  Vcl.Forms, System.Classes, Vcl.Edge, BrowserTypes;
 
 type
-  IWVBrowserGeneric = interface
-  ['{6C60A2A9-3AC3-4B29-AB6A-2A184F8B7414}']
+  IEWBrowserFormBase = interface
+  ['{F0F68439-7282-4113-A3DC-65BB6A9B7698}']
     // Getters
     function GetWidthProp: Integer;
     function GetHeightProp: Integer;
@@ -25,7 +25,7 @@ type
     function GetAlphaProp: Boolean;
     function GetURLProp: String;
     function GetParentFormProp: TForm;
-    function GetParentBrowserProp: TWVBrowser;
+    function GetParentBrowserProp: TEdgeBrowser;
     function GetUniqueIdentifierProp: String;
     function GetMaxInstancesProp: Integer;
     function GetLegacyFormProp: Boolean;
@@ -50,7 +50,7 @@ type
     procedure SetAlphaProp(const Value: Boolean);
     procedure SetURLProp(const Value: String);
     procedure SetParentFormProp(const Value: TForm);
-    procedure SetParentBrowserProp(const Value: TWVBrowser);
+    procedure SetParentBrowserProp(const Value: TEdgeBrowser);
     procedure SetUniqueIdentifierProp(const Value: String);
     procedure SetMaxInstancesProp(const Value: Integer);
     procedure SetLegacyFormProp(const Value: Boolean);
@@ -76,7 +76,7 @@ type
     property Alpha: Boolean read GetAlphaProp write SetAlphaProp;
     property URL: String read GetURLProp write SetURLProp;
     property ParentForm: TForm read GetParentFormProp write SetParentFormProp;
-    property ParentBrowser: TWVBrowser read GetParentBrowserProp write SetParentBrowserProp;
+    property ParentBrowser: TEdgeBrowser read GetParentBrowserProp write SetParentBrowserProp;
     property UniqueIdentifier: String read GetUniqueIdentifierProp write SetUniqueIdentifierProp;
     property MaxInstances: Integer read GetMaxInstancesProp write SetMaxInstancesProp;
     property LegacyForm: Boolean read GetLegacyFormProp write SetLegacyFormProp;
@@ -84,6 +84,14 @@ type
     property OnMessageSender: String read ReadMessageSenderProp write SetMessageSenderProp;
     property OnWindowOpened: TNotifyEvent read GetWindowOpenedProp write SetWindowOpenedProp;
     property OnWindowClosed: TNotifyEvent read GetWindowClosedProp write SetWindowClosedProp;
+
+    // Final Methods
+    procedure Show(const AType: TOpenType = TOpenType.Default);
+    procedure ShowModal(const AType: TOpenType = TOpenType.Modal);
+    procedure ShowAsModal(AParentForm: TForm = nil);
+    procedure ShowAsMDICustom(AutoShow: Boolean = True);
+    procedure ShowAsMDISimple(AutoShow: Boolean; SingleInstance: Boolean; MaximizeOnShow: Boolean = True);
+    procedure ShowAsMDIAdvanced(AutoShow: Boolean = True; SingleInstance: Boolean = True; MaximizeOnShow: Boolean = True; BringToFrontIfExists: Boolean = True; const UniqueIdentifier: String = ''; MaxInstances: Integer = 1);
   end;
 
 implementation

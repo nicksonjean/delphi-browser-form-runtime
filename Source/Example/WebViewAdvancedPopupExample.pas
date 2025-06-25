@@ -1,4 +1,4 @@
-﻿unit WVAdvancedPopupExample;
+﻿unit WebViewAdvancedPopupExample;
 
 interface
 
@@ -11,15 +11,14 @@ uses
   System.NetEncoding,
 
   uWVBrowser,
-  WVBrowserFormClass,
-  BrowserTypes,
-  WVBrowserFormInterface;
+  WebViewBrowserForm,
+  BrowserTypes;
 
 type
   TWVAdvancedPopupManager = class
   private
-    FMainBrowser: TCustomFormWVBrowser;
-    FPopups: TList<TCustomFormWVBrowser>;
+    FMainBrowser: TWebViewBrowser;
+    FPopups: TList<TWebViewBrowser>;
     FOwnerForm: TForm;
     procedure OnMessageReceived(Sender: TObject; const Message: string);
   public
@@ -44,7 +43,7 @@ constructor TWVAdvancedPopupManager.Create(AOwnerForm: TForm = nil);
 begin
   inherited Create;
   FOwnerForm := AOwnerForm;
-  FPopups := TList<TCustomFormWVBrowser>.Create;
+  FPopups := TList<TWebViewBrowser>.Create;
 end;
 
 destructor TWVAdvancedPopupManager.Destroy;
@@ -167,7 +166,7 @@ const
     '</body>' +
     '</html>';
 begin
-  FMainBrowser := TCustomFormWVBrowser.Create(EncodeHTML(MAIN_HTML), FOwnerForm)
+  FMainBrowser := TWebViewBrowser.Create(EncodeHTML(MAIN_HTML), FOwnerForm)
     .SetWidth(800)
     .SetHeight(600)
     .SetCaption('Sistema Principal')
@@ -245,11 +244,11 @@ const
     '</body>' +
     '</html>';
 var
-  LoginBrowser: TCustomFormWVBrowser;
+  LoginBrowser: TWebViewBrowser;
 begin
   if not Assigned(FMainBrowser) then Exit;
 
-  LoginBrowser := TCustomFormWVBrowser.CreateAsPopup(FMainBrowser.Instance as TWVBrowser, EncodeHTML(LOGIN_HTML))
+  LoginBrowser := TWebViewBrowser.CreateAsPopup(FMainBrowser.Instance as TWVBrowser, EncodeHTML(LOGIN_HTML))
     .SetWidth(400)
     .SetHeight(300)
     .SetCaption('Login')
@@ -264,7 +263,7 @@ end;
 procedure TWVAdvancedPopupManager.CreateNotificationPopup;
 var
   NotificationHTML: string;
-  NotificationBrowser: TCustomFormWVBrowser;
+  NotificationBrowser: TWebViewBrowser;
 begin
   if not Assigned(FMainBrowser) then Exit;
 
@@ -289,7 +288,7 @@ begin
     '</body>' +
     '</html>';
 
-  NotificationBrowser := TCustomFormWVBrowser.CreateAsPopup(FMainBrowser.Instance as TWVBrowser, EncodeHTML(NotificationHTML))
+  NotificationBrowser := TWebViewBrowser.CreateAsPopup(FMainBrowser.Instance as TWVBrowser, EncodeHTML(NotificationHTML))
     .SetWidth(350)
     .SetHeight(200)
     .SetCaption('Notificação')
@@ -366,11 +365,11 @@ const
     '</body>' +
     '</html>';
 var
-  DataEntryBrowser: TCustomFormWVBrowser;
+  DataEntryBrowser: TWebViewBrowser;
 begin
   if not Assigned(FMainBrowser) then Exit;
 
-  DataEntryBrowser := TCustomFormWVBrowser.CreateAsPopup(FMainBrowser.Instance as TWVBrowser, EncodeHTML(DATA_ENTRY_HTML))
+  DataEntryBrowser := TWebViewBrowser.CreateAsPopup(FMainBrowser.Instance as TWVBrowser, EncodeHTML(DATA_ENTRY_HTML))
     .SetWidth(500)
     .SetHeight(450)
     .SetCaption('Entrada de Dados')

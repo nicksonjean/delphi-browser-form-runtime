@@ -47,3 +47,32 @@ Thumbs.db
 *.identcache
 CustomCache/
 **/CustomCache/
+
+# Arquivos específicos do projeto
+*.dcu
+*.exe
+*.dll
+*.bpl
+*.so
+*.dylib
+
+# Pastas de build e output
+Win32/
+Win64/
+Debug/
+Release/
+Output/
+Results/
+
+# Arquivos de configuração do IDE
+*.tvsconfig
+*.dsk
+*.dof
+*.cfg
+*.res
+
+# Arquivos de cache do WebView2/Edge
+EdgeCustomCache/
+WVCustomCache/
+**/EdgeCustomCache/
+**/WVCustomCache/

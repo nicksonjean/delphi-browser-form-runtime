@@ -4,153 +4,193 @@ Este projeto em Delphi implementa um framework de abstração para navegadores o
 
 ## ✨ Objetivo
 
-Oferecer uma arquitetura extensível e reutilizável para formulários de navegador (`IBrowser` e `IBrowserForm`), com foco em:
+Oferecer uma arquitetura extensível e reutilizável para formulários de navegador (`IBrowserForm`), com foco em:
 
 - Configuração fluente (`method chaining`)
 - Separação clara de responsabilidades
 - Uso de interfaces para abstração e desacoplamento
-- Propriedades e comportamentos reutilizáveis via interface base (`IBrowserGeneric`)
+- Suporte a múltiplos tipos de navegador (Edge e WebView2)
+- Gerenciamento de instâncias MDI e popup
 
 ## 📦 Estrutura de Interfaces
 
-### 🔹 IBrowserGeneric
+### 🔹 IBrowserForm
 
-Interface base com os métodos e propriedades comuns:
-
-- `Width`, `Height`, `Caption`, `CaptionPosition`
-- `ActionButtons`, `Resizable`, `Movable`
+Interface principal para formulários de navegador com propriedades e métodos comuns:
 
 ```pascal
 type
-  IBrowserGeneric = interface
-    ...
-  end;
-````
-
-### 🔹 IBrowser
-
-Interface principal para navegadores personalizados.
-
-```pascal
-type
-  IBrowser = interface(IBrowserGeneric)
-    ...
+  IBrowserForm = interface
+    // Propriedades básicas
+    property Width: Integer;
+    property Height: Integer;
+    property Caption: string;
+    property CaptionPosition: TPositionCaption;
+    property ActionButtons: TBorderIcons;
+    property Resizable: Boolean;
+    property Movable: Boolean;
+    property TitleBar: Boolean;
+    
+    // Propriedades de cookie
+    property CookieName: String;
+    property CookieValue: String;
+    property CookieDomain: String;
+    property CookiePath: String;
+    
+    // Propriedades de controle
+    property Alpha: Boolean;
+    property URL: String;
+    property ParentForm: TForm;
+    property ParentBrowser: TComponent;
+    property UniqueIdentifier: String;
+    property MaxInstances: Integer;
+    property LegacyForm: Boolean;
+    
+    // Eventos
+    property OnMessageReceiver: TMessageReceiverCallback;
+    property OnMessageSender: String;
+    property OnWindowOpened: TNotifyEvent;
+    property OnWindowClosed: TNotifyEvent;
+    
+    // Métodos de exibição
+    procedure Show(const AType: TOpenType = TOpenType.Default);
+    procedure ShowModal(const AType: TOpenType = TOpenType.Modal);
+    procedure ShowAsModal(AParentForm: TForm = nil);
+    procedure ShowAsMDICustom(AutoShow: Boolean = True);
+    procedure ShowAsMDISimple(AutoShow: Boolean; SingleInstance: Boolean; MaximizeOnShow: Boolean = True);
+    procedure ShowAsMDIAdvanced(AutoShow: Boolean = True; SingleInstance: Boolean = True; MaximizeOnShow: Boolean = True; BringToFrontIfExists: Boolean = True; const UniqueIdentifier: String = ''; MaxInstances: Integer = 1);
   end;
 ```
 
-### 🔹 IBrowserForm
+### 🔹 IBrowserFormFactory
 
-Versão especializada da interface para integração com formulários Delphi.
+Interface para criação de navegadores usando o padrão Factory:
 
 ```pascal
 type
-  IBrowserForm = interface(IBrowserGeneric)
-    ...
+  IBrowserFormFactory = interface
+    function CreateBrowser(const AURL: String = ''): IBrowserForm;
+    function CreatePopup(AParentBrowser: TComponent; const AURL: String = ''): IBrowserForm;
+    function CreateMDI(AParentForm: TForm; const AURL: String = ''; ALegacyForm: Boolean = false): IBrowserForm;
+    function GetBrowserType: TBrowserType;
+    function GetBrowserTypeName: String;
   end;
 ```
 
 ## 🧩 Como usar
 
-1. Implemente a interface `IBrowserForm` ou `IBrowser` em uma classe Delphi.
-2. Use os métodos fluentes para configurar as propriedades antes de exibir o formulário:
+### 1. Configuração básica
 
 ```pascal
-BrowserForm
+// Usar WebView2 (padrão)
+TBrowserStrategy.SetBrowserType(WebView2);
+
+// Criar um navegador básico
+var Browser := TBrowserStrategy.CreateBrowser('https://www.google.com');
+Browser
   .SetWidth(800)
   .SetHeight(600)
-  .SetCaption('Exemplo de Navegador')
+  .SetCaption('Meu Navegador')
   .SetResizable(True)
-  .ShowModal;
+  .Show;
+```
+
+### 2. Criar popup
+
+```pascal
+var Popup := TBrowserStrategy.CreatePopup(ParentBrowser, 'https://www.example.com');
+Popup
+  .SetWidth(400)
+  .SetHeight(300)
+  .SetCaption('Popup')
+  .ShowAsModal;
+```
+
+### 3. Criar MDI
+
+```pascal
+var MDIBrowser := TBrowserStrategy.CreateMDI(ParentForm, 'https://www.example.com');
+MDIBrowser
+  .SetCaption('MDI Browser')
+  .ShowAsMDIAdvanced(True, True, True, True, 'unique-id', 1);
 ```
 
 ## 📁 Organização do Projeto
 
 ```
 /Source
-  ├── Context
-  │   ├── BrowserFormInterface.pas      // Interface IBrowserForm
-  │   ├── WebBrowserFormClass.pas       // Implementação com TWebBrowser
-  │   └── WVBrowserFormClass.pas        // Implementação com WebView2
+  ├── Context/                           # Implementações específicas
+  │   ├── IBrowserFormBase.pas          # Interface IBrowserForm
+  │   ├── BrowserTypes.pas              # Tipos e enums comuns
+  │   ├── EdgeWebBrowserForm.pas        # Implementação Edge
+  │   ├── WebViewBrowserForm.pas        # Implementação WebView2
+  │   ├── Edge/                         # Componentes específicos do Edge
+  │   │   ├── Interfaces/
+  │   │   │   ├── IEdgeWebBrowserForm.pas
+  │   │   │   └── IEdgeWebBrowserFormBase.pas
+  │   │   └── Component/
+  │   │       ├── EdgeBrowserHelper.pas
+  │   │       ├── EdgeCookie.pas
+  │   │       ├── EdgeDeferral.pas
+  │   │       ├── EdgeNewWindowRequestedEventArgs.pas
+  │   │       └── EdgeWindowFeatures.pas
+  │   └── WebView/                      # Componentes específicos do WebView
+  │       ├── Interfaces/
+  │       │   ├── IWebViewBrowserForm.pas
+  │       │   └── IWebViewBrowserFormBase.pas
+  │       └── Component/
   │
-  ├── Generic
-  │   ├── BrowserGenericInterface.pas   // Interface IBrowserSettings (genérica)
-  │   └── BrowserTypes.pas              // Tipos auxiliares (TPositionCaption, TOpenType etc.)
+  ├── Strategy/                         # Padrão Strategy
+  │   └── BrowserFactory.pas            # Factory e Strategy para criação
   │
-  └── Strategy
-      ├── BrowserClass.pas              // Implementação da lógica de navegador
-      └── BrowserInterface.pas          // Interface IBrowser
+  ├── Generic/                          # Utilitários genéricos
+  │   ├── TimerHelper.pas               # Helper para timers
+  │   └── UtilsLib.pas                  # Utilitários gerais
+  │
+  └── Example/                          # Exemplos de uso
+      ├── EdgeWebAdvancedPopupExample.pas
+      └── WebViewAdvancedPopupExample.pas
 ```
 
-## 📁 Diagrama Mermaid
+## 🔧 Tipos e Enums
 
-### 📁 Mermaid Graph TD
-
-```mermaid
-graph TD
-
-  subgraph Source
-    subgraph Context
-      A1[BrowserFormInterface.pas]
-      A2[WebBrowserFormClass.pas]
-      A3[WVBrowserFormClass.pas]
-    end
-
-    subgraph Generic
-      B1[BrowserGenericInterface.pas]
-      B2[BrowserTypes.pas]
-    end
-
-    subgraph Strategy
-      C1[BrowserClass.pas]
-      C2[BrowserInterface.pas]
-    end
-  end
-
-  %% Relações entre as unidades (exemplo genérico)
-  C2 --> B1
-  C1 --> C2
-  A1 --> B1
-  A2 --> A1
-  A3 --> A1
+### TBrowserType
+```pascal
+type
+  TBrowserType = (EdgeBrowser, WebView2);
 ```
 
-### 📁 Mermaid Flowchart TB
+### TOpenType
+```pascal
+type
+  TOpenType = (Default, Modal);
+```
 
-```mermaid
-flowchart TB
-    subgraph Source
-        subgraph Context
-            A1[BrowserFormInterface.pas]
-            A2[WebBrowserFormClass.pas]
-            A3[WVBrowserFormClass.pas]
-        end
+### TPositionCaption
+```pascal
+type
+  TPositionCaption = (Before, After, Replaced, Between, None);
+```
 
-        subgraph Generic
-            B1[BrowserGenericInterface.pas]
-            B2[BrowserTypes.pas]
-        end
-
-        subgraph Strategy
-            C1[BrowserClass.pas]
-            C2[BrowserInterface.pas]
-        end
-    end
-
-    %% Relações de uso (exemplos de dependências)
-    A2 --> A1
-    A3 --> A1
-    C1 --> C2
-    A2 --> C2
-    A3 --> C2
-    A1 --> B1
-    B1 --> B2
-    C2 --> B1
+### TMDIOptions
+```pascal
+type
+  TMDIOptions = record
+    AutoShow: Boolean;
+    SingleInstance: Boolean;
+    MaximizeOnShow: Boolean;
+    BringToFrontIfExists: Boolean;
+    UniqueIdentifier: String;
+    MaxInstances: Integer;
+  end;
 ```
 
 ## 🔧 Requisitos
 
 * Delphi 10.4+ (recomendado)
 * VCL com suporte a `TBorderIcons`, `TPosition`, etc.
+* WebView2 Runtime (para WebView2)
+* Microsoft Edge WebView2 (para Edge)
 
 ## 📄 Licença
 
@@ -158,4 +198,4 @@ Este projeto está licenciado sob a [MIT License](LICENSE).
 
 ---
 
-Feito com 💻 por \[Nickson Jeanmerson]
+Feito com 💻 por [Nickson Jeanmerson]
