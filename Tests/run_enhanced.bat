@@ -1,6 +1,6 @@
 @echo off
 setlocal enabledelayedexpansion
-set SCRIPT_VERSION=2.0
+set SCRIPT_VERSION=3.0
 
 REM ================================================================
 REM Script Avançado para Execução de Testes Unitários WVBrowser
@@ -8,9 +8,11 @@ REM Versão: %SCRIPT_VERSION%
 REM Autor: Nickson Jeanmerson
 REM ================================================================
 
-set TEST_EXE=Output\WVBrowserTests.exe
+set TEST_EXE=Output\TestBrowserForm.exe
+set TEST_ENHANCED_EXE=Output\TestBrowserForm_Enhanced.exe
 set OUTPUT_DIR=Output
-set RESULTS_DIR=Results
+set RESULTS_DIR=Output\Results
+set COVERAGE_DIR=Output\Coverage
 
 REM Cores para output (se suportado)
 set COLOR_SUCCESS=2
@@ -24,159 +26,179 @@ echo           WVBrowser Unit Tests Runner Versao: %SCRIPT_VERSION%
 echo ================================================================
 echo.
 
-REM Verificar argumentos
-if "%1"=="help" goto show_help
-if "%1"=="-h" goto show_help
-if "%1"=="/?" goto show_help
-
-REM Verificar se executável existe
+REM Verificar se o executável existe
 if not exist %TEST_EXE% (
     color %COLOR_ERROR%
     echo ERRO: %TEST_EXE% nao encontrado!
+    echo Compile o projeto primeiro usando build_enhanced.bat
     echo.
-    echo Execute primeiro: build.bat
     color
     pause
     exit /b 1
 )
 
-REM Criar diretório de resultados
-if not exist %RESULTS_DIR% mkdir %RESULTS_DIR%
-
-REM Limpar resultados anteriores
-if exist %RESULTS_DIR%\*.* del /Q %RESULTS_DIR%\*.*
-if exist TestResults.* del /Q TestResults.*
-
-REM Obter timestamp
-for /f "tokens=2 delims==" %%a in ('wmic OS Get localdatetime /value') do set "dt=%%a"
-set "YY=%dt:~2,2%"
-set "YYYY=%dt:~0,4%"
-set "MM=%dt:~4,2%"
-set "DD=%dt:~6,2%"
-set "HH=%dt:~8,2%"
-set "Min=%dt:~10,2%"
-set "Sec=%dt:~12,2%"
-set "timestamp=%YYYY%-%MM%-%DD%_%HH%-%Min%-%Sec%"
-
-echo Data/Hora: %DD%/%MM%/%YYYY% %HH%:%Min%:%Sec%
-echo Executavel: %TEST_EXE%
-echo.
-
-REM Processar argumentos
-set "RUN_MODE=default"
-set "CATEGORY="
-set "QUIET_MODE=false"
-set "REPORT_MODE=all"
-set "FILTER="
-
-:parse_args
-if "%1"=="" goto execute_tests
-
-if "%1"=="console" (
-    set "REPORT_MODE=console"
-    shift
-    goto parse_args
+REM Criar diretório de resultados se não existir
+if not exist %RESULTS_DIR% (
+    mkdir %RESULTS_DIR%
+    echo Criado diretorio: %RESULTS_DIR%
 )
 
-if "%1"=="xml" (
-    set "REPORT_MODE=xml"
-    shift
-    goto parse_args
+REM Criar diretório de cobertura se não existir
+if not exist %COVERAGE_DIR% (
+    mkdir %COVERAGE_DIR%
+    echo Criado diretorio: %COVERAGE_DIR%
 )
 
-if "%1"=="quiet" (
-    set "QUIET_MODE=true"
-    shift
-    goto parse_args
-)
-
-if "%1"=="category" (
-    if "%2"=="" (
-        echo ERRO: Categoria nao especificada!
-        goto show_categories
-    )
-    set "CATEGORY=%2"
-    shift
-    shift
-    goto parse_args
-)
-
-if "%1"=="filter" (
-    if "%2"=="" (
-        echo ERRO: Filtro nao especificado!
-        echo Exemplo: run_enhanced.bat filter "*Width*"
-        goto end
-    )
-    set "FILTER=%2"
-    shift
-    shift
-    goto parse_args
-)
-
-if "%1"=="list" (
-    goto list_tests
-)
-
-if "%1"=="benchmark" (
-    goto run_benchmark
-)
-
-if "%1"=="coverage" (
-    goto run_coverage
-)
-
-REM Argumento desconhecido
-echo AVISO: Argumento desconhecido: %1
-shift
-goto parse_args
-
-:execute_tests
-echo Iniciando execucao dos testes...
-echo.
-
-REM Construir linha de comando
-set "CMD_LINE=%TEST_EXE%"
-
-REM Adicionar reporters baseado no modo
-if "%REPORT_MODE%"=="console" (
-    set "CMD_LINE=!CMD_LINE!"
-) else if "%REPORT_MODE%"=="xml" (
-    set "CMD_LINE=!CMD_LINE! -xml TestResults.xml"
-) else (
-    set "CMD_LINE=!CMD_LINE! -xml TestResults.xml"
-)
-
-REM Adicionar modo quiet (removido - não suportado)
-REM if "%QUIET_MODE%"=="true" (
-REM     set "CMD_LINE=!CMD_LINE! --quiet"
-REM )
-
-REM Adicionar categoria
-if not "%CATEGORY%"=="" (
-    set "CMD_LINE=!CMD_LINE! -i %CATEGORY%"
-    echo Executando apenas categoria: %CATEGORY%
+REM Limpar arquivos de resultado anteriores (opcional)
+if "%1"=="clean" (
+    if exist %RESULTS_DIR%\*.html del /Q %RESULTS_DIR%\*.html
+    if exist %RESULTS_DIR%\*.json del /Q %RESULTS_DIR%\*.json
+    if exist %RESULTS_DIR%\*.xml del /Q %RESULTS_DIR%\*.xml
+    if exist %RESULTS_DIR%\*.txt del /Q %RESULTS_DIR%\*.txt
+    if exist %COVERAGE_DIR%\*.html del /Q %COVERAGE_DIR%\*.html
+    echo Limpeza de resultados anteriores concluida
     echo.
 )
 
-REM Adicionar filtro (removido - não suportado nesta versão)
-REM if not "%FILTER%"=="" (
-REM     set "CMD_LINE=!CMD_LINE! --filter:%FILTER%"
-REM     echo Aplicando filtro: %FILTER%
-REM     echo.
-REM )
-
-REM Executar testes
-echo Comando: !CMD_LINE!
-echo.
-echo ================================================================
-echo                        EXECUTANDO TESTES
-echo ================================================================
+echo Executando testes...
 echo.
 
-!CMD_LINE!
+REM Executar testes com diferentes opções
+if "%1"=="console" goto console
+if "%1"=="xml" goto xml
+if "%1"=="quiet" goto quiet
+if "%1"=="category" goto category
+if "%1"=="html" goto html
+if "%1"=="json" goto json
+if "%1"=="all" goto all
+if "%1"=="help" goto help
+if "%1"=="clean" goto clean
+if "%1"=="coverage" goto coverage
 
-set TEST_RESULT=%ERRORLEVEL%
+REM Execução padrão (todos os relatórios)
+:default
+echo Executando testes com relatorios completos...
+%TEST_EXE%
+goto end
 
+REM Apenas console
+:console
+echo Executando testes apenas no console...
+%TEST_EXE% --console
+goto end
+
+REM Apenas XML
+:xml
+echo Executando testes com saida XML...
+%TEST_EXE% --xml
+goto end
+
+REM Modo silencioso
+:quiet
+echo Executando testes em modo silencioso...
+%TEST_EXE% --quiet
+goto end
+
+REM Executar categoria específica
+:category
+if "%2"=="" (
+    color %COLOR_ERROR%
+    echo ERRO: Especifique uma categoria!
+    echo Exemplo: run_enhanced.bat category Constructor
+    echo.
+    echo Categorias disponíveis:
+    echo - Constructor
+    echo - Properties  
+    echo - FluentInterface
+    echo - Configuration
+    echo - Cookies
+    echo - MDI
+    echo - State
+    echo - Factory
+    echo - Interface
+    echo - Content
+    echo - ShowMethods
+    color
+    goto end
+)
+echo Executando categoria: %2
+%TEST_EXE% --category %2
+goto end
+
+REM Apenas HTML
+:html
+echo Executando testes com relatorio HTML...
+%TEST_EXE% --html
+goto end
+
+REM Apenas JSON
+:json
+echo Executando testes com relatorio JSON...
+%TEST_EXE% --json
+goto end
+
+REM Todos os relatórios
+:all
+echo Executando testes com todos os relatorios...
+%TEST_EXE% --all
+goto end
+
+REM Cobertura de código
+:coverage
+echo Executando testes com cobertura de codigo...
+if exist %TEST_ENHANCED_EXE% (
+    %TEST_ENHANCED_EXE%
+) else (
+    color %COLOR_WARNING%
+    echo AVISO: Executavel com cobertura nao encontrado. Usando versao basica.
+    color
+    %TEST_EXE%
+)
+goto end
+
+REM Limpar resultados
+:clean
+echo Limpeza concluida.
+goto end
+
+REM Ajuda
+:help
+echo.
+echo Uso: run_enhanced.bat [opcao] [parametro]
+echo.
+echo Opcoes:
+echo   console    - Executar apenas com saida no console
+echo   xml        - Executar com saida XML
+echo   html       - Executar com relatorio HTML
+echo   json       - Executar com relatorio JSON
+echo   all        - Executar com todos os relatorios
+echo   coverage   - Executar com cobertura de codigo
+echo   quiet      - Executar em modo silencioso
+echo   category   - Executar apenas categoria especifica
+echo   clean      - Limpar relatorios anteriores
+echo   help       - Mostrar esta ajuda
+echo.
+echo Exemplos:
+echo   run_enhanced.bat                    - Execucao padrao (todos os relatorios)
+echo   run_enhanced.bat console            - Apenas console
+echo   run_enhanced.bat xml                - Gerar arquivo XML
+echo   run_enhanced.bat html               - Gerar relatorio HTML
+echo   run_enhanced.bat json               - Gerar relatorio JSON
+echo   run_enhanced.bat coverage           - Executar com cobertura de codigo
+echo   run_enhanced.bat category Constructor - Apenas testes de construtor
+echo   run_enhanced.bat clean              - Limpar relatorios anteriores
+echo.
+echo Categorias de teste:
+echo   Constructor, Properties, FluentInterface, Configuration,
+echo   Cookies, MDI, State, Factory, Interface, Content, ShowMethods
+echo.
+echo Relatorios gerados em:
+echo   - %RESULTS_DIR% (Resultados de teste)
+echo   - %COVERAGE_DIR% (Relatorios de cobertura)
+echo.
+goto end
+
+:end
 echo.
 echo ================================================================
 echo                            RESULTADO
@@ -185,197 +207,27 @@ echo.
 
 REM Verificar código de saída
 if %ERRORLEVEL% equ 0 (
+    color %COLOR_SUCCESS%
     echo ================================================================
     echo                  TODOS OS TESTES PASSARAM!
     echo ================================================================
 ) else if %ERRORLEVEL% equ 1 (
+    color %COLOR_WARNING%
     echo ================================================================
     echo                   ALGUNS TESTES FALHARAM!
     echo ================================================================
 ) else (
+    color %COLOR_ERROR%
     echo ================================================================
     echo                   ERRO FATAL NA EXECUCAO!
     echo ================================================================
 )
 
-REM Mover resultados para diretório com timestamp
-if exist TestResults.xml (
-    move TestResults.xml %RESULTS_DIR%\TestResults_%timestamp%.xml >nul
-    echo Resultado XML: %RESULTS_DIR%\TestResults_%timestamp%.xml
-)
-
-if exist TestResults.txt (
-    move TestResults.txt %RESULTS_DIR%\TestResults_%timestamp%.txt >nul
-    echo Resultado TXT: %RESULTS_DIR%\TestResults_%timestamp%.txt
-)
-
-REM Mostrar sumário se arquivo de texto existir
-if exist %RESULTS_DIR%\TestResults_%timestamp%.txt (
-    echo.
-    echo ================================================================
-    echo                          SUMARIO
-    echo ================================================================
-    
-    for /f "tokens=*" %%i in ('findstr /C:"Total Tests:" %RESULTS_DIR%\TestResults_%timestamp%.txt') do echo %%i
-    for /f "tokens=*" %%i in ('findstr /C:"Passed:" %RESULTS_DIR%\TestResults_%timestamp%.txt') do echo %%i
-    for /f "tokens=*" %%i in ('findstr /C:"Failed:" %RESULTS_DIR%\TestResults_%timestamp%.txt') do echo %%i
-    for /f "tokens=*" %%i in ('findstr /C:"Errors:" %RESULTS_DIR%\TestResults_%timestamp%.txt') do echo %%i
-    for /f "tokens=*" %%i in ('findstr /C:"Memory Leaks:" %RESULTS_DIR%\TestResults_%timestamp%.txt') do echo %%i
-)
-
 color
-goto end
-
-:list_tests
-echo ================================================================
-echo                    LISTAGEM DE TESTES
-echo ================================================================
-%TEST_EXE% -h
-goto end
-
-:run_benchmark
-echo ================================================================
-echo                   EXECUTANDO BENCHMARK
-echo ================================================================
-echo Executando testes de performance...
-
-REM Executar categoria Performance 3 vezes e calcular média
-set /a "total_time=0"
-set /a "runs=3"
-
-for /l %%i in (1,1,%runs%) do (
-    echo.
-    echo Execucao %%i de %runs%...
-    
-    set "start_time=!time!"
-    %TEST_EXE% -i Performance
-    set "end_time=!time!"
-    
-    REM Calcular tempo (simplificado)
-    echo Tempo execucao %%i: !start_time! - !end_time!
-)
-
 echo.
-echo Benchmark concluido!
-goto end
-
-:run_coverage
-echo ================================================================
-echo                 EXECUTANDO COM COBERTURA
-echo ================================================================
-
-REM Verificar se CodeCoverage está disponível
-where CodeCoverage.exe >nul 2>nul
-if %ERRORLEVEL% neq 0 (
-    echo CodeCoverage.exe nao encontrado no PATH
-    echo Download: https://github.com/DelphiCodeCoverage/DelphiCodeCoverage
-    goto end
-)
-
-echo Executando testes com analise de cobertura...
-
-REM Executar com cobertura
-CodeCoverage.exe -e %TEST_EXE% -m "*.pas" -uf ..\Source\WVBrowserFormClass.pas -html -od Coverage
-
-if %ERRORLEVEL% equ 0 (
-    echo.
-    echo Relatorio de cobertura gerado em: Coverage\index.html
-    
-    REM Abrir relatório se possível
-    if exist Coverage\index.html (
-        echo Abrindo relatorio...
-        start Coverage\index.html
-    )
-) else (
-    echo Erro ao gerar relatorio de cobertura
-)
-
-goto end
-
-:show_categories
+echo Relatorios disponiveis em: %RESULTS_DIR%
 echo.
-echo ================================================================
-echo                   CATEGORIAS DISPONIVEIS
-echo ================================================================
+echo Para visualizar o relatorio HTML:
+echo   start %RESULTS_DIR%\TestReport_*.html
 echo.
-echo Constructor      - Testes de construcao e inicializacao
-echo Properties       - Testes de propriedades e getters/setters  
-echo FluentInterface  - Testes da interface fluente (method chaining)
-echo Configuration    - Testes de configuracao de janela
-echo Cookies          - Testes de manipulacao de cookies
-echo MDI              - Testes especificos para MDI
-echo Validation       - Testes de validacao de dados
-echo State            - Testes de estado interno do objeto
-echo Factory          - Testes dos metodos factory
-echo Messages         - Testes de sistema de mensagens
-echo Content          - Testes de conteudo HTML
-echo ShowMethods      - Testes dos metodos Show/ShowModal
-echo Interface        - Testes da interface IBrowserForm
-echo EdgeCases        - Testes de casos extremos
-echo Relationships    - Testes de relacionamentos Parent/Child
-echo Events           - Testes de eventos
-echo Performance      - Testes de performance
-echo.
-echo Exemplo: run_enhanced.bat category Properties
-echo.
-goto end
-
-:show_help
-echo.
-echo ================================================================
-echo                    AJUDA - Test Runner v%SCRIPT_VERSION%
-echo ================================================================
-echo.
-echo USO:
-echo   run_enhanced.bat [opcao] [parametro]
-echo.
-echo OPCOES BASICAS:
-echo   console          - Executar apenas com saida no console
-echo   xml              - Executar apenas com saida XML
-echo   quiet            - Executar em modo silencioso
-echo   category [nome]  - Executar apenas categoria especifica
-echo   filter [pattern] - Filtrar testes por padrao (nao implementado)
-echo.
-echo OPCOES AVANCADAS:
-echo   list             - Listar informacoes dos testes
-echo   benchmark        - Executar testes de performance
-echo   coverage         - Executar com analise de cobertura
-echo   help             - Mostrar esta ajuda
-echo.
-echo EXEMPLOS:
-echo   run_enhanced.bat
-echo   run_enhanced.bat console
-echo   run_enhanced.bat category Constructor
-echo   run_enhanced.bat xml
-echo   run_enhanced.bat benchmark
-echo   run_enhanced.bat coverage
-echo.
-echo ARQUIVOS GERADOS:
-echo   Results\TestResults_[timestamp].xml - Formato NUnit
-echo   Results\TestResults_[timestamp].txt - Relatorio detalhado
-echo   Coverage\index.html                 - Relatorio de cobertura
-echo.
-goto end
-
-:end
-echo.
-if exist TEST_RESULT (
-    if %TEST_RESULT% neq 0 (
-        echo Codigo de saida: %TEST_RESULT%
-        echo Para mais informacoes, execute: run_enhanced.bat help
-    )
-)
-echo.
-
-REM Pause apenas se não estiver em modo quiet
-if "%QUIET_MODE%" neq "true" (
-    if not defined CI (
-        pause
-    )
-)
-
-if defined TEST_RESULT (
-    exit /b %TEST_RESULT%
-) else (
-    exit /b 0
-)
+pause

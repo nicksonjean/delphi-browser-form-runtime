@@ -1,0 +1,13 @@
+{
+	"name": "Delphi-Browser-Form-Popup-Runtime",
+	"description": "Este projeto em Delphi implementa um framework de abstração para navegadores ou formulários baseados em visualização Web, utilizando o padrão de projeto Strategy com suporte a interfaces fluentes e encapsulamento de propriedades comuns.",
+	"version": "1.0.0",
+	"homepage": "",
+	"mainsrc": "../Source",
+	"projects": [],
+	"dependencies": {
+		"github.com/delphicodecoverage/delphicodecoverage": "^1.0.15",
+		"github.com/nicksonjean/webview4delphi": "1.0.0",
+		"github.com/vsofttechnologies/dunitx": "^v0.4.0"
+	}
+}

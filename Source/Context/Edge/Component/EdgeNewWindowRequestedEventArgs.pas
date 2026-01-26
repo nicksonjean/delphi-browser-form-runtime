@@ -8,7 +8,6 @@ uses
   System.SysUtils,
   Vcl.Edge,
   WebView2,
-
   EdgeDeferral;
 
 const

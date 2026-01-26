@@ -1,22 +1,47 @@
-﻿unit TestWVBrowserFormClass;
+﻿unit TestUnitBrowserForm;
 
 interface
 
 uses
   DUnitX.TestFramework,
+  Winapi.Windows,
+  Winapi.Messages,
   System.SysUtils,
   System.Classes,
-  Vcl.Forms,
+  System.JSON,
+  System.StrUtils,
   Vcl.Controls,
-  WVBrowserFormClass,
+  Vcl.Forms,
+  Vcl.Dialogs,
+  Vcl.StdCtrls,
+  Vcl.Menus,
+  Vcl.WinXCtrls,
+
+  Vcl.Edge,
+  uWVBrowser,
+  IBrowserFormBase,
+
+  UtilsLib,
   BrowserTypes,
-  BrowserFormInterface;
+  IEdgeWebBrowserForm,
+  IWebViewBrowserForm,
+
+  EdgeWebBrowserForm,
+  EdgeWebAdvancedPopupExample,
+  WebViewBrowserForm,
+  WebViewAdvancedPopupExample
+  ;
+
+const
+  DEFAULT_URL = 'about:blank';
+  DEFAULT_WIDTH = 800;
+  DEFAULT_HEIGHT = 600;
 
 type
   [TestFixture]
-  TTestWVBrowserForm = class
+  TTestWebViewBrowser = class
   private
-    FBrowserForm: TCustomFormWVBrowser;
+    FBrowserForm: TWebViewBrowser;
     FTestForm: TForm;
   public
     [Setup]
@@ -34,7 +59,7 @@ type
     [Category('Constructor')]
     procedure TestCreate_WithURL_ShouldSetURL;
 
-    // Testes de Propriedades
+    // Testes de Propriedades Básicas
     [Test]
     [Category('Properties')]
     procedure TestSetWidth_ShouldUpdateProperty;
@@ -111,16 +136,16 @@ type
 
 implementation
 
-{ TTestWVBrowserForm }
+{ TTestUnitBrowserForm }
 
-procedure TTestWVBrowserForm.Setup;
+procedure TTestWebViewBrowser.Setup;
 begin
-  FBrowserForm := TCustomFormWVBrowser.Create;
+  FBrowserForm := TWebViewBrowser.Create;
   FTestForm := TForm.Create(nil);
   FTestForm.FormStyle := fsMDIForm;
 end;
 
-procedure TTestWVBrowserForm.TearDown;
+procedure TTestWebViewBrowser.TearDown;
 begin
   if Assigned(FBrowserForm) then
   begin
@@ -137,7 +162,7 @@ end;
 
 // Testes de Construção
 
-procedure TTestWVBrowserForm.TestCreate_Default_ShouldSetDefaultValues;
+procedure TTestWebViewBrowser.TestCreate_Default_ShouldSetDefaultValues;
 begin
   Assert.IsNotNull(FBrowserForm, 'Browser form should be created');
   Assert.AreEqual(DEFAULT_WIDTH, FBrowserForm.Width, 'Default width should be 800');
@@ -146,23 +171,25 @@ begin
   Assert.IsFalse(FBrowserForm.IsPopup, 'Should not be popup by default');
 end;
 
-procedure TTestWVBrowserForm.TestCreate_WithURL_ShouldSetURL;
+procedure TTestWebViewBrowser.TestCreate_WithURL_ShouldSetURL;
 const
   TEST_URL = 'https://www.example.com';
 var
-  BrowserWithURL: TCustomFormWVBrowser;
+  BrowserWithURL: TWebViewBrowser;
 begin
-  BrowserWithURL := TCustomFormWVBrowser.Create(TEST_URL);
+  BrowserWithURL := nil;
   try
+    BrowserWithURL := TWebViewBrowser.Create(TEST_URL);
     Assert.AreEqual(TEST_URL, BrowserWithURL.URL, 'URL should be set from constructor');
   finally
-    BrowserWithURL.Free;
+    if Assigned(BrowserWithURL) then
+      BrowserWithURL.Free;
   end;
 end;
 
 // Testes de Propriedades
 
-procedure TTestWVBrowserForm.TestSetWidth_ShouldUpdateProperty;
+procedure TTestWebViewBrowser.TestSetWidth_ShouldUpdateProperty;
 const
   TEST_WIDTH = 1024;
 begin
@@ -170,7 +197,7 @@ begin
   Assert.AreEqual(TEST_WIDTH, FBrowserForm.Width, 'Width should be updated');
 end;
 
-procedure TTestWVBrowserForm.TestSetHeight_ShouldUpdateProperty;
+procedure TTestWebViewBrowser.TestSetHeight_ShouldUpdateProperty;
 const
   TEST_HEIGHT = 768;
 begin
@@ -178,7 +205,7 @@ begin
   Assert.AreEqual(TEST_HEIGHT, FBrowserForm.Height, 'Height should be updated');
 end;
 
-procedure TTestWVBrowserForm.TestSetCaption_ShouldUpdateCaption;
+procedure TTestWebViewBrowser.TestSetCaption_ShouldUpdateCaption;
 const
   TEST_CAPTION = 'Test Browser Window';
 begin
@@ -186,7 +213,7 @@ begin
   Assert.AreEqual(TEST_CAPTION, FBrowserForm.Caption, 'Caption should be updated');
 end;
 
-procedure TTestWVBrowserForm.TestSetURL_ShouldUpdateURL;
+procedure TTestWebViewBrowser.TestSetURL_ShouldUpdateURL;
 const
   TEST_URL = 'https://www.google.com';
 begin
@@ -196,9 +223,9 @@ end;
 
 // Testes de Interface Fluente
 
-procedure TTestWVBrowserForm.TestChainableMethods_ShouldReturnSelf;
+procedure TTestWebViewBrowser.TestChainableMethods_ShouldReturnSelf;
 var
-  Result: TCustomFormWVBrowser;
+  Result: TWebViewBrowser;
 begin
   Result := FBrowserForm.SetWidth(1024);
   Assert.AreSame(FBrowserForm, Result, 'SetWidth should return self');
@@ -210,9 +237,9 @@ begin
   Assert.AreSame(FBrowserForm, Result, 'SetCaption should return self');
 end;
 
-procedure TTestWVBrowserForm.TestComplexChaining_ShouldWorkCorrectly;
+procedure TTestWebViewBrowser.TestComplexChaining_ShouldWorkCorrectly;
 var
-  Result: TCustomFormWVBrowser;
+  Result: TWebViewBrowser;
 const
   TEST_WIDTH = 1920;
   TEST_HEIGHT = 1080;
@@ -233,7 +260,7 @@ end;
 
 // Testes de Configuração
 
-procedure TTestWVBrowserForm.TestSetResizable_ShouldWork;
+procedure TTestWebViewBrowser.TestSetResizable_ShouldWork;
 begin
   FBrowserForm.SetResizable(True);
   Assert.IsTrue(FBrowserForm.Resizable, 'Should be resizable when set to true');
@@ -242,7 +269,7 @@ begin
   Assert.IsFalse(FBrowserForm.Resizable, 'Should not be resizable when set to false');
 end;
 
-procedure TTestWVBrowserForm.TestSetMovable_ShouldWork;
+procedure TTestWebViewBrowser.TestSetMovable_ShouldWork;
 begin
   FBrowserForm.SetMovable(False);
   Assert.IsFalse(FBrowserForm.Movable, 'Should not be movable when set to false');
@@ -253,7 +280,7 @@ end;
 
 // Testes de Cookies
 
-procedure TTestWVBrowserForm.TestSetCookie_ShouldSetProperties;
+procedure TTestWebViewBrowser.TestSetCookie_ShouldSetProperties;
 const
   COOKIE_NAME = 'TestCookie';
   COOKIE_VALUE = 'TestValue';
@@ -270,7 +297,7 @@ end;
 
 // Testes MDI
 
-procedure TTestWVBrowserForm.TestSetMaxInstances_ShouldUpdateProperty;
+procedure TTestWebViewBrowser.TestSetMaxInstances_ShouldUpdateProperty;
 const
   MAX_INSTANCES = 5;
 begin
@@ -278,61 +305,64 @@ begin
   Assert.AreEqual(MAX_INSTANCES, FBrowserForm.MaxInstances, 'Max instances should be updated');
 end;
 
-procedure TTestWVBrowserForm.TestCheckMDILimits_ShouldReturnTrue;
+procedure TTestWebViewBrowser.TestCheckMDILimits_ShouldReturnTrue;
 const
   TEST_IDENTIFIER = 'TestBrowser';
 begin
   Assert.IsTrue(
-    TCustomFormWVBrowser.CheckMDILimits(TEST_IDENTIFIER),
+    TWebViewBrowser.CheckMDILimits(TEST_IDENTIFIER, 1, True),
     'CheckMDILimits should return true for new identifier'
   );
 end;
 
 // Testes de Estados
 
-procedure TTestWVBrowserForm.TestIsPopup_InitialState_ShouldBeFalse;
+procedure TTestWebViewBrowser.TestIsPopup_InitialState_ShouldBeFalse;
 begin
   Assert.IsFalse(FBrowserForm.IsPopup, 'IsPopup should be false initially');
 end;
 
 // Testes de Factory Methods
 
-procedure TTestWVBrowserForm.TestNewBrowser_ShouldCreateWithDefaults;
+procedure TTestWebViewBrowser.TestNewBrowser_ShouldCreateWithDefaults;
 var
-  Browser: TCustomFormWVBrowser;
+  Browser: TWebViewBrowser;
 begin
-  Browser := TCustomFormWVBrowser.NewBrowser('https://example.com');
+  Browser := nil;
   try
+    Browser := TWebViewBrowser.NewBrowser('https://example.com');
     Assert.IsNotNull(Browser, 'NewBrowser should create instance');
     Assert.AreEqual('https://example.com', Browser.URL, 'URL should be set');
     Assert.IsFalse(Browser.IsPopup, 'Should not be popup');
   finally
-    Browser.Free;
+    if Assigned(Browser) then
+      Browser.Free;
   end;
 end;
 
 // Testes de Interface
 
-procedure TTestWVBrowserForm.TestInterfaceCompatibility_ShouldWork;
+procedure TTestWebViewBrowser.TestInterfaceCompatibility_ShouldWork;
 var
   BrowserInterface: IBrowserForm;
 begin
   BrowserInterface := FBrowserForm;
   Assert.IsNotNull(BrowserInterface, 'Should support IBrowserForm interface');
 
-  // Test interface methods
-  BrowserInterface.SetWidth(1024).SetHeight(768);
-  Assert.AreEqual(1024, FBrowserForm.Width, 'Interface method should work');
-  Assert.AreEqual(768, FBrowserForm.Height, 'Interface method should work');
+  // Test interface properties
+  BrowserInterface.Width := 1024;
+  BrowserInterface.Height := 768;
+  Assert.AreEqual(1024, FBrowserForm.Width, 'Interface property should work');
+  Assert.AreEqual(768, FBrowserForm.Height, 'Interface property should work');
 end;
 
 // Testes de HTML Content
 
-procedure TTestWVBrowserForm.TestSetHTMLContent_ShouldReturnSelf;
+procedure TTestWebViewBrowser.TestSetHTMLContent_ShouldReturnSelf;
 const
   HTML_CONTENT = '<html><body><h1>Test</h1></body></html>';
 var
-  Result: TCustomFormWVBrowser;
+  Result: TWebViewBrowser;
 begin
   Result := FBrowserForm.SetHTMLContent(HTML_CONTENT);
   Assert.AreSame(FBrowserForm, Result, 'SetHTMLContent should return self');
@@ -340,10 +370,10 @@ end;
 
 // Testes de Show Methods
 
-procedure TTestWVBrowserForm.TestShow_ShouldNotRaiseUnexpectedExceptions;
+procedure TTestWebViewBrowser.TestShow_ShouldNotRaiseUnexpectedExceptions;
 begin
   try
-    FBrowserForm.Show();
+    FBrowserForm.Show(TOpenType.Default);
     Assert.Pass('Show executed without unexpected exceptions');
   except
     on E: Exception do
@@ -358,6 +388,6 @@ begin
 end;
 
 initialization
-  TDUnitX.RegisterTestFixture(TTestWVBrowserForm);
+  TDUnitX.RegisterTestFixture(TTestWebViewBrowser);
 
 end.

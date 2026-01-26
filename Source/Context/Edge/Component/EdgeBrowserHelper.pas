@@ -1,4 +1,4 @@
-unit EdgeBrowserHelper;
+Ôªøunit EdgeBrowserHelper;
 
 interface
 
@@ -9,12 +9,12 @@ uses
   Vcl.Forms,
   Vcl.ExtCtrls,
   Vcl.Dialogs,
-  Vcl.Edge,
   System.JSON,
   System.Generics.Collections,
   System.SysUtils,
   System.Classes,
   WebView2,
+  Vcl.Edge,
   Winapi.ActiveX,
   EdgeCookie;
 
@@ -29,7 +29,7 @@ type
     {$ENDIF}
   {$ENDIF}
 
-  // Tipos de evento - usar nomes ˙nicos para evitar conflitos
+  // Tipos de evento - usar nomes √∫nicos para evitar conflitos
   TEdgeInitializationErrorEvent = procedure(Sender: TObject; aErrorCode: HRESULT; const aErrorMessage: wvstring) of object;
   TEdgeAfterCreatedEvent = procedure(Sender: TObject) of object;
 
@@ -44,27 +44,27 @@ type
     property OnInitializationError: TEdgeInitializationErrorEvent read GetOnInitializationError write SetOnInitializationError;
     property OnAfterCreated: TEdgeAfterCreatedEvent read GetOnAfterCreated write SetOnAfterCreated;
 
-    // MÈtodos de cookies
+    // M√©todos de cookies
     function CreateCookie(const ACookieName, ACookieValue, ACookieDomain, ACookiePath: string): IEdgeCookie;
     procedure AddOrUpdateCookie(const ACookie: IEdgeCookie);
     procedure SetCookieViaScript(const ACookieName, ACookieValue, ACookieDomain, ACookiePath: string);
     procedure GetCookieViaScript(const ACookieName: string; ACallback: TProc<string>);
 
-    // MÈtodos de acesso ao WebView2
+    // M√©todos de acesso ao WebView2
     function GetCoreWebView2: ICoreWebView2;
 
-    // MÈtodos de eventos
+    // M√©todos de eventos
     procedure DoOnInitializationError(aErrorCode: HRESULT; const aErrorMessage: wvstring);
     procedure DoOnAfterCreated;
 
-    // MÈtodos utilit·rios
+    // M√©todos utilit√°rios
     procedure PostWebMessageAsString(const AMessage: string);
     procedure NavigateToString(const AHTMLContent: string);
   end;
 
 implementation
 
-// Vari·veis globais para armazenar eventos (workaround para helper)
+// Vari√°veis globais para armazenar eventos (workaround para helper)
 var
   GlobalInitErrorEvents: TDictionary<TEdgeBrowser, TEdgeInitializationErrorEvent>;
   GlobalAfterCreatedEvents: TDictionary<TEdgeBrowser, TEdgeAfterCreatedEvent>;
@@ -113,7 +113,7 @@ begin
     GlobalAfterCreatedEvents.Remove(Self);
 end;
 
-// MÈtodos de eventos
+// M√©todos de eventos
 
 procedure TEdgeBrowserHelper.DoOnInitializationError(aErrorCode: HRESULT; const aErrorMessage: wvstring);
 begin
@@ -127,7 +127,7 @@ begin
     GlobalAfterCreatedEvents[Self](Self);
 end;
 
-// MÈtodos do WebView2
+// M√©todos do WebView2
 
 function TEdgeBrowserHelper.GetCoreWebView2: ICoreWebView2;
 var
@@ -141,7 +141,7 @@ begin
   end;
 end;
 
-// MÈtodos de cookies
+// M√©todos de cookies
 
 function TEdgeBrowserHelper.CreateCookie(const ACookieName, ACookieValue, ACookieDomain, ACookiePath: string): IEdgeCookie;
 begin
@@ -177,14 +177,14 @@ begin
   if Assigned(ACookie.Path) then
     CookiePath := string(ACookie.Path);
 
-  // Validar dados mÌnimos
+  // Validar dados m√≠nimos
   if (CookieName = '') or (CookieValue = '') then
     Exit;
 
   // Construir script JavaScript para definir cookie
   CookieScript := Format('document.cookie = "%s=%s', [CookieName, CookieValue]);
 
-  // Adicionar domÌnio se especificado
+  // Adicionar dom√≠nio se especificado
   if CookieDomain <> '' then
     CookieScript := CookieScript + '; domain=' + CookieDomain;
 
@@ -203,7 +203,7 @@ begin
   except
     on E: Exception do
     begin
-      // Chamar evento de erro se disponÌvel
+      // Chamar evento de erro se dispon√≠vel
       DoOnInitializationError(E_FAIL, 'Erro ao definir cookie: ' + E.Message);
     end;
   end;
@@ -261,7 +261,7 @@ begin
     Exit;
   end;
 
-  // Script para buscar cookie especÌfico
+  // Script para buscar cookie espec√≠fico
   Script := Format(
     'function getCookie(name) {' +
     '  var nameEQ = name + "=";' +
@@ -279,7 +279,7 @@ begin
 
   try
     Self.ExecuteScript(Script);
-    // O resultado ser· recebido via OnWebMessageReceived
+    // O resultado ser√° recebido via OnWebMessageReceived
   except
     on E: Exception do
     begin
@@ -290,7 +290,7 @@ begin
   end;
 end;
 
-// MÈtodos utilit·rios
+// M√©todos utilit√°rios
 
 procedure TEdgeBrowserHelper.PostWebMessageAsString(const AMessage: string);
 var
@@ -334,7 +334,7 @@ begin
   end;
 end;
 
-// InicializaÁ„o e finalizaÁ„o
+// Inicializa√ß√£o e finaliza√ß√£o
 
 initialization
 

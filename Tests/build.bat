@@ -1,18 +1,18 @@
 @echo off
 setlocal enabledelayedexpansion
-set BUILD_VERSION=2.0
+set BUILD_VERSION=3.0
 
 REM ================================================================
-REM Script de Build Simplificado para WVBrowser Tests - Versao: %BUILD_VERSION%
+REM Script de Build Avançado para WVBrowser Tests - Versao: %BUILD_VERSION%
 REM Versão: %BUILD_VERSION%
 REM Autor: Nickson Jeanmerson
 REM ================================================================
 
-set PROJECT_NAME=WVBrowserTests
+set PROJECT_NAME=TestBrowserForm
 set PROJECT_FILE=%PROJECT_NAME%.dpr
 set OUTPUT_DIR=Output
-set DCU_DIR=%OUTPUT_DIR%\DCU
 set SOURCE_DIR=..\Source
+set DEPENDENCIES_DIR=%SOURCE_DIR%\Dependencies
 
 REM Cores para output
 set COLOR_SUCCESS=2
@@ -36,9 +36,9 @@ if not exist %PROJECT_FILE% (
     exit /b 1
 )
 
-echo [1/4] Procurando instalacao do Delphi...
+echo [1/5] Procurando instalacao do Delphi...
 
-REM Tentar caminhos comuns do Delphi
+REM Definir possiveis localizacoes do Delphi
 set "DELPHI_PATHS="
 set "DELPHI_PATHS=%DELPHI_PATHS%;C:\Program Files (x86)\Embarcadero\Studio\23.0\bin"
 set "DELPHI_PATHS=%DELPHI_PATHS%;C:\Program Files (x86)\Embarcadero\Studio\22.0\bin"
@@ -87,16 +87,11 @@ pause
 exit /b 1
 
 :delphi_found
-echo [2/4] Preparando ambiente... e Limpando build anterior...
+echo [2/5] Preparando ambiente... e Limpando build anterior...
 
 if not exist %OUTPUT_DIR% (
     mkdir %OUTPUT_DIR%
     echo Criado: %OUTPUT_DIR%
-)
-
-if not exist %DCU_DIR% (
-    mkdir %DCU_DIR%
-    echo Criado: %DCU_DIR%
 )
 
 if exist %OUTPUT_DIR%\*.exe (
@@ -104,17 +99,7 @@ if exist %OUTPUT_DIR%\*.exe (
     echo Removidos: executaveis antigos
 )
 
-if exist %DCU_DIR%\*.dcu (
-    del /Q %DCU_DIR%\*.dcu
-    echo Removidos: DCUs antigos
-)
-
-if exist *.dcu (
-    del /Q *.dcu
-    echo Removidos: DCUs do diretorio atual
-)
-
-echo [3/4] Verificando dependencias...
+echo [3/5] Verificando dependencias...
 
 if not exist %SOURCE_DIR% (
     color %COLOR_ERROR%
@@ -127,6 +112,7 @@ if not exist %SOURCE_DIR% (
     echo     Strategy\
     echo     Generic\
     echo     Example\
+    echo     Dependencies\
     echo.
     color
     pause
@@ -136,14 +122,14 @@ if not exist %SOURCE_DIR% (
 echo Diretorio source encontrado: %SOURCE_DIR%
 
 REM Verificar se WebView4Delphi esta disponivel
-set "WEBVIEW4DELPHI_PATH=F:\Projetos\Delphi\Components\WebView4Delphi\source"
+set "WEBVIEW4DELPHI_PATH=%DEPENDENCIES_DIR%\WebView4Delphi\source"
 if not exist "%WEBVIEW4DELPHI_PATH%" (
     color %COLOR_ERROR%
     echo ERRO: WebView4Delphi nao encontrado em: %WEBVIEW4DELPHI_PATH%
     echo.
     echo O projeto precisa do WebView4Delphi para compilar.
     echo Verifique se:
-    echo 1. O WebView4Delphi esta instalado
+    echo 1. O WebView4Delphi esta na pasta Dependencies
     echo 2. O caminho esta correto
     echo 3. As units estao disponiveis
     echo.
@@ -154,14 +140,45 @@ if not exist "%WEBVIEW4DELPHI_PATH%" (
 
 echo WebView4Delphi encontrado em: %WEBVIEW4DELPHI_PATH%
 
-echo [4/4] Compilando projeto...
+REM Verificar se DUnitX esta disponivel
+set "DUNITX_PATH=%DEPENDENCIES_DIR%\DUnitX\Source"
+if not exist "%DUNITX_PATH%" (
+    color %COLOR_ERROR%
+    echo ERRO: DUnitX nao encontrado em: %DUNITX_PATH%
+    echo.
+    echo O projeto precisa do DUnitX para testes.
+    echo Verifique se:
+    echo 1. O DUnitX esta na pasta Dependencies
+    echo 2. O caminho esta correto
+    echo 3. As units estao disponiveis
+    echo.
+    color
+    pause
+    exit /b 1
+)
+
+echo DUnitX encontrado em: %DUNITX_PATH%
+
+REM Verificar se DelphiCodeCoverage esta disponivel
+set "COVERAGE_PATH=%DEPENDENCIES_DIR%\DelphiCodeCoverage\Source"
+if not exist "%COVERAGE_PATH%" (
+    color %COLOR_WARNING%
+    echo AVISO: DelphiCodeCoverage nao encontrado em: %COVERAGE_PATH%
+    echo Os testes funcionarao sem cobertura de codigo.
+    echo.
+    color
+) else (
+    echo DelphiCodeCoverage encontrado em: %COVERAGE_PATH%
+)
+
+echo [4/5] Compilando projeto...
 
 REM Construir paths de units
-set "UNIT_PATHS=-U%SOURCE_DIR%;%SOURCE_DIR%\Context;%SOURCE_DIR%\Strategy;%SOURCE_DIR%\Generic;%SOURCE_DIR%\Example;%WEBVIEW4DELPHI_PATH%;%DCU_DIR%"
+set "UNIT_PATHS=-U%SOURCE_DIR%;%SOURCE_DIR%\Context;%SOURCE_DIR%\Context\Edge\Component;%SOURCE_DIR%\Strategy;%SOURCE_DIR%\Generic;%SOURCE_DIR%\Example;%WEBVIEW4DELPHI_PATH%;%DUNITX_PATH%;%COVERAGE_PATH%"
 
 REM Parâmetros de compilação
 set "COMPILER_PARAMS=-B -Q"
-set "OUTPUT_PARAMS=-E%OUTPUT_DIR% -N%DCU_DIR%"
+set "OUTPUT_PARAMS=-E%OUTPUT_DIR%"
 set "DEBUG_PARAMS=-$D+ -$L+ -$Y+ -$C+ -$Q+ -$R+ -$W+"
 set "NAMESPACE_PARAMS=-NSSystem;Xml;Data;Datasnap;Web;Soap;Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell"
 
@@ -177,7 +194,8 @@ echo   - Strategy: %SOURCE_DIR%\Strategy
 echo   - Generic: %SOURCE_DIR%\Generic
 echo   - Example: %SOURCE_DIR%\Example
 echo   - WebView4Delphi: %WEBVIEW4DELPHI_PATH%
-echo   - DCU: %DCU_DIR%
+echo   - DUnitX: %DUNITX_PATH%
+echo   - DelphiCodeCoverage: %COVERAGE_PATH%
 echo.
 
 call %BUILD_CMD%
@@ -206,6 +224,11 @@ if %BUILD_RESULT% equ 0 (
         echo Tempo: %time%
         echo ================================================================
 
+        echo.
+        echo ================================================================
+        echo                    EXECUTANDO TESTES
+        echo ================================================================
+
         call run.bat
         
     ) else (
@@ -224,5 +247,5 @@ if %BUILD_RESULT% equ 0 (
     echo 1. Execute o build novamente sem -Q para ver detalhes
     echo 2. Abra o projeto no Delphi IDE
     echo 3. Verifique se todas as units estao acessiveis
-    echo 4. Verifique se WebView4Delphi esta instalado
+    echo 4. Verifique se as dependencias estao na pasta Dependencies
 )

@@ -1,9 +1,39 @@
-# Arquivos temporários do Delphi
 *.~*
+*.#*
+
+*.~pas
+*.~dfm
+*.~fmx
+*.~inc
+*.~dpr
+*.~dpk
+*.~dproj
+*.dcu
+*.exe
+*.dll
+*.bpl
+*.so
+*.dylib
+*.pdb
+*.il
+*.chm
+*.hlp
+*.~test*
+*.log
+*.stat
+*.tvsconfig
+*.dsk
+*.dof
+*.cfg
+*.res
 *.tmp
 *.temp
 *.bak
-*.#*
+*.dsk
+*.local
+*.identcache
+*.projdata
+*.tvsconfig
 
 # Pastas de histórico (em qualquer nível)
 __history/
@@ -15,46 +45,9 @@ __recovery/
 .qodo/
 **/.qodo/
 
-# Arquivos de backup automático
-*.~pas
-*.~dfm
-*.~fmx
-*.~inc
-*.~dpr
-*.~dpk
-*.~dproj
-
-# Arquivos de debug
-*.pdb
-*.il
-
-# Arquivos de documentação gerados
-*.chm
-*.hlp
-
-# Arquivos de teste
-*.~test*
-
-# Logs
-*.log
-
 # Outros arquivos temporários
 Thumbs.db
 .DS_Store
-
-# Arquivos locais e de cache
-*.local
-*.identcache
-CustomCache/
-**/CustomCache/
-
-# Arquivos específicos do projeto
-*.dcu
-*.exe
-*.dll
-*.bpl
-*.so
-*.dylib
 
 # Pastas de build e output
 Win32/
@@ -64,15 +57,12 @@ Release/
 Output/
 Results/
 
-# Arquivos de configuração do IDE
-*.tvsconfig
-*.dsk
-*.dof
-*.cfg
-*.res
-
 # Arquivos de cache do WebView2/Edge
 EdgeCustomCache/
-WVCustomCache/
 **/EdgeCustomCache/
+WVCustomCache/
 **/WVCustomCache/
+CustomCache/
+**/CustomCache/
+
+modules/

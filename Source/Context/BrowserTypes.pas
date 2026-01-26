@@ -27,14 +27,7 @@ type
 
   TMDIOptionsHelper = record helper for TMDIOptions
   private
-    class function InitWith(
-      AAutoShow: Boolean;
-      ASingleInstance: Boolean;
-      AMaximizeOnShow: Boolean;
-      ABringToFrontIfExists: Boolean;
-      const AUniqueIdentifier: String;
-      AMaxInstances: Integer
-    ): TMDIOptions; static;
+    class function InitWith(AAutoShow: Boolean; ASingleInstance: Boolean; AMaximizeOnShow: Boolean; ABringToFrontIfExists: Boolean; const AUniqueIdentifier: String; AMaxInstances: Integer): TMDIOptions; static;
   public
     class function Default: TMDIOptions; static;
     class function Simple: TMDIOptions; static;
@@ -46,14 +39,7 @@ implementation
 
 { TMDIOptionsHelper }
 
-class function TMDIOptionsHelper.InitWith(
-  AAutoShow: Boolean;
-  ASingleInstance: Boolean;
-  AMaximizeOnShow: Boolean;
-  ABringToFrontIfExists: Boolean;
-  const AUniqueIdentifier: String;
-  AMaxInstances: Integer
-): TMDIOptions;
+class function TMDIOptionsHelper.InitWith(AAutoShow: Boolean; ASingleInstance: Boolean; AMaximizeOnShow: Boolean; ABringToFrontIfExists: Boolean; const AUniqueIdentifier: String; AMaxInstances: Integer): TMDIOptions;
 begin
   Result.AutoShow := AAutoShow;
   Result.SingleInstance := ASingleInstance;

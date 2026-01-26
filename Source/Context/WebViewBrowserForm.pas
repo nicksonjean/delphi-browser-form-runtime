@@ -150,6 +150,10 @@ type
     procedure OnWindowCloseRequested(Sender: TObject);
     procedure OnPopupOpened(Sender: TObject);
     procedure OnPopupClosed(Sender: TObject);
+    procedure OnContextMenuRequested(Sender: TObject; const aWebView: ICoreWebView2; const aArgs: ICoreWebView2ContextMenuRequestedEventArgs);
+
+    // Loader
+    procedure ConfigureWebView2Loader;
   protected
     // Getters
     function GetWidthProp: Integer;
@@ -1593,6 +1597,17 @@ end;
 
 // Context
 
+procedure TWebViewBrowser.ConfigureWebView2Loader;
+begin
+  if not Assigned(GlobalWebView2Loader) then
+  begin
+    GlobalWebView2Loader := TWVLoader.Create(nil);
+    GlobalWebView2Loader.UserDataFolder := TUtils.EnsureCacheDirectory(CACHE_PATH);
+    GlobalWebView2Loader.LoaderDllPath := ExtractFilePath(Application.ExeName) + 'WebView2\WV\WebView2Loader.dll';
+    GlobalWebView2Loader.StartWebView2;
+  end;
+end;
+
 procedure TWebViewBrowser.CreateComponents(AParentBrowser: TWVBrowser = nil; AIsPopup: Boolean = false; const AURL: String = '');
 begin
   FParentFormToRestore := nil;
@@ -1618,13 +1633,7 @@ begin
   if AParentBrowser <> nil then
     FParentBrowser := AParentBrowser;
 
-  if not Assigned(GlobalWebView2Loader) then
-  begin
-    GlobalWebView2Loader := TWVLoader.Create(nil);
-    GlobalWebView2Loader.UserDataFolder := TUtils.EnsureCacheDirectory(CACHE_PATH);
-    GlobalWebView2Loader.LoaderDllPath := ExtractFilePath(Application.ExeName) + 'WebView2\WV\WebView2Loader.dll';
-    GlobalWebView2Loader.StartWebView2;
-  end;
+  Self.ConfigureWebView2Loader;
 
   FForm := TWebViewForm.CreateWithArgs(nil, nil);
   FForm.BrowserInstance := Self;
@@ -1690,13 +1699,7 @@ begin
   FParentForm := AParentForm;
   FIsInitializing := False;
 
-  if not Assigned(GlobalWebView2Loader) then
-  begin
-    GlobalWebView2Loader := TWVLoader.Create(nil);
-    GlobalWebView2Loader.UserDataFolder := TUtils.EnsureCacheDirectory(CACHE_PATH);
-    GlobalWebView2Loader.LoaderDllPath := ExtractFilePath(Application.ExeName) + 'WebView2\WV\WebView2Loader.dll';
-    GlobalWebView2Loader.StartWebView2;
-  end;
+  Self.ConfigureWebView2Loader;
 
   try
 
@@ -1977,6 +1980,7 @@ begin
   // WVBrowser
   FBrowser := TWVBrowser.Create(FForm);
   FBrowser.DefaultURL := EmptyStr;
+
   FBrowser.OnAfterCreated := Self.OnAfterCreated;
   FBrowser.OnDocumentTitleChanged := Self.OnDocumentTitleChanged;
   FBrowser.OnInitializationError := Self.OnInitializationError;
@@ -1984,6 +1988,7 @@ begin
   FBrowser.OnWindowCloseRequested := Self.OnWindowCloseRequested;
   FBrowser.OnNavigationCompleted := Self.OnNavigationCompleted;
   FBrowser.OnWebMessageReceived := Self.OnWebMessageReceived;
+  FBrowser.OnContextMenuRequested := Self.OnContextMenuRequested;
 
   // WVWindowParent Container
   FWindowParent := TWVWindowParent.Create(FForm);
@@ -2095,6 +2100,13 @@ end;
 procedure TWebViewBrowser.OnAfterCreated(Sender: TObject);
 begin
   FBrowserInitialized := True;
+
+  if Assigned(FBrowser.CoreWebView2) then
+  begin
+//    FBrowser.CoreWebView2.Settings.Set_AreDevToolsEnabled(0);
+//    FBrowser.CoreWebView2.Settings.Set_AreDefaultContextMenusEnabled(0);
+  end;
+
   ResizeBrowser;
 
   if FURL <> EmptyStr then
@@ -2308,6 +2320,65 @@ procedure TWebViewBrowser.OnPopupClosed(Sender: TObject);
 begin
   if DEBUG_MODE then
     ShowMessage('Popup has been closed! Instance: ' + TWebViewBrowser(Sender).ClassName);
+end;
+
+procedure TWebViewBrowser.OnContextMenuRequested(Sender: TObject; const aWebView: ICoreWebView2; const aArgs: ICoreWebView2ContextMenuRequestedEventArgs);
+var
+  MenuItems: ICoreWebView2ContextMenuItemCollection;
+  MenuItem: ICoreWebView2ContextMenuItem;
+  MenuItemsCount: Cardinal;
+  ItemName: PWideChar;
+  ItemNameStr: string;
+  i: Integer;
+  ItemKind: COREWEBVIEW2_CONTEXT_MENU_ITEM_KIND;
+begin
+  try
+    if Succeeded(aArgs.Get_MenuItems(MenuItems)) then
+    begin
+      if Succeeded(MenuItems.Get_Count(MenuItemsCount)) then
+      begin
+        for i := Integer(MenuItemsCount) - 1 downto 0 do
+        begin
+          if Succeeded(MenuItems.GetValueAtIndex(i, MenuItem)) then
+          begin
+            if Succeeded(MenuItem.Get_Name(ItemName)) then
+            begin
+              ItemNameStr := string(ItemName);
+              if (ItemNameStr = 'inspectElement') or
+                 (ItemNameStr = 'devtools') or
+                 (ItemNameStr = 'inspect') or
+                 (Pos('inspect', LowerCase(ItemNameStr)) > 0) or
+                 (Pos('devtools', LowerCase(ItemNameStr)) > 0) then
+              begin
+                MenuItems.RemoveValueAtIndex(i);
+                if DEBUG_MODE then
+                  ShowMessage('Removido item: ' + ItemNameStr);
+
+                if (i > 0) and Succeeded(MenuItems.GetValueAtIndex(i - 1, MenuItem)) then
+                begin
+                  if Succeeded(MenuItem.Get_Kind(ItemKind)) then
+                  begin
+                    if ItemKind = COREWEBVIEW2_CONTEXT_MENU_ITEM_KIND_SEPARATOR then
+                    begin
+                      MenuItems.RemoveValueAtIndex(i - 1);
+                      if DEBUG_MODE then
+                        ShowMessage('Removido separador anterior ao item: ' + ItemNameStr);
+                    end;
+                  end;
+                end;
+              end;
+            end;
+          end;
+        end;
+      end;
+    end;
+  except
+    on E: Exception do
+    begin
+      if DEBUG_MODE then
+        ShowMessage('Erro ao processar menu de contexto: ' + E.Message);
+    end;
+  end;
 end;
 
 procedure TWebViewBrowser.TryCreateBrowser;

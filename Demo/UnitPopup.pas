@@ -453,7 +453,6 @@ procedure TFormPopup.BtnWVBrowserClassChainableTestClick(Sender: TObject);
 var
   BrowserTag: String;
 begin
-  BrowserTag := GetUniqueID;
 
   if IsUsingEdgeBrowser then
   begin

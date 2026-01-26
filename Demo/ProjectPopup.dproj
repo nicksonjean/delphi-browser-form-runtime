@@ -61,6 +61,7 @@
         <DCC_DUPLICATE_CTOR_DTOR>false</DCC_DUPLICATE_CTOR_DTOR>
         <VerInfo_Locale>1046</VerInfo_Locale>
         <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
+        <DCC_UnitSearchPath>$(DCC_UnitSearchPath);modules\.dcp;modules\.dcu;modules;modules\delphicodecoverage\3rdParty\JCL\Source\Windows;modules\delphicodecoverage\3rdParty\JCL\Source\common;modules\delphicodecoverage\3rdParty\JCL\Source\include;modules\delphicodecoverage\3rdParty\JCL\Source\include\jedi;modules\delphicodecoverage\3rdParty\JWAPI\jwapi2.2a\Common;modules\delphicodecoverage\3rdParty\JWAPI\jwapi2.2a\Includes;modules\delphicodecoverage\3rdParty\JWAPI\jwapi2.2a\Includes\jproject;modules\delphicodecoverage\3rdParty\JWAPI\jwapi2.2a\Win32API;modules\delphicodecoverage\3rdParty;modules\delphicodecoverage\Source;modules\delphicodecoverage\Test;modules\dunitx\Examples;modules\dunitx\Expert;modules\dunitx\Source;modules\dunitx\Tests;modules\webview4delphi\demos\Delphi_FMX\FMXTabbedBrowser;modules\webview4delphi\demos\Delphi_FMX\FMXWindowlessBrowser;modules\webview4delphi\demos\Delphi_FMX\MonacoEditor;modules\webview4delphi\demos\Delphi_FMX\SimpleFMXBrowser;modules\webview4delphi\demos\Delphi_VCL\AddHostObject;modules\webview4delphi\demos\Delphi_VCL\BrowserHostAppCommunication;modules\webview4delphi\demos\Delphi_VCL\ClientCertsBrowser;modules\webview4delphi\demos\Delphi_VCL\CookieManager;modules\webview4delphi\demos\Delphi_VCL\CustomSchemeBrowser;modules\webview4delphi\demos\Delphi_VCL\EditorBrowser;modules\webview4delphi\demos\Delphi_VCL\KioskBrowser;modules\webview4delphi\demos\Delphi_VCL\MDIBrowser;modules\webview4delphi\demos\Delphi_VCL\MiniBrowser;modules\webview4delphi\demos\Delphi_VCL\MobileBrowser;modules\webview4delphi\demos\Delphi_VCL\MonacoEditor;modules\webview4delphi\demos\Delphi_VCL\NavigateWithWebResourceRequestBrowser;modules\webview4delphi\demos\Delphi_VCL\PopupBrowser;modules\webview4delphi\demos\Delphi_VCL\SimpleBrowser;modules\webview4delphi\demos\Delphi_VCL\SubscribeToDevToolsProtocolEventBrowser;modules\webview4delphi\demos\Delphi_VCL\TabbedBrowser;modules\webview4delphi\demos\Delphi_VCL\VirtualHostBrowser;modules\webview4delphi\demos\Delphi_VCL\WebpageSnapshot;modules\webview4delphi\demos\Delphi_VCL\WindowlessBrowser;modules\webview4delphi\demos\Lazarus\BrowserHostAppCommunication;modules\webview4delphi\demos\Lazarus\ClientCertsBrowser;modules\webview4delphi\demos\Lazarus\CookieManager;modules\webview4delphi\demos\Lazarus\CustomSchemeBrowser;modules\webview4delphi\demos\Lazarus\EditorBrowser;modules\webview4delphi\demos\Lazarus\MiniBrowser;modules\webview4delphi\demos\Lazarus\MonacoEditor;modules\webview4delphi\demos\Lazarus\NavigateWithWebResourceRequestBrowser;modules\webview4delphi\demos\Lazarus\PopupBrowser;modules\webview4delphi\demos\Lazarus\SimpleBrowser;modules\webview4delphi\demos\Lazarus\TabbedBrowser;modules\webview4delphi\demos\Lazarus\VirtualHostBrowser;modules\webview4delphi\demos\Lazarus\WebpageSnapshot;modules\webview4delphi\packages;modules\webview4delphi\source</DCC_UnitSearchPath>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
         <DCC_UsePackage>DBXSqliteDriver;RESTComponents;fmxase;DBXDb2Driver;DBXInterBaseDriver;vclactnband;vclFireDAC;bindcompvclsmp;emsclientfiredac;tethering;svnui;DataSnapFireDAC;FireDACADSDriver;DBXMSSQLDriver;DatasnapConnectorsFreePascal;FireDACMSSQLDriver;vcltouch;vcldb;bindcompfmx;svn;DBXOracleDriver;inetdb;FmxTeeUI;emsedge;fmx;FireDACIBDriver;fmxdae;vcledge;vclib;FireDACDBXDriver;dbexpress;IndyCore;vclx;dsnap;emsclient;DataSnapCommon;FireDACCommon;RESTBackendComponents;DataSnapConnectors;VCLRESTComponents;soapserver;vclie;bindengine;DBXMySQLDriver;CloudService;FireDACOracleDriver;FireDACMySQLDriver;DBXFirebirdDriver;FireDACCommonODBC;FireDACCommonDriver;DataSnapClient;inet;IndyIPCommon;bindcompdbx;vcl;IndyIPServer;DBXSybaseASEDriver;IndySystem;FireDACDb2Driver;bindcompvclwinx;dsnapcon;FireDACMSAccDriver;fmxFireDAC;FireDACInfxDriver;vclimg;TeeDB;FireDAC;emshosting;FireDACSqliteDriver;FireDACPgDriver;ibmonitor;FireDACASADriver;DBXOdbcDriver;FireDACTDataDriver;FMXTee;soaprtl;DbxCommonDriver;ibxpress;Tee;DataSnapServer;xmlrtl;soapmidas;DataSnapNativeClient;fmxobj;vclwinx;FireDACDSDriver;rtl;emsserverresource;DbxClientDriver;ibxbindings;DBXSybaseASADriver;CustomIPTransport;vcldsnap;bindcomp;appanalytics;DBXInformixDriver;IndyIPClient;bindcompvcl;TeeUI;dbxcds;VclSmp;adortl;FireDACODBCDriver;DataSnapIndy10ServerTransport;dsnapxml;DataSnapProviderClient;dbrtl;IndyProtocols;inetdbxpress;FireDACMongoDBDriver;DataSnapServerMidas;$(DCC_UsePackage)</DCC_UsePackage>
@@ -124,12 +125,7 @@
         <DCCReference Include="..\Source\Context\Edge\Component\EdgeWindowFeatures.pas"/>
         <DCCReference Include="..\Source\Context\IBrowserFormBase.pas"/>
         <DCCReference Include="..\Source\Strategy\BrowserFactory.pas"/>
-        <None Include="ModelSupport_ProjectPopup\ProjectTest\default.txaPackage"/>
-        <None Include="ModelSupport_ProjectPopup\default.txaPackage"/>
-        <None Include="ModelSupport_ProjectPopup\ProjectTest\default.txvpck"/>
-        <None Include="ModelSupport_ProjectPopup\default.txvpck"/>
-        <None Include="ModelSupport_ProjectPopup\BrowserTypes\default.txvpck"/>
-        <None Include="ModelSupport_ProjectPopup\WebViewBrowserForm\default.txvpck"/>
+        <DCCReference Include="..\Source\Context\Edge\Component\EdgeWebBrowserTypeLibrary.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
@@ -156,45 +152,9 @@
                 </Excluded_Packages>
             </Delphi.Personality>
             <Deployment Version="3">
-                <DeployFile LocalName="ModelSupport_ProjectPopup\ProjectTest\default.txvpck" Configuration="Debug" Class="ProjectFile">
-                    <Platform Name="Win32">
-                        <RemoteDir>.\</RemoteDir>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="ModelSupport_ProjectPopup\default.txaPackage" Configuration="Debug" Class="ProjectFile">
-                    <Platform Name="Win32">
-                        <RemoteDir>.\</RemoteDir>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="ModelSupport_ProjectPopup\default.txvpck" Configuration="Debug" Class="ProjectFile">
-                    <Platform Name="Win32">
-                        <RemoteDir>.\</RemoteDir>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
                 <DeployFile LocalName="Win32\Debug\ProjectPopup.exe" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
                         <RemoteName>ProjectPopup.exe</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="ModelSupport_ProjectPopup\ProjectTest\default.txaPackage" Configuration="Debug" Class="ProjectFile">
-                    <Platform Name="Win32">
-                        <RemoteDir>.\</RemoteDir>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="ModelSupport_ProjectPopup\BrowserTypes\default.txvpck" Configuration="Debug" Class="ProjectFile">
-                    <Platform Name="Win32">
-                        <RemoteDir>.\</RemoteDir>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="ModelSupport_ProjectPopup\WebViewBrowserForm\default.txvpck" Configuration="Debug" Class="ProjectFile">
-                    <Platform Name="Win32">
-                        <RemoteDir>.\</RemoteDir>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
@@ -973,7 +933,10 @@
                 <Platform value="Win32">True</Platform>
                 <Platform value="Win64">False</Platform>
             </Platforms>
-            <ModelSupport>True</ModelSupport>
+            <ModelSupport>False</ModelSupport>
+            <UnitTesting>
+                <TestProjectName>F:\Projetos\Delphi-Browser-Form-Runtime\Demo\Test\ProjectPopupTests.dproj</TestProjectName>
+            </UnitTesting>
         </BorlandProject>
         <ProjectFileVersion>12</ProjectFileVersion>
     </ProjectExtensions>

@@ -1,0 +1,30 @@
+{
+	"hash": "d41d8cd98f00b204e9800998ecf8427e",
+	"updated": "2025-06-29T15:54:20.467561-03:00",
+	"installedModules": {
+		"github.com/delphicodecoverage/delphicodecoverage": {
+			"name": "delphicodecoverage",
+			"version": "1.0.15",
+			"hash": "8f64d9ec609ef9cfd44e2eae5aea742b",
+			"artifacts": {},
+			"failed": false,
+			"changed": false
+		},
+		"github.com/nicksonjean/webview4delphi": {
+			"name": "webview4delphi",
+			"version": "1.0.0",
+			"hash": "eea4815cc6a2665d45873d97ad92c240",
+			"artifacts": {},
+			"failed": false,
+			"changed": false
+		},
+		"github.com/vsofttechnologies/dunitx": {
+			"name": "dunitx",
+			"version": "v0.4.1",
+			"hash": "41a71ef14b864de4cb48e93ac2a47d6b",
+			"artifacts": {},
+			"failed": false,
+			"changed": false
+		}
+	}
+}

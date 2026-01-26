@@ -505,6 +505,7 @@ begin
         (BrowserInstance as TEdgeWebBrowser).FBrowser.OnWindowCloseRequested := nil;
         (BrowserInstance as TEdgeWebBrowser).FBrowser.OnNavigationCompleted := nil;
         (BrowserInstance as TEdgeWebBrowser).FBrowser.OnWebMessageReceived := nil;
+//        (BrowserInstance as TEdgeWebBrowser).FBrowser.OnContextMenuRequested := nil;
         (BrowserInstance as TEdgeWebBrowser).FBrowserInitialized := False;
       end;
     end;
@@ -1753,6 +1754,7 @@ begin
     FBrowser.OnWindowCloseRequested := nil;
     FBrowser.OnNavigationCompleted := nil;
     FBrowser.OnWebMessageReceived := nil;
+//    FBrowser.OnContextMenuRequested := nil;
 
     FBrowserInitialized := False;
   end;
@@ -2080,13 +2082,14 @@ begin
   FBrowser.Height := FForm.Height;
 
   // EdgeBrowser Events
+  FBrowser.OnAfterCreated := Self.OnAfterCreated;
   FBrowser.OnDocumentTitleChanged := Self.OnDocumentTitleChanged;
   FBrowser.OnNavigationCompleted := Self.OnNavigationCompleted;
   FBrowser.OnNewWindowRequested := Self.OnNewWindowRequested;
   FBrowser.OnWindowCloseRequested := Self.OnWindowCloseRequested;
   FBrowser.OnWebMessageReceived := Self.OnWebMessageReceived;
   FBrowser.OnInitializationError := Self.OnInitializationError;
-  FBrowser.OnAfterCreated := Self.OnAfterCreated;
+//  FBrowser.OnContextMenuRequested := Self.OnContextMenuRequested;
 
   // Cache Path
   if FBrowser.UserDataFolder = EmptyStr then

@@ -18,7 +18,8 @@ uses
   EdgeNewWindowRequestedEventArgs in '..\Source\Context\Edge\Component\EdgeNewWindowRequestedEventArgs.pas',
   EdgeWindowFeatures in '..\Source\Context\Edge\Component\EdgeWindowFeatures.pas',
   IBrowserFormBase in '..\Source\Context\IBrowserFormBase.pas',
-  BrowserFactory in '..\Source\Strategy\BrowserFactory.pas';
+  BrowserFactory in '..\Source\Strategy\BrowserFactory.pas',
+  EdgeWebBrowserTypeLibrary in '..\Source\Context\Edge\Component\EdgeWebBrowserTypeLibrary.pas';
 
 {$R ProjectPopup.res}
 
