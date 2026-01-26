@@ -551,8 +551,10 @@ var
   BrowserTag: String;
   EdgeBrowser: IEWBrowserForm;
   WVBrowser: IWVBrowserForm;
+  URL: String;
 begin
   BrowserTag := GetUniqueID;
+  URL := 'https://cadastro.uat.unico.app/process/b905f92a-4206-421b-85e5-9175d68b8b70';
 
   if IsUsingEdgeBrowser then
   begin
@@ -574,7 +576,8 @@ begin
   end
   else
   begin
-      WVBrowser := TWebViewBrowser.Create('file:///' + ExtractFilePath(ParamStr(0)) + 'index.html')
+      //WVBrowser := TWebViewBrowser.Create('file:///' + ExtractFilePath(ParamStr(0)) + 'index.html')
+      WVBrowser := TWebViewBrowser.Create(URL)
       .SetCaption('WVBrowser - Interface Chainable')
       .SetUniqueIdentifier(BrowserTag)
       .SetWidth(2048)
